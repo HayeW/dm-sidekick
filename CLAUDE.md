@@ -60,5 +60,8 @@ The user is on Windows. The terminal may be PowerShell; use commands that work t
 5. No new dependencies without asking.
 6. If a requirement is unclear or contradicts the plan, stop and ask; don't guess.
    Record new decisions in the plan's decisions section.
-7. At the end of a step: summarise what changed, update the plan's **Progress** line,
-   and propose a commit message. Don't commit unless asked.
+7. When the checks pass, have the `code-reviewer` agent (`.claude/agents/code-reviewer.md`)
+   review the uncommitted changes. Fix clear bugs and test gaps it finds and re-run the checks;
+   report the remaining findings to the user with a recommendation instead of deciding alone.
+8. At the end of a step: summarise what changed (including the review outcome), update the
+   plan's **Progress** line, and propose a commit message. Don't commit unless asked.

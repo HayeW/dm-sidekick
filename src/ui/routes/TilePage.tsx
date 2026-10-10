@@ -15,10 +15,15 @@ export default function TilePage() {
   const description = block?.type === 'descriptions' && findDescription(block, descriptionId);
 
   if (!campaign || !scene || !block || block.type !== 'descriptions' || !description) {
+    // Back to the deepest level that does exist: the scene, else the campaign, else the list.
+    let backTo = '/';
+    if (campaign && scene) backTo = `/c/${campaign.id}/s/${scene.id}`;
+    else if (campaign) backTo = `/c/${campaign.id}`;
+
     return (
       <main className="page">
         <h1>Tile not found</h1>
-        <Link to={campaign ? `/c/${campaign.id}` : '/'}>Back</Link>
+        <Link to={backTo}>Back</Link>
       </main>
     );
   }

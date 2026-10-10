@@ -1,9 +1,21 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, useNavigate } from 'react-router';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import App from './App';
 import { getCampaign, getCampaigns } from './data/campaigns';
+
+function renderWithBrowserBack(path: string) {
+  return render(
+    <MemoryRouter initialEntries={[path]}>
+      <App />
+      <BrowserBack />
+    </MemoryRouter>,
+  );
+}
+
+const pressBrowserBack = () =>
+  userEvent.click(screen.getByRole('button', { name: 'Browser back' }));
 
 function renderAt(path: string) {
   return render(
@@ -147,6 +159,29 @@ describe('DC-011 — Descriptions tile openen', () => {
     expect(screen.getByRole('heading', { level: 1, name: scene.title })).toBeInTheDocument();
   });
 
+  it('leaves no extra history entries: after Back, the browser back goes to the campaign list', async () => {
+    const user = userEvent.setup();
+    renderWithBrowserBack('/');
+    await user.click(screen.getByRole('link', { name: new RegExp(campaign.name) }));
+    await user.click(screen.getByRole('link', { name: /^Descriptions/ }));
+    await user.click(screen.getByRole('link', { name: /Next/ }));
+    await user.click(screen.getByRole('button', { name: new RegExp(scene.title) }));
+    expect(screen.getByRole('heading', { level: 1, name: scene.title })).toBeInTheDocument();
+
+    await pressBrowserBack();
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Campaigns' })).toBeInTheDocument();
+  });
+
+  it('starts the next description at the top of the page', async () => {
+    const user = await openTile();
+    vi.mocked(window.scrollTo).mockClear();
+
+    await user.click(screen.getByRole('link', { name: /Next/ }));
+
+    expect(window.scrollTo).toHaveBeenCalledWith(0, 0);
+  });
+
   it('returns to the scene when a description was opened directly (deep link)', async () => {
     const user = userEvent.setup();
     renderAt(`${sceneUrl}/b/${block.id}/d/${inn!.id}`);
@@ -157,10 +192,11 @@ describe('DC-011 — Descriptions tile openen', () => {
     expect(screen.getByRole('heading', { level: 1, name: scene.title })).toBeInTheDocument();
   });
 
-  it('shows "not found" for an unknown description', () => {
+  it('shows "not found" for an unknown description, with a way back to its scene', () => {
     renderAt(`${sceneUrl}/b/${block.id}/d/does-not-exist`);
 
     expect(screen.getByRole('heading', { name: 'Tile not found' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Back' })).toHaveAttribute('href', sceneUrl);
   });
 
   it('does not make other tiles openable', () => {
@@ -199,12 +235,7 @@ describe('DC-015 / DC-016 — Vorige en volgende scene', () => {
 
   it('goes back scene by scene with the back button (D12)', async () => {
     const user = userEvent.setup();
-    render(
-      <MemoryRouter initialEntries={[`/c/${campaign.id}/s/${first!.id}`]}>
-        <App />
-        <BrowserBack />
-      </MemoryRouter>,
-    );
+    renderWithBrowserBack(`/c/${campaign.id}/s/${first!.id}`);
     await user.click(within(scenes()).getByRole('link', { name: /Next/ }));
     await user.click(within(scenes()).getByRole('link', { name: /Next/ }));
     expectScene(last!.title);
@@ -214,6 +245,20 @@ describe('DC-015 / DC-016 — Vorige en volgende scene', () => {
 
     await user.click(screen.getByRole('button', { name: 'Browser back' }));
     expectScene(first!.title);
+  });
+
+  it('starts the next scene at the top, but keeps the position when going back', async () => {
+    const user = userEvent.setup();
+    renderWithBrowserBack(`/c/${campaign.id}/s/${first!.id}`);
+    vi.mocked(window.scrollTo).mockClear();
+
+    await user.click(within(scenes()).getByRole('link', { name: /Next/ }));
+    expect(window.scrollTo).toHaveBeenCalledWith(0, 0);
+
+    vi.mocked(window.scrollTo).mockClear();
+    await pressBrowserBack();
+    expectScene(first!.title);
+    expect(window.scrollTo).not.toHaveBeenCalled();
   });
 
   it('disables Previous on the first scene', () => {
@@ -305,16 +350,40 @@ describe('DC-017 — Swipen tussen beschrijvingen', () => {
     expectTitle(intro!.title);
   });
 
-  it('returns to the scene with one tap after swiping', async () => {
+  it('does not treat panning while zoomed in as a swipe', () => {
+    renderAt(blockUrl);
+    Object.defineProperty(window, 'visualViewport', { value: { scale: 2 }, configurable: true });
+    try {
+      swipe(-100);
+    } finally {
+      Object.defineProperty(window, 'visualViewport', { value: undefined, configurable: true });
+    }
+
+    expectTitle(intro!.title);
+  });
+
+  it('starts the swiped-to description at the top of the page', () => {
+    renderAt(blockUrl);
+    vi.mocked(window.scrollTo).mockClear();
+
+    swipe(-100);
+
+    expect(window.scrollTo).toHaveBeenCalledWith(0, 0);
+  });
+
+  it('returns to the scene with one tap after swiping, without extra history entries', async () => {
     const user = userEvent.setup();
-    renderAt(`/c/${campaign.id}/s/${scene.id}`);
+    renderWithBrowserBack('/');
+    await user.click(screen.getByRole('link', { name: new RegExp(campaign.name) }));
     await user.click(screen.getByRole('link', { name: /^Descriptions/ }));
     swipe(-100);
     expectTitle(inn!.title);
 
     await user.click(screen.getByRole('button', { name: new RegExp(scene.title) }));
-
     expectTitle(scene.title);
+
+    await pressBrowserBack();
+    expectTitle('Campaigns');
   });
 });
 

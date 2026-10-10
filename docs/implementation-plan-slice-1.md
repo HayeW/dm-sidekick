@@ -253,6 +253,11 @@ These are open questions from `requirements.md` that actually block this slice. 
   scene adds a history entry, so the phone's back button returns to the previously viewed
   scene. Unlike descriptions (D11), which replace the entry so Back returns to the scene in
   one tap. Both use one fixed bottom bar (`StepNav`).
+- **D13 — Scroll position** (2026-10-10, from code review). A newly opened screen (link,
+  previous/next, swipe) starts at the top. Going back keeps the browser's scroll position,
+  so the DM returns to where they were on the previous screen.
+- **D14 — No swipe while zoomed in** (2026-10-10, from code review; refines DC-017). While
+  the page is zoomed in, one finger pans the text, so it is not treated as a swipe.
 
 Not blocking for this slice: combat lifetime/cleanup (old combat simply stays until replaced),
 healing controls, Quick Access contents, campaign editing.

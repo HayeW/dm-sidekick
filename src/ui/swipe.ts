@@ -23,9 +23,14 @@ export function useSwipe(onSwipe: (direction: SwipeDirection) => void) {
   return {
     onTouchStart(event: TouchEvent) {
       const touch = event.touches[0];
-      // A second finger means zooming, not swiping.
+      // A second finger means zooming, not swiping. While zoomed in, one finger pans the
+      // text sideways, so that isn't a swipe either.
+      // Small tolerance: some browsers report e.g. 1.0000001 after zooming back out.
+      const zoomedIn = (window.visualViewport?.scale ?? 1) > 1.01;
       start.current =
-        event.touches.length === 1 && touch ? { x: touch.clientX, y: touch.clientY } : null;
+        !zoomedIn && event.touches.length === 1 && touch
+          ? { x: touch.clientX, y: touch.clientY }
+          : null;
     },
     onTouchEnd(event: TouchEvent) {
       const from = start.current;

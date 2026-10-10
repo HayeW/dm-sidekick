@@ -3,18 +3,25 @@ import CampaignListPage from './ui/routes/CampaignListPage';
 import CampaignPage from './ui/routes/CampaignPage';
 import ScenePage from './ui/routes/ScenePage';
 import TilePage from './ui/routes/TilePage';
+import ScrollToTop from './ui/components/ScrollToTop';
 
 // Routes follow docs/implementation-plan-slice-1.md, §5.
 export default function App() {
   return (
-    <Routes>
-      <Route path="/" element={<CampaignListPage />} />
-      <Route path="/c/:campaignId" element={<CampaignPage />} />
-      <Route path="/c/:campaignId/s/:sceneId" element={<ScenePage />} />
-      <Route path="/c/:campaignId/s/:sceneId/b/:blockId" element={<TilePage />} />
-      <Route path="/c/:campaignId/s/:sceneId/b/:blockId/d/:descriptionId" element={<TilePage />} />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+    <>
+      <ScrollToTop />
+      <Routes>
+        <Route path="/" element={<CampaignListPage />} />
+        <Route path="/c/:campaignId" element={<CampaignPage />} />
+        <Route path="/c/:campaignId/s/:sceneId" element={<ScenePage />} />
+        <Route path="/c/:campaignId/s/:sceneId/b/:blockId" element={<TilePage />} />
+        <Route
+          path="/c/:campaignId/s/:sceneId/b/:blockId/d/:descriptionId"
+          element={<TilePage />}
+        />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </>
   );
 }
 
