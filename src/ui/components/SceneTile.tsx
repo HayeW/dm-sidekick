@@ -4,7 +4,7 @@ import { enemySummary, findEncounter } from '../../domain/scene';
 import styles from './SceneTile.module.css';
 
 const labels: Record<ContentBlock['type'], string> = {
-  intro: 'Intro',
+  descriptions: 'Descriptions',
   encounter: 'Encounter',
   location: 'Location',
   npcs: 'NPCs',
@@ -23,7 +23,11 @@ export default function SceneTile({ block, campaign, openTo }: Props) {
   const label = labels[block.type];
   const content = (
     <>
-      <h2 className={styles.label}>{label}</h2>
+      <h2 className={styles.label}>
+        {block.type === 'descriptions' && block.descriptions.length > 1
+          ? `${label} · ${block.descriptions.length}`
+          : label}
+      </h2>
       <TileBody block={block} campaign={campaign} />
     </>
   );
@@ -31,7 +35,7 @@ export default function SceneTile({ block, campaign, openTo }: Props) {
   return (
     <section className={`${styles.tile} ${styles[block.type]}`} aria-label={label}>
       {openTo ? (
-        <Link to={openTo} className={styles.open}>
+        <Link to={openTo} state={{ fromScene: true }} className={styles.open}>
           {content}
         </Link>
       ) : (
@@ -43,7 +47,11 @@ export default function SceneTile({ block, campaign, openTo }: Props) {
 
 function TileBody({ block, campaign }: Omit<Props, 'openTo'>) {
   switch (block.type) {
-    case 'intro':
+    case 'descriptions': {
+      const first = block.descriptions[0];
+      if (!first) return <p className={styles.missing}>No descriptions</p>;
+      return <p className={styles.clamp}>{first.text}</p>;
+    }
     case 'notes':
       return <p className={styles.clamp}>{block.text}</p>;
     case 'location':

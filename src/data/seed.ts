@@ -29,12 +29,25 @@ export const seedCampaigns: Campaign[] = [
         title: 'Arrival in Millbrook',
         blocks: [
           {
-            id: 'b-arrival-intro',
-            type: 'intro',
-            text:
-              'Rain drums on the thatched roofs as you reach Millbrook at dusk. ' +
-              'The mill wheel by the river stands still, and every shutter in the village is closed. ' +
-              'Only the lantern above the Crooked Kettle inn still burns.',
+            id: 'b-arrival-descriptions',
+            type: 'descriptions',
+            descriptions: [
+              {
+                id: 'd-arrival-intro',
+                title: 'Intro',
+                text:
+                  'Rain drums on the thatched roofs as you reach Millbrook at dusk. ' +
+                  'The mill wheel by the river stands still, and every shutter in the village is closed. ' +
+                  'Only the lantern above the Crooked Kettle inn still burns.',
+              },
+              {
+                id: 'd-arrival-inn',
+                title: 'Entering the Crooked Kettle',
+                text:
+                  'Warmth and the smell of peat smoke hit you as the door swings open. ' +
+                  'A handful of villagers fall silent and stare; the innkeeper sets down a tankard and waits.',
+              },
+            ],
           },
           {
             id: 'b-arrival-location',
@@ -55,11 +68,24 @@ export const seedCampaigns: Campaign[] = [
         title: 'The Mill Road',
         blocks: [
           {
-            id: 'b-road-intro',
-            type: 'intro',
-            text:
-              'The muddy road follows the river toward the old mill. ' +
-              'Broken cart wheels lie in the ditch, and fresh tracks lead into the reeds.',
+            id: 'b-road-descriptions',
+            type: 'descriptions',
+            descriptions: [
+              {
+                id: 'd-road-intro',
+                title: 'Intro',
+                text:
+                  'The muddy road follows the river toward the old mill. ' +
+                  'Broken cart wheels lie in the ditch, and fresh tracks lead into the reeds.',
+              },
+              {
+                id: 'd-road-mill',
+                title: 'Arriving at the mill',
+                text:
+                  'The reeds part and the old mill rises ahead, dark against the evening sky. ' +
+                  'Its door hangs open, and wet footprints lead inside.',
+              },
+            ],
           },
           { id: 'b-road-encounter', type: 'encounter', encounterId: 'enc-road-ambush' },
           {
@@ -74,11 +100,17 @@ export const seedCampaigns: Campaign[] = [
         title: 'The Old Mill',
         blocks: [
           {
-            id: 'b-mill-intro',
-            type: 'intro',
-            text:
-              'The mill looms over the water, its great wheel jammed with branches. ' +
-              'A faint knocking comes from somewhere below the floorboards.',
+            id: 'b-mill-descriptions',
+            type: 'descriptions',
+            descriptions: [
+              {
+                id: 'd-mill-intro',
+                title: 'Intro',
+                text:
+                  'The mill looms over the water, its great wheel jammed with branches. ' +
+                  'A faint knocking comes from somewhere below the floorboards.',
+              },
+            ],
           },
           {
             id: 'b-mill-location',
@@ -104,11 +136,17 @@ export const seedCampaigns: Campaign[] = [
         title: 'The Harbour at Low Tide',
         blocks: [
           {
-            id: 'b-harbour-intro',
-            type: 'intro',
-            text:
-              'At low tide the harbour floor lies bare, and somewhere beneath the mud ' +
-              'a bell is ringing that no one has seen in a hundred years.',
+            id: 'b-harbour-descriptions',
+            type: 'descriptions',
+            descriptions: [
+              {
+                id: 'd-harbour-intro',
+                title: 'Intro',
+                text:
+                  'At low tide the harbour floor lies bare, and somewhere beneath the mud ' +
+                  'a bell is ringing that no one has seen in a hundred years.',
+              },
+            ],
           },
         ],
       },

@@ -63,7 +63,7 @@ Wanneer een nieuwe campaign wordt geopend:
 Een scene is het centrale scherm tijdens een sessie.
 Een scene bestaat uit compacte content tiles.
 Voor v1 zijn onder andere de volgende tile-types voorzien:
-- Intro / read-aloud
+- Descriptions / read-aloud (meerdere beschrijvingen per tile, bijv. "Intro" en "Aankomst bij het einde")
 - Location
 - NPCs
 - Encounter
@@ -266,7 +266,8 @@ Een Scene heeft een vaste positie binnen een Campaign.
 Content
 Een Scene bestaat uit content blocks/tiles.
 Mogelijke types:
-Intro Location NPCs Encounter DMNotes 
+Descriptions Location NPCs Encounter DMNotes 
+Een Descriptions-block bevat een geordende lijst beschrijvingen; elke beschrijving heeft een eigen titel en tekst.
 Het exacte model van contentBlocks is nog open.
 ## 4. PlayerCharacter
 PlayerCharacter - id - campaignId - name 
@@ -388,13 +389,15 @@ Acceptance criteria
 - De scene toont zijn content blocks.
 - Tiles zijn compact weergegeven.
 - De belangrijkste tile-types kunnen worden weergegeven.
-### DC-011 — Intro tile openen
+### DC-011 — Descriptions tile openen
 P0
-Als DM wil ik de Intro kunnen openen zodat ik read-aloud tekst goed kan lezen.
+Als DM wil ik de beschrijvingen van een scene kunnen openen en ertussen kunnen wisselen, zodat ik elke read-aloud tekst goed kan voorlezen.
 Acceptance criteria
-- Een Intro tile kan worden geopend.
+- Een Descriptions tile bevat één of meer beschrijvingen (bijv. "Intro" en "Aankomst bij het einde"), elk met een eigen titel en tekst.
+- Een Descriptions tile kan met één tap worden geopend; de eerste beschrijving wordt getoond.
+- De DM kan met één tap naar de vorige of volgende beschrijving; bij de eerste/laatste is die knop uitgeschakeld.
 - De tekst wordt leesbaar weergegeven.
-- De DM kan terug naar de scene.
+- De DM kan met één actie terug naar de scene.
 ### DC-012 — Location tile openen
 P1
 Als DM wil ik een Location tile kunnen openen.
@@ -589,7 +592,7 @@ Voor een eerste verticale slice:
 - DC-001 — Campaigns tonen
 - DC-002 — Campaign openen
 - DC-010 — Scene tonen
-- DC-011 — Intro tile openen
+- DC-011 — Descriptions tile openen
 - DC-015 — Vorige scene
 - DC-016 — Volgende scene
 - DC-043 — Combat starten

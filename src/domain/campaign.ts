@@ -17,8 +17,22 @@ export type Scene = {
   blocks: ContentBlock[];
 };
 
+/** Read-aloud texts for a scene, e.g. "Intro" and "Arriving at the end" (decision D11). */
+export type DescriptionsBlock = {
+  id: string;
+  type: 'descriptions';
+  /** Array order is the reading order. */
+  descriptions: Description[];
+};
+
+export type Description = {
+  id: string;
+  title: string;
+  text: string;
+};
+
 export type ContentBlock =
-  | { id: string; type: 'intro'; text: string }
+  | DescriptionsBlock
   | { id: string; type: 'encounter'; encounterId: string }
   | { id: string; type: 'location'; title: string; text: string }
   | { id: string; type: 'npcs'; names: string[] }

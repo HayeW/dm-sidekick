@@ -68,7 +68,7 @@ describe('DC-010 — Scene tonen', () => {
 
     const tiles = screen.getAllByRole('region');
     expect(tiles.map((tile) => tile.getAttribute('aria-label'))).toEqual([
-      'Intro',
+      'Descriptions',
       'Location',
       'NPCs',
       'DM Notes',
@@ -86,43 +86,85 @@ describe('DC-010 — Scene tonen', () => {
   });
 });
 
-describe('DC-011 — Intro tile openen', () => {
+describe('DC-011 — Descriptions tile openen', () => {
   const campaign = getCampaign('shadows-over-millbrook')!;
   const scene = campaign.scenes[0]!;
-  const intro = scene.blocks.find((block) => block.type === 'intro')!;
-  const introText = intro.type === 'intro' ? intro.text : '';
+  const block = scene.blocks.find((b) => b.type === 'descriptions')!;
+  const [intro, inn] = block.type === 'descriptions' ? block.descriptions : [];
+  const sceneUrl = `/c/${campaign.id}/s/${scene.id}`;
 
-  it('opens the Intro tile with one tap and shows its full text', async () => {
+  async function openTile() {
     const user = userEvent.setup();
-    renderAt(`/c/${campaign.id}/s/${scene.id}`);
+    renderAt(sceneUrl);
+    await user.click(screen.getByRole('link', { name: /^Descriptions/ }));
+    return user;
+  }
 
-    await user.click(screen.getByRole('link', { name: /^Intro/ }));
+  function expectDescription(title: string, text: string) {
+    expect(screen.getByRole('heading', { level: 1, name: title })).toBeInTheDocument();
+    expect(screen.getByText(text)).toBeInTheDocument();
+  }
 
-    expect(screen.getByRole('heading', { level: 1, name: 'Intro' })).toBeInTheDocument();
-    expect(screen.getByText(introText)).toBeInTheDocument();
+  it('opens the first description with one tap', async () => {
+    await openTile();
+
+    expectDescription(intro!.title, intro!.text);
+    expect(screen.getByText('1 / 2')).toBeInTheDocument();
   });
 
-  it('returns to the scene with one tap', async () => {
-    const user = userEvent.setup();
-    renderAt(`/c/${campaign.id}/s/${scene.id}`);
-    await user.click(screen.getByRole('link', { name: /^Intro/ }));
+  it('goes to the next and previous description with one tap each', async () => {
+    const user = await openTile();
 
-    await user.click(screen.getByRole('button', { name: /Arrival in Millbrook/ }));
+    await user.click(screen.getByRole('link', { name: /Next/ }));
+    expectDescription(inn!.title, inn!.text);
+    expect(screen.getByText('2 / 2')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('link', { name: /Previous/ }));
+    expectDescription(intro!.title, intro!.text);
+  });
+
+  it('disables Previous at the first and Next at the last description', async () => {
+    const user = await openTile();
+    expect(screen.getByRole('button', { name: /Previous/ })).toBeDisabled();
+
+    await user.click(screen.getByRole('link', { name: /Next/ }));
+    expect(screen.getByRole('button', { name: /Next/ })).toBeDisabled();
+  });
+
+  it('hides Previous/Next when there is only one description', () => {
+    const mill = campaign.scenes[2]!;
+    renderAt(`/c/${campaign.id}/s/${mill.id}/b/${mill.blocks[0]!.id}`);
+
+    expect(screen.queryByRole('navigation', { name: 'Descriptions' })).not.toBeInTheDocument();
+  });
+
+  it('returns to the scene with one tap, also after moving between descriptions', async () => {
+    const user = await openTile();
+    await user.click(screen.getByRole('link', { name: /Next/ }));
+
+    await user.click(screen.getByRole('button', { name: new RegExp(scene.title) }));
 
     expect(screen.getByRole('heading', { level: 1, name: scene.title })).toBeInTheDocument();
   });
 
-  it('returns to the scene when the Intro was opened directly (refresh)', async () => {
+  it('returns to the scene when a description was opened directly (deep link)', async () => {
     const user = userEvent.setup();
-    renderAt(`/c/${campaign.id}/s/${scene.id}/b/${intro.id}`);
+    renderAt(`${sceneUrl}/b/${block.id}/d/${inn!.id}`);
+    expectDescription(inn!.title, inn!.text);
 
-    await user.click(screen.getByRole('button', { name: /Arrival in Millbrook/ }));
+    await user.click(screen.getByRole('button', { name: new RegExp(scene.title) }));
 
     expect(screen.getByRole('heading', { level: 1, name: scene.title })).toBeInTheDocument();
+  });
+
+  it('shows "not found" for an unknown description', () => {
+    renderAt(`${sceneUrl}/b/${block.id}/d/does-not-exist`);
+
+    expect(screen.getByRole('heading', { name: 'Tile not found' })).toBeInTheDocument();
   });
 
   it('does not make other tiles openable', () => {
-    renderAt(`/c/${campaign.id}/s/${scene.id}`);
+    renderAt(sceneUrl);
 
     expect(screen.queryAllByRole('link', { name: /^(Location|NPCs|DM Notes)/ })).toHaveLength(0);
   });

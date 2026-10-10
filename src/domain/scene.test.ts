@@ -1,11 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import type { Campaign, ContentBlock, Encounter, Scene } from './campaign';
+import type {
+  Campaign,
+  ContentBlock,
+  Description,
+  DescriptionsBlock,
+  Encounter,
+  Scene,
+} from './campaign';
 import {
   canOpenTile,
   enemySummary,
   findBlock,
+  findDescription,
   findEncounter,
   findScene,
+  neighbours,
   openingScene,
 } from './scene';
 
@@ -55,22 +64,67 @@ describe('DC-010 — Scene tonen', () => {
   });
 });
 
-describe('DC-011 — Intro tile openen', () => {
-  const intro: ContentBlock = { id: 'b-intro', type: 'intro', text: 'Read this aloud.' };
+describe('DC-011 — Descriptions tile openen', () => {
+  const intro: Description = { id: 'd-intro', title: 'Intro', text: 'Read this aloud.' };
+  const middle: Description = { id: 'd-middle', title: 'Halfway', text: 'Then this.' };
+  const end: Description = { id: 'd-end', title: 'Arriving at the end', text: 'And this.' };
+  const descriptions: DescriptionsBlock = {
+    id: 'b-descriptions',
+    type: 'descriptions',
+    descriptions: [intro, middle, end],
+  };
   const notes: ContentBlock = { id: 'b-notes', type: 'notes', text: 'Secret.' };
-  const scene: Scene = { id: 's-1', title: 'First', blocks: [intro, notes] };
+  const scene: Scene = { id: 's-1', title: 'First', blocks: [descriptions, notes] };
 
   it('finds a block in a scene by id', () => {
     expect(findBlock(scene, 'b-notes')).toBe(notes);
     expect(findBlock(scene, 'nope')).toBeUndefined();
   });
 
-  it('can open an Intro tile', () => {
-    expect(canOpenTile(intro)).toBe(true);
+  it('can open a Descriptions tile', () => {
+    expect(canOpenTile(descriptions)).toBe(true);
+  });
+
+  it('cannot open an empty Descriptions tile', () => {
+    expect(canOpenTile({ ...descriptions, descriptions: [] })).toBe(false);
   });
 
   it('cannot open other tiles yet', () => {
     expect(canOpenTile(notes)).toBe(false);
     expect(canOpenTile({ id: 'b-enc', type: 'encounter', encounterId: 'enc-1' })).toBe(false);
+  });
+
+  it('shows the first description when none is chosen', () => {
+    expect(findDescription(descriptions)).toBe(intro);
+  });
+
+  it('finds a description by id', () => {
+    expect(findDescription(descriptions, 'd-end')).toBe(end);
+    expect(findDescription(descriptions, 'nope')).toBeUndefined();
+  });
+
+  it('gives the previous and next description', () => {
+    expect(neighbours(descriptions.descriptions, 'd-middle')).toEqual({
+      previous: intro,
+      next: end,
+    });
+  });
+
+  it('has no previous description at the first and no next at the last', () => {
+    expect(neighbours(descriptions.descriptions, 'd-intro')).toEqual({
+      previous: undefined,
+      next: middle,
+    });
+    expect(neighbours(descriptions.descriptions, 'd-end')).toEqual({
+      previous: middle,
+      next: undefined,
+    });
+  });
+
+  it('has no neighbours for an unknown id', () => {
+    expect(neighbours(descriptions.descriptions, 'nope')).toEqual({
+      previous: undefined,
+      next: undefined,
+    });
   });
 });

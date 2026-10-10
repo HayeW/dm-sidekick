@@ -18,7 +18,7 @@ Stories in this slice (all from the "Eerste aanbevolen implementatievolgorde"):
 | DC-001 | Campaigns tonen                |
 | DC-002 | Campaign openen                |
 | DC-010 | Scene tonen                    |
-| DC-011 | Intro tile openen              |
+| DC-011 | Descriptions tile openen       |
 | DC-015 | Vorige scene                   |
 | DC-016 | Volgende scene                 |
 | DC-043 | Combat starten                 |
@@ -100,11 +100,13 @@ type Scene = {
 };
 
 type ContentBlock =
-  | { id: string; type: 'intro'; text: string }
+  | { id: string; type: 'descriptions'; descriptions: Description[] }  // array order (D11)
   | { id: string; type: 'encounter'; encounterId: string }
   | { id: string; type: 'location'; title: string; text: string }   // shown, not openable yet
   | { id: string; type: 'npcs'; names: string[] }                    // shown, not openable yet
   | { id: string; type: 'notes'; text: string };                     // shown, not openable yet
+
+type Description = { id: string; title: string; text: string };  // e.g. "Intro"
 
 type PlayerCharacter = { id: string; name: string };   // no HP (decision D3)
 
@@ -155,7 +157,8 @@ Modelling choices (following the requirements' domain model):
 | `/`                                    | Campaign list | DC-001 |
 | `/c/:campaignId`                       | Redirects to the current (or first) scene | DC-002, DC-003 |
 | `/c/:campaignId/s/:sceneId`            | Scene: tiles + previous/next | DC-010, DC-015, DC-016 |
-| `/c/:campaignId/s/:sceneId/b/:blockId` | Tile detail (Intro only in this slice) | DC-011 |
+| `/c/:campaignId/s/:sceneId/b/:blockId` | Tile detail (Descriptions only in this slice): first description | DC-011 |
+| `/c/:campaignId/s/:sceneId/b/:blockId/d/:descriptionId` | Tile detail: a specific description | DC-011 |
 | `/c/:campaignId/combat`                | Combat list | DC-053 – DC-067, DC-071 |
 
 UX details:
@@ -185,7 +188,7 @@ UX details:
 ## 7. Seed data
 
 One or two demo campaigns, e.g. *"The Lost Mine"* with:
-- 3 scenes, each with an Intro tile, plus Location/NPCs/Notes tiles for visual variety;
+- 3 scenes, each with a Descriptions tile (some with more than one description), plus Location/NPCs/Notes tiles for visual variety;
 - one scene with an Encounter tile (`3 × Goblin`, `1 × Goblin Boss`);
 - 4 player characters.
 
@@ -203,7 +206,7 @@ Update this line when a step is finished and committed.
 | 0 | Scaffold: Vite + React + TS, Vitest, RTL, ESLint, Prettier, React Router, git init, README | — | Smoke test runs |
 | 1 | Domain types + seed data; campaign list screen; tap navigates to `/c/:id` (placeholder) | DC-001 | List renders names; tap navigates |
 | 2 | Scene screen with compact tiles of all five types | DC-002, DC-010 | Opening a campaign shows its first scene; tiles render |
-| 3 | Intro detail screen with one-tap back | DC-011 | Text shown; back returns to scene |
+| 3 | Descriptions detail screen with one-tap back; previous/next description (D11) | DC-011 | Text shown; back returns to scene; navigation + edge cases |
 | 4 | Previous/next navigation, disabled at the edges | DC-015, DC-016 | Navigation + edge cases |
 | 5 | Session storage: current scene remembered across refresh | DC-003, DC-080 | Storage round-trip; reopening goes to last scene |
 | 6 | `startCombat` domain function: enemies expanded + numbered, initiative rolled and sorted, PCs appended | DC-043, DC-050, DC-051 | Deterministic tests with a fixed random source |
@@ -238,6 +241,12 @@ These are open questions from `requirements.md` that actually block this slice. 
 - **D9 — No previous/next scene.** Proposal: **button disabled.**
 - **D10 — Language of the UI.** Requirements are in Dutch, examples in English
   ("START COMBAT"). Proposal: **English UI text.**
+- **D11 — Descriptions tile replaces the Intro tile** (product owner, 2026-10-10). A
+  `descriptions` block holds an ordered list of descriptions, each with its own title and
+  text (e.g. "Intro", "Arriving at the end"). On the scene the tile shows the count and a
+  preview of the first description; one tap opens the first description. The detail screen
+  has `◀ Previous` / `Next ▶` buttons (disabled at the edges, hidden when there is only one).
+  Previous/next replace the history entry, so one tap on Back always returns to the scene.
 
 Not blocking for this slice: combat lifetime/cleanup (old combat simply stays until replaced),
 healing controls, Quick Access contents, campaign editing.

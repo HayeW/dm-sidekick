@@ -1,4 +1,11 @@
-import type { Campaign, ContentBlock, Encounter, Scene } from './campaign';
+import type {
+  Campaign,
+  ContentBlock,
+  Description,
+  DescriptionsBlock,
+  Encounter,
+  Scene,
+} from './campaign';
 
 /**
  * The scene to show when a campaign is opened (DC-002).
@@ -26,7 +33,29 @@ export function findBlock(scene: Scene, blockId: string): ContentBlock | undefin
   return scene.blocks.find((block) => block.id === blockId);
 }
 
-/** Tiles that open a detail screen. Only Intro in this slice (DC-011); others are P1. */
+/**
+ * Tiles that open a detail screen. Only Descriptions in this slice (DC-011), and only
+ * when there is something to read; Location/NPCs/Notes are P1.
+ */
 export function canOpenTile(block: ContentBlock): boolean {
-  return block.type === 'intro';
+  return block.type === 'descriptions' && block.descriptions.length > 0;
+}
+
+/** The description to show: the given one, or the first when no id is given (D11). */
+export function findDescription(
+  block: DescriptionsBlock,
+  descriptionId?: string,
+): Description | undefined {
+  if (descriptionId === undefined) return block.descriptions[0];
+  return block.descriptions.find((description) => description.id === descriptionId);
+}
+
+/** The items before and after the item with this id, in array order. */
+export function neighbours<T extends { id: string }>(
+  items: T[],
+  id: string,
+): { previous: T | undefined; next: T | undefined } {
+  const index = items.findIndex((item) => item.id === id);
+  if (index === -1) return { previous: undefined, next: undefined };
+  return { previous: items[index - 1], next: items[index + 1] };
 }

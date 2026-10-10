@@ -22,3 +22,57 @@
   line-height: 1.7;
   white-space: pre-line;
 }
+
+.heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.position {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+/* Previous/next stay in thumb reach at the bottom while reading long text. */
+.nav {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  gap: 12px;
+  margin-top: var(--space);
+  padding: 12px 0 env(safe-area-inset-bottom);
+  background: var(--bg);
+}
+
+.step {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--touch);
+  padding: 0 12px;
+  background: var(--surface);
+  border: none;
+  border-radius: var(--radius);
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 600;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.step:active {
+  opacity: 0.8;
+}
+
+.step:disabled {
+  color: var(--text-muted);
+  opacity: 0.4;
+}
+
+.step:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

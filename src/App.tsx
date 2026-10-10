@@ -12,6 +12,7 @@ export default function App() {
       <Route path="/c/:campaignId" element={<CampaignPage />} />
       <Route path="/c/:campaignId/s/:sceneId" element={<ScenePage />} />
       <Route path="/c/:campaignId/s/:sceneId/b/:blockId" element={<TilePage />} />
+      <Route path="/c/:campaignId/s/:sceneId/b/:blockId/d/:descriptionId" element={<TilePage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
