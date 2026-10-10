@@ -106,7 +106,7 @@ type ContentBlock =
   | { id: string; type: 'npcs'; names: string[] }                    // shown, not openable yet
   | { id: string; type: 'notes'; text: string };                     // shown, not openable yet
 
-type PlayerCharacter = { id: string; name: string; maxHp?: number };   // see decision D3
+type PlayerCharacter = { id: string; name: string };   // no HP (decision D3)
 
 type Encounter = {
   id: string;
@@ -121,7 +121,7 @@ type Combatant = {
   id: string;
   name: string;                  // "Goblin 1", "Goblin 2", ...
   type: 'PLAYER' | 'ENEMY' | 'NPC';
-  hp: number | null;             // null = HP not tracked (see D3)
+  hp: number | null;             // null for PLAYER: HP not tracked (D3)
   maxHp: number | null;
 };
 
@@ -170,6 +170,7 @@ UX details:
   screen links back to it, so leaving and returning costs one tap (DC-070/071).
 - **Combat row:** `Goblin 2   7/7 HP   [−1] [−5] [−10]   [▲] [▼]  [⋯]`
   `⋯` reveals *Remove*. Dead combatants stay in place, greyed out with a `DEAD` label.
+  Player character rows show only name, a `PC` marker and the move/remove controls — no HP.
 - **Add combatant:** a button below the list opens a small inline form (name + HP),
   appended at the bottom. No initiative roll.
 
@@ -194,6 +195,9 @@ This is enough to demo and test the whole slice.
 
 Each step is small, ends with green tests and a working app, and is one commit.
 
+**Progress:** step 0 ✅ done · step 1 (DC-001) ✅ done · **next: step 2**.
+Update this line when a step is finished and committed.
+
 | Step | Content | Stories | Tests |
 |------|---------|---------|-------|
 | 0 | Scaffold: Vite + React + TS, Vitest, RTL, ESLint, Prettier, React Router, git init, README | — | Smoke test runs |
@@ -203,8 +207,8 @@ Each step is small, ends with green tests and a working app, and is one commit.
 | 4 | Previous/next navigation, disabled at the edges | DC-015, DC-016 | Navigation + edge cases |
 | 5 | Session storage: current scene remembered across refresh | DC-003, DC-080 | Storage round-trip; reopening goes to last scene |
 | 6 | `startCombat` domain function: enemies expanded + numbered, initiative rolled and sorted, PCs appended | DC-043, DC-050, DC-051 | Deterministic tests with a fixed random source |
-| 7 | Encounter tile + START COMBAT → combat screen showing order and HP | DC-053, DC-060 | One tap from tile to combat list |
-| 8 | Damage buttons, DEAD display | DC-061, DC-063 | HP decreases, clamps at 0, dead stays in place |
+| 7 | Encounter tile + START COMBAT → combat screen showing order and HP (non-PCs only) | DC-053, DC-060 | One tap from tile to combat list; PCs show no HP |
+| 8 | Damage buttons (non-PCs only), DEAD display | DC-061, DC-063 | HP decreases, clamps at 0, dead stays in place |
 | 9 | Move up/down for any combatant | DC-064, DC-052, DC-066 | Swap logic incl. top/bottom edges |
 | 10 | Add combatant (bottom of list), remove combatant | DC-065, DC-067 | Appended without initiative; removed |
 | 11 | Persist combat; leave/return and refresh keep state; "Combat" bar on scene screen | DC-070, DC-071, DC-081, DC-082 | State identical after navigation and reload |
@@ -212,17 +216,17 @@ Each step is small, ends with green tests and a working app, and is one commit.
 
 ## 9. Decisions needed before or during the slice
 
-These are open questions from `requirements.md` that actually block this slice. Proposed
-answers in **bold** — confirm or change them.
+These are open questions from `requirements.md` that actually block this slice. Answers in
+**bold**. **Status: all confirmed on 2026-10-10; D3 changed by the product owner.**
 
 - **D1 — Starting combat while one is active.** Proposal: **the encounter tile shows
   RESUME COMBAT; a small "New combat" option on the combat screen replaces it.** Only one
   active combat per campaign.
 - **D2 — Where PCs go in the initial order.** PCs have no initiative. Proposal: **append
   PCs after the sorted enemies; the DM moves them into place** (DC-052).
-- **D3 — PC hit points.** `PlayerCharacter` has only a name, yet DC-060 wants HP for every
-  combatant. Proposal: **optional `maxHp` on PlayerCharacter; if absent, the PC row shows
-  no HP and no damage buttons** (many tables let players track their own HP).
+- **D3 — PC hit points.** Decision: **HP is not tracked for player characters at all.**
+  `PlayerCharacter` has no HP field; PC combatants have `hp: null`, show no HP and no damage
+  buttons, and can never be DEAD. DC-060 in `requirements.md` has been updated accordingly.
 - **D4 — HP below 0.** Proposal: **clamp at 0.**
 - **D5 — Duplicate enemies.** Proposal: **number them: "Goblin 1", "Goblin 2", "Goblin 3".**
   A group of one keeps its plain name ("Goblin Boss").
