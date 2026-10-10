@@ -1,19 +1,23 @@
-import { Route, Routes } from 'react-router';
+import { Link, Route, Routes } from 'react-router';
+import CampaignListPage from './ui/routes/CampaignListPage';
+import CampaignPage from './ui/routes/CampaignPage';
 
-// Routes are added story by story (see docs/implementation-plan-slice-1.md, §5).
+// Routes follow docs/implementation-plan-slice-1.md, §5.
 export default function App() {
   return (
     <Routes>
-      <Route path="*" element={<Home />} />
+      <Route path="/" element={<CampaignListPage />} />
+      <Route path="/c/:campaignId" element={<CampaignPage />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }
 
-function Home() {
+function NotFound() {
   return (
     <main className="page">
-      <h1>DM Cockpit</h1>
-      <p>Setup works. Campaigns arrive in DC-001.</p>
+      <h1>Page not found</h1>
+      <Link to="/">Back to campaigns</Link>
     </main>
   );
 }
