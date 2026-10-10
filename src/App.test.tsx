@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, useNavigate } from 'react-router';
 import { describe, expect, it } from 'vitest';
@@ -236,6 +236,85 @@ describe('DC-015 / DC-016 — Vorige en volgende scene', () => {
 
     expect(within(scenes()).getByRole('button', { name: /Previous/ })).toBeDisabled();
     expect(within(scenes()).getByRole('button', { name: /Next/ })).toBeDisabled();
+  });
+});
+
+describe('DC-017 — Swipen tussen beschrijvingen', () => {
+  const campaign = getCampaign('shadows-over-millbrook')!;
+  const scene = campaign.scenes[0]!;
+  const block = scene.blocks.find((b) => b.type === 'descriptions')!;
+  const [intro, inn] = block.type === 'descriptions' ? block.descriptions : [];
+  const blockUrl = `/c/${campaign.id}/s/${scene.id}/b/${block.id}`;
+
+  function swipe(dx: number, dy = 0) {
+    const main = screen.getByRole('main');
+    fireEvent.touchStart(main, { touches: [{ clientX: 200, clientY: 300 }] });
+    fireEvent.touchEnd(main, { changedTouches: [{ clientX: 200 + dx, clientY: 300 + dy }] });
+  }
+
+  function expectTitle(title: string) {
+    expect(screen.getByRole('heading', { level: 1, name: title })).toBeInTheDocument();
+  }
+
+  it('opens the next description when swiping left', () => {
+    renderAt(blockUrl);
+
+    swipe(-100);
+
+    expectTitle(inn!.title);
+  });
+
+  it('opens the previous description when swiping right', () => {
+    renderAt(`${blockUrl}/d/${inn!.id}`);
+
+    swipe(100);
+
+    expectTitle(intro!.title);
+  });
+
+  it('does nothing when swiping past the first or last description', () => {
+    renderAt(blockUrl);
+    swipe(100);
+    expectTitle(intro!.title);
+
+    swipe(-100);
+    swipe(-100);
+    expectTitle(inn!.title);
+  });
+
+  it('does not treat vertical scrolling as a swipe', () => {
+    renderAt(blockUrl);
+
+    swipe(-60, 250);
+
+    expectTitle(intro!.title);
+  });
+
+  it('does not treat a two-finger gesture (zoom) as a swipe', () => {
+    renderAt(blockUrl);
+    const main = screen.getByRole('main');
+
+    fireEvent.touchStart(main, {
+      touches: [
+        { clientX: 200, clientY: 300 },
+        { clientX: 250, clientY: 350 },
+      ],
+    });
+    fireEvent.touchEnd(main, { changedTouches: [{ clientX: 50, clientY: 300 }] });
+
+    expectTitle(intro!.title);
+  });
+
+  it('returns to the scene with one tap after swiping', async () => {
+    const user = userEvent.setup();
+    renderAt(`/c/${campaign.id}/s/${scene.id}`);
+    await user.click(screen.getByRole('link', { name: /^Descriptions/ }));
+    swipe(-100);
+    expectTitle(inn!.title);
+
+    await user.click(screen.getByRole('button', { name: new RegExp(scene.title) }));
+
+    expectTitle(scene.title);
   });
 });
 

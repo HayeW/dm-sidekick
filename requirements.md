@@ -419,6 +419,15 @@ Als DM wil ik met één actie naar de volgende scene kunnen gaan.
 Acceptance criteria
 - De volgende scene wordt geopend.
 - De nieuwe scene wordt de current scene.
+### DC-017 — Swipen tussen beschrijvingen
+P1
+Als DM wil ik op mobiel tussen beschrijvingen kunnen swipen, zodat ik naar de vorige of volgende beschrijving kan zonder naar de knoppen te reiken.
+Acceptance criteria
+- Naar links swipen opent de volgende beschrijving.
+- Naar rechts swipen opent de vorige beschrijving.
+- Bij de eerste/laatste beschrijving gebeurt er niets.
+- Verticaal scrollen door een lange tekst of inzoomen met twee vingers wordt niet als swipe gezien.
+- Swipen werkt hetzelfde als de Previous/Next-knoppen, die beschikbaar blijven.
 ## Epic 3 — Quick Access
 ### DC-020 — Quick Access openen
 P1

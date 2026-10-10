@@ -35,3 +35,8 @@
   color: var(--text-muted);
   font-size: 0.875rem;
 }
+
+/* The whole screen is the swipe area (DC-017), also below short texts. */
+.screen {
+  min-height: 100dvh;
+}

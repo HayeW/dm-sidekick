@@ -21,6 +21,7 @@ Stories in this slice (all from the "Eerste aanbevolen implementatievolgorde"):
 | DC-011 | Descriptions tile openen       |
 | DC-015 | Vorige scene                   |
 | DC-016 | Volgende scene                 |
+| DC-017 | Swipen tussen beschrijvingen (added 2026-10-10) |
 | DC-043 | Combat starten                 |
 | DC-050 | Enemy initiative               |
 | DC-051 | Players toevoegen              |
@@ -198,7 +199,7 @@ This is enough to demo and test the whole slice.
 
 Each step is small, ends with green tests and a working app, and is one commit.
 
-**Progress:** step 0 ✅ done · step 1 (DC-001) ✅ done · step 2 (DC-002, DC-010) ✅ done · step 3 (DC-011) ✅ done · step 4 (DC-015, DC-016) ✅ done · **next: step 5**.
+**Progress:** step 0 ✅ done · step 1 (DC-001) ✅ done · step 2 (DC-002, DC-010) ✅ done · step 3 (DC-011) ✅ done · step 4 (DC-015, DC-016) ✅ done · step 4a (DC-017) ✅ done · **next: step 5**.
 Update this line when a step is finished and committed.
 
 | Step | Content | Stories | Tests |
@@ -208,6 +209,7 @@ Update this line when a step is finished and committed.
 | 2 | Scene screen with compact tiles of all five types | DC-002, DC-010 | Opening a campaign shows its first scene; tiles render |
 | 3 | Descriptions detail screen with one-tap back; previous/next description (D11) | DC-011 | Text shown; back returns to scene; navigation + edge cases |
 | 4 | Previous/next navigation, disabled at the edges | DC-015, DC-016 | Navigation + edge cases |
+| 4a | Swipe left/right between descriptions on the detail screen | DC-017 | Swipe direction rules (distance, mostly horizontal); swipe navigates like the buttons |
 | 5 | Session storage: current scene remembered across refresh | DC-003, DC-080 | Storage round-trip; reopening goes to last scene |
 | 6 | `startCombat` domain function: enemies expanded + numbered, initiative rolled and sorted, PCs appended | DC-043, DC-050, DC-051 | Deterministic tests with a fixed random source |
 | 7 | Encounter tile + START COMBAT → combat screen showing order and HP (non-PCs only) | DC-053, DC-060 | One tap from tile to combat list; PCs show no HP |
