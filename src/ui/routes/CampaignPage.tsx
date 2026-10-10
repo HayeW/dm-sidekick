@@ -1,8 +1,9 @@
 import { Link, Navigate, useParams } from 'react-router';
 import { getCampaign } from '../../data/campaigns';
+import { loadSession } from '../../data/storage';
 import { openingScene } from '../../domain/scene';
 
-/** DC-002: opening a campaign goes straight to the scene the app picks. */
+/** DC-002, DC-003: opening a campaign goes straight to the last used (or first) scene. */
 export default function CampaignPage() {
   const { campaignId = '' } = useParams();
   const campaign = getCampaign(campaignId);
@@ -16,7 +17,7 @@ export default function CampaignPage() {
     );
   }
 
-  const scene = openingScene(campaign);
+  const scene = openingScene(campaign, loadSession(campaign.id)?.currentSceneId);
   if (!scene) {
     return (
       <main className="page">

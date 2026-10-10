@@ -48,6 +48,16 @@ describe('DC-002 — Campaign openen', () => {
   });
 });
 
+describe('DC-003 — Laatst gebruikte scene onthouden', () => {
+  it('opens the last used scene', () => {
+    expect(openingScene(campaign, 's-2')?.id).toBe('s-2');
+  });
+
+  it('opens the first scene when the last used scene no longer exists', () => {
+    expect(openingScene(campaign, 'deleted-scene')?.id).toBe('s-1');
+  });
+});
+
 describe('DC-010 — Scene tonen', () => {
   it('finds a scene by id', () => {
     expect(findScene(campaign, 's-2')?.title).toBe('Second');

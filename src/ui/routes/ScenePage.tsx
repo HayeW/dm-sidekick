@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import { Link, useParams } from 'react-router';
 import { getCampaign } from '../../data/campaigns';
+import { saveSession } from '../../data/storage';
 import { canOpenTile, findScene, neighbours } from '../../domain/scene';
 import SceneTile from '../components/SceneTile';
 import StepNav from '../components/StepNav';
@@ -8,11 +10,19 @@ import styles from './ScenePage.module.css';
 /**
  * DC-010: a scene's content blocks as compact tiles, in array order.
  * DC-015, DC-016: previous/next scene with one tap.
+ * DC-080: the scene shown is remembered as the current scene.
  */
 export default function ScenePage() {
   const { campaignId = '', sceneId = '' } = useParams();
   const campaign = getCampaign(campaignId);
   const scene = campaign && findScene(campaign, sceneId);
+  const currentSceneId = scene?.id;
+
+  // Saving is a side effect, so it runs in an effect after rendering, and only when the
+  // shown scene changes. Hooks must run before the early return below.
+  useEffect(() => {
+    if (currentSceneId) saveSession({ campaignId, currentSceneId });
+  }, [campaignId, currentSceneId]);
 
   if (!campaign || !scene) {
     return (

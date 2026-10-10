@@ -387,6 +387,63 @@ describe('DC-017 — Swipen tussen beschrijvingen', () => {
   });
 });
 
+describe('DC-003 / DC-080 — Laatst gebruikte scene onthouden', () => {
+  const campaign = getCampaign('shadows-over-millbrook')!;
+  const [first, second, last] = campaign.scenes;
+
+  function expectScene(title: string) {
+    expect(screen.getByRole('heading', { level: 1, name: title })).toBeInTheDocument();
+  }
+
+  it('reopens the campaign on the last used scene', async () => {
+    const user = userEvent.setup();
+    const { unmount } = renderAt(`/c/${campaign.id}/s/${last!.id}`);
+    unmount();
+
+    renderAt('/');
+    await user.click(screen.getByRole('link', { name: new RegExp(campaign.name) }));
+
+    expectScene(last!.title);
+  });
+
+  it('remembers the scene reached with Next, also after a refresh', async () => {
+    const user = userEvent.setup();
+    const { unmount } = renderAt(`/c/${campaign.id}`);
+    await user.click(
+      within(screen.getByRole('navigation', { name: 'Scenes' })).getByRole('link', {
+        name: /Next/,
+      }),
+    );
+    expectScene(second!.title);
+    unmount(); // closing the app / refreshing
+
+    renderAt(`/c/${campaign.id}`);
+
+    expectScene(second!.title);
+  });
+
+  it('remembers the scene per campaign', () => {
+    const other = getCampaign('the-sunken-bell')!;
+    renderAt(`/c/${campaign.id}/s/${last!.id}`).unmount();
+    renderAt(`/c/${other.id}/s/${other.scenes[0]!.id}`).unmount();
+
+    renderAt(`/c/${campaign.id}`);
+
+    expectScene(last!.title);
+  });
+
+  it('opens the first scene when the saved scene no longer exists', () => {
+    localStorage.setItem(
+      `dm-cockpit:v1:session:${campaign.id}`,
+      JSON.stringify({ campaignId: campaign.id, currentSceneId: 'deleted-scene' }),
+    );
+
+    renderAt(`/c/${campaign.id}`);
+
+    expectScene(first!.title);
+  });
+});
+
 /** Stands in for the browser's / phone's back button. */
 function BrowserBack() {
   const navigate = useNavigate();

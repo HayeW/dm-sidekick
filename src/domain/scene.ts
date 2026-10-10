@@ -8,12 +8,12 @@ import type {
 } from './campaign';
 
 /**
- * The scene to show when a campaign is opened (DC-002).
- * For now this is the first scene; DC-003 adds "last used scene".
- * Returns undefined for a campaign without scenes.
+ * The scene to show when a campaign is opened (DC-002): the last used scene (DC-003) if it
+ * still exists, otherwise the first scene. Undefined for a campaign without scenes.
  */
-export function openingScene(campaign: Campaign): Scene | undefined {
-  return campaign.scenes[0];
+export function openingScene(campaign: Campaign, lastSceneId?: string): Scene | undefined {
+  const last = lastSceneId === undefined ? undefined : findScene(campaign, lastSceneId);
+  return last ?? campaign.scenes[0];
 }
 
 export function findScene(campaign: Campaign, sceneId: string): Scene | undefined {

@@ -185,6 +185,8 @@ UX details:
 - Loaded at startup / when a campaign is opened. If the stored JSON is invalid or the
   schema version doesn't match, it is discarded and the app starts fresh for that campaign.
 - Campaign data itself comes from `seed.ts` in this slice and is not stored.
+- Step 5 stores only `campaignId` and `currentSceneId`; `activeCombat` is added in step 11.
+  Data without it then means "no active combat", so no new key version is needed.
 
 ## 7. Seed data
 
@@ -199,7 +201,7 @@ This is enough to demo and test the whole slice.
 
 Each step is small, ends with green tests and a working app, and is one commit.
 
-**Progress:** step 0 ✅ done · step 1 (DC-001) ✅ done · step 2 (DC-002, DC-010) ✅ done · step 3 (DC-011) ✅ done · step 4 (DC-015, DC-016) ✅ done · step 4a (DC-017) ✅ done · **next: step 5**.
+**Progress:** step 0 ✅ done · step 1 (DC-001) ✅ done · step 2 (DC-002, DC-010) ✅ done · step 3 (DC-011) ✅ done · step 4 (DC-015, DC-016) ✅ done · step 4a (DC-017) ✅ done · step 5 (DC-003, DC-080) ✅ done · **next: step 6**.
 Update this line when a step is finished and committed.
 
 | Step | Content | Stories | Tests |
