@@ -1,0 +1,57 @@
+.tile {
+  padding: 12px var(--space);
+  background: var(--surface);
+  border-radius: var(--radius);
+  border-left: 4px solid var(--text-muted);
+}
+
+.tile p {
+  margin: 0;
+}
+
+.intro {
+  border-left-color: var(--accent);
+}
+
+.encounter {
+  border-left-color: var(--danger);
+}
+
+.location {
+  border-left-color: #5b9bd5;
+}
+
+.npcs {
+  border-left-color: #7bb36a;
+}
+
+.notes {
+  border-left-color: var(--text-muted);
+}
+
+.label {
+  margin: 0 0 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.title {
+  font-weight: 600;
+}
+
+/* Compact: long text is cut off after two lines. */
+.clamp {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+
+.missing {
+  color: var(--text-muted);
+  font-style: italic;
+}

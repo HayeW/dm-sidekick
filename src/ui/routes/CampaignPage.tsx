@@ -1,10 +1,8 @@
-import { Link, useParams } from 'react-router';
+import { Link, Navigate, useParams } from 'react-router';
 import { getCampaign } from '../../data/campaigns';
+import { openingScene } from '../../domain/scene';
 
-/**
- * Placeholder target for selecting a campaign (DC-001).
- * DC-002 replaces this with "open the right scene".
- */
+/** DC-002: opening a campaign goes straight to the scene the app picks. */
 export default function CampaignPage() {
   const { campaignId = '' } = useParams();
   const campaign = getCampaign(campaignId);
@@ -18,11 +16,16 @@ export default function CampaignPage() {
     );
   }
 
-  return (
-    <main className="page">
-      <h1>{campaign.name}</h1>
-      <p>Opening a campaign arrives in DC-002.</p>
-      <Link to="/">Back to campaigns</Link>
-    </main>
-  );
+  const scene = openingScene(campaign);
+  if (!scene) {
+    return (
+      <main className="page">
+        <h1>{campaign.name}</h1>
+        <p>This campaign has no scenes yet.</p>
+        <Link to="/">Back to campaigns</Link>
+      </main>
+    );
+  }
+
+  return <Navigate to={`/c/${campaign.id}/s/${scene.id}`} replace />;
 }
