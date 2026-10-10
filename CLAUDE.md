@@ -57,7 +57,9 @@ The user is on Windows. The terminal may be PowerShell; use commands that work t
    Name test `describe` blocks after the story, e.g. `DC-001 — Campaigns tonen`.
 4. A step is done only when `npm test`, `npm run typecheck` and `npm run lint` all pass.
    Run them yourself and fix failures before reporting.
-5. No new dependencies without asking.
+5. No new dependencies without asking. Never approve npm install scripts (`allowScripts`,
+   `npm install-scripts approve`) without asking; npm blocks them by default as protection
+   against supply-chain attacks. esbuild's blocked postinstall is known and harmless.
 6. If a requirement is unclear or contradicts the plan, stop and ask; don't guess.
    Record new decisions in the plan's decisions section.
 7. When the checks pass, have the `code-reviewer` agent (`.claude/agents/code-reviewer.md`)
