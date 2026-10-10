@@ -5,6 +5,30 @@
   border-left: 4px solid var(--text-muted);
 }
 
+.tile:has(.open) {
+  padding: 0;
+}
+
+/* Openable tile: the whole tile is the touch target. */
+.open {
+  display: block;
+  min-height: var(--touch);
+  padding: 12px var(--space);
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--radius);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.open:active {
+  opacity: 0.8;
+}
+
+.open:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .tile p {
   margin: 0;
 }

@@ -1,0 +1,24 @@
+.back {
+  display: inline-flex;
+  align-items: center;
+  margin: 0 0 4px;
+  padding: 0 12px 0 0;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.back:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Read-aloud text: large and airy, readable at arm's length in a dim room. */
+.readAloud {
+  margin: 0;
+  font-size: 1.25rem;
+  line-height: 1.7;
+  white-space: pre-line;
+}

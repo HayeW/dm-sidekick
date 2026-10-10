@@ -85,3 +85,45 @@ describe('DC-010 — Scene tonen', () => {
     expect(tile).toHaveTextContent('3 × Goblin, 1 × Goblin Boss');
   });
 });
+
+describe('DC-011 — Intro tile openen', () => {
+  const campaign = getCampaign('shadows-over-millbrook')!;
+  const scene = campaign.scenes[0]!;
+  const intro = scene.blocks.find((block) => block.type === 'intro')!;
+  const introText = intro.type === 'intro' ? intro.text : '';
+
+  it('opens the Intro tile with one tap and shows its full text', async () => {
+    const user = userEvent.setup();
+    renderAt(`/c/${campaign.id}/s/${scene.id}`);
+
+    await user.click(screen.getByRole('link', { name: /^Intro/ }));
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Intro' })).toBeInTheDocument();
+    expect(screen.getByText(introText)).toBeInTheDocument();
+  });
+
+  it('returns to the scene with one tap', async () => {
+    const user = userEvent.setup();
+    renderAt(`/c/${campaign.id}/s/${scene.id}`);
+    await user.click(screen.getByRole('link', { name: /^Intro/ }));
+
+    await user.click(screen.getByRole('button', { name: /Arrival in Millbrook/ }));
+
+    expect(screen.getByRole('heading', { level: 1, name: scene.title })).toBeInTheDocument();
+  });
+
+  it('returns to the scene when the Intro was opened directly (refresh)', async () => {
+    const user = userEvent.setup();
+    renderAt(`/c/${campaign.id}/s/${scene.id}/b/${intro.id}`);
+
+    await user.click(screen.getByRole('button', { name: /Arrival in Millbrook/ }));
+
+    expect(screen.getByRole('heading', { level: 1, name: scene.title })).toBeInTheDocument();
+  });
+
+  it('does not make other tiles openable', () => {
+    renderAt(`/c/${campaign.id}/s/${scene.id}`);
+
+    expect(screen.queryAllByRole('link', { name: /^(Location|NPCs|DM Notes)/ })).toHaveLength(0);
+  });
+});

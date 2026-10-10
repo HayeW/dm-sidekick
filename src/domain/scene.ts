@@ -1,4 +1,4 @@
-import type { Campaign, Encounter, Scene } from './campaign';
+import type { Campaign, ContentBlock, Encounter, Scene } from './campaign';
 
 /**
  * The scene to show when a campaign is opened (DC-002).
@@ -20,4 +20,13 @@ export function findEncounter(campaign: Campaign, encounterId: string): Encounte
 /** Compact enemy list for an encounter tile, e.g. "3 × Goblin, 1 × Goblin Boss". */
 export function enemySummary(encounter: Encounter): string {
   return encounter.enemies.map((group) => `${group.count} × ${group.name}`).join(', ');
+}
+
+export function findBlock(scene: Scene, blockId: string): ContentBlock | undefined {
+  return scene.blocks.find((block) => block.id === blockId);
+}
+
+/** Tiles that open a detail screen. Only Intro in this slice (DC-011); others are P1. */
+export function canOpenTile(block: ContentBlock): boolean {
+  return block.type === 'intro';
 }

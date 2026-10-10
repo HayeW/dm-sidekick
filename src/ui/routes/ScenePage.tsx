@@ -1,6 +1,6 @@
 import { Link, useParams } from 'react-router';
 import { getCampaign } from '../../data/campaigns';
-import { findScene } from '../../domain/scene';
+import { canOpenTile, findScene } from '../../domain/scene';
 import SceneTile from '../components/SceneTile';
 import styles from './ScenePage.module.css';
 
@@ -30,7 +30,13 @@ export default function ScenePage() {
       <ul className={styles.tiles}>
         {scene.blocks.map((block) => (
           <li key={block.id}>
-            <SceneTile block={block} campaign={campaign} />
+            <SceneTile
+              block={block}
+              campaign={campaign}
+              openTo={
+                canOpenTile(block) ? `/c/${campaign.id}/s/${scene.id}/b/${block.id}` : undefined
+              }
+            />
           </li>
         ))}
       </ul>
