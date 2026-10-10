@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router';
+import { MemoryRouter, useNavigate } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import App from './App';
 import { getCampaign, getCampaigns } from './data/campaigns';
@@ -169,3 +169,82 @@ describe('DC-011 — Descriptions tile openen', () => {
     expect(screen.queryAllByRole('link', { name: /^(Location|NPCs|DM Notes)/ })).toHaveLength(0);
   });
 });
+
+describe('DC-015 / DC-016 — Vorige en volgende scene', () => {
+  const campaign = getCampaign('shadows-over-millbrook')!;
+  const [first, second, last] = campaign.scenes;
+  const scenes = () => screen.getByRole('navigation', { name: 'Scenes' });
+
+  function expectScene(title: string) {
+    expect(screen.getByRole('heading', { level: 1, name: title })).toBeInTheDocument();
+  }
+
+  it('opens the next scene with one tap', async () => {
+    const user = userEvent.setup();
+    renderAt(`/c/${campaign.id}/s/${first!.id}`);
+
+    await user.click(within(scenes()).getByRole('link', { name: /Next/ }));
+
+    expectScene(second!.title);
+  });
+
+  it('opens the previous scene with one tap', async () => {
+    const user = userEvent.setup();
+    renderAt(`/c/${campaign.id}/s/${second!.id}`);
+
+    await user.click(within(scenes()).getByRole('link', { name: /Previous/ }));
+
+    expectScene(first!.title);
+  });
+
+  it('goes back scene by scene with the back button (D12)', async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter initialEntries={[`/c/${campaign.id}/s/${first!.id}`]}>
+        <App />
+        <BrowserBack />
+      </MemoryRouter>,
+    );
+    await user.click(within(scenes()).getByRole('link', { name: /Next/ }));
+    await user.click(within(scenes()).getByRole('link', { name: /Next/ }));
+    expectScene(last!.title);
+
+    await user.click(screen.getByRole('button', { name: 'Browser back' }));
+    expectScene(second!.title);
+
+    await user.click(screen.getByRole('button', { name: 'Browser back' }));
+    expectScene(first!.title);
+  });
+
+  it('disables Previous on the first scene', () => {
+    renderAt(`/c/${campaign.id}/s/${first!.id}`);
+
+    expect(within(scenes()).getByRole('button', { name: /Previous/ })).toBeDisabled();
+    expect(within(scenes()).getByRole('link', { name: /Next/ })).toBeInTheDocument();
+  });
+
+  it('disables Next on the last scene', () => {
+    renderAt(`/c/${campaign.id}/s/${last!.id}`);
+
+    expect(within(scenes()).getByRole('button', { name: /Next/ })).toBeDisabled();
+    expect(within(scenes()).getByRole('link', { name: /Previous/ })).toBeInTheDocument();
+  });
+
+  it('disables both in a campaign with a single scene', () => {
+    const single = getCampaign('the-sunken-bell')!;
+    renderAt(`/c/${single.id}/s/${single.scenes[0]!.id}`);
+
+    expect(within(scenes()).getByRole('button', { name: /Previous/ })).toBeDisabled();
+    expect(within(scenes()).getByRole('button', { name: /Next/ })).toBeDisabled();
+  });
+});
+
+/** Stands in for the browser's / phone's back button. */
+function BrowserBack() {
+  const navigate = useNavigate();
+  return (
+    <button type="button" onClick={() => navigate(-1)}>
+      Browser back
+    </button>
+  );
+}

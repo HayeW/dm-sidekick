@@ -1,6 +1,7 @@
 import { Link, useLocation, useNavigate, useParams } from 'react-router';
 import { getCampaign } from '../../data/campaigns';
 import { findBlock, findDescription, findScene, neighbours } from '../../domain/scene';
+import StepNav from '../components/StepNav';
 import styles from './TilePage.module.css';
 
 /**
@@ -56,33 +57,14 @@ export default function TilePage() {
       </div>
       <p className={styles.readAloud}>{description.text}</p>
       {total > 1 && (
-        <nav className={styles.nav} aria-label="Descriptions">
-          <StepLink to={previous && descriptionUrl(previous.id)} state={location.state}>
-            ◀ Previous
-          </StepLink>
-          <StepLink to={next && descriptionUrl(next.id)} state={location.state}>
-            Next ▶
-          </StepLink>
-        </nav>
+        <StepNav
+          label="Descriptions"
+          replace
+          previousTo={previous && descriptionUrl(previous.id)}
+          nextTo={next && descriptionUrl(next.id)}
+          state={location.state}
+        />
       )}
     </main>
-  );
-}
-
-type StepLinkProps = { to: string | undefined; state: unknown; children: string };
-
-/** Previous/next: a link when there is somewhere to go, otherwise a disabled button. */
-function StepLink({ to, state, children }: StepLinkProps) {
-  if (!to) {
-    return (
-      <button type="button" className={styles.step} disabled>
-        {children}
-      </button>
-    );
-  }
-  return (
-    <Link to={to} replace state={state} className={styles.step}>
-      {children}
-    </Link>
   );
 }

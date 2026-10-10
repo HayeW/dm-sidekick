@@ -128,3 +128,15 @@ describe('DC-011 — Descriptions tile openen', () => {
     });
   });
 });
+
+describe('DC-015 / DC-016 — Vorige en volgende scene', () => {
+  const [first, second] = campaign.scenes;
+
+  it('gives the next scene from the first scene, and no previous one', () => {
+    expect(neighbours(campaign.scenes, 's-1')).toEqual({ previous: undefined, next: second });
+  });
+
+  it('gives the previous scene from the last scene, and no next one', () => {
+    expect(neighbours(campaign.scenes, 's-2')).toEqual({ previous: first, next: undefined });
+  });
+});

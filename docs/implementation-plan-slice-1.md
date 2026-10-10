@@ -198,7 +198,7 @@ This is enough to demo and test the whole slice.
 
 Each step is small, ends with green tests and a working app, and is one commit.
 
-**Progress:** step 0 ✅ done · step 1 (DC-001) ✅ done · step 2 (DC-002, DC-010) ✅ done · step 3 (DC-011) ✅ done · **next: step 4**.
+**Progress:** step 0 ✅ done · step 1 (DC-001) ✅ done · step 2 (DC-002, DC-010) ✅ done · step 3 (DC-011) ✅ done · step 4 (DC-015, DC-016) ✅ done · **next: step 5**.
 Update this line when a step is finished and committed.
 
 | Step | Content | Stories | Tests |
@@ -247,6 +247,10 @@ These are open questions from `requirements.md` that actually block this slice. 
   preview of the first description; one tap opens the first description. The detail screen
   has `◀ Previous` / `Next ▶` buttons (disabled at the edges, hidden when there is only one).
   Previous/next replace the history entry, so one tap on Back always returns to the scene.
+- **D12 — Back button goes back scene by scene** (product owner, 2026-10-10). Previous/next
+  scene adds a history entry, so the phone's back button returns to the previously viewed
+  scene. Unlike descriptions (D11), which replace the entry so Back returns to the scene in
+  one tap. Both use one fixed bottom bar (`StepNav`).
 
 Not blocking for this slice: combat lifetime/cleanup (old combat simply stays until replaced),
 healing controls, Quick Access contents, campaign editing.
