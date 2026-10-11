@@ -43,6 +43,24 @@ export function applyDamage(combat: Combat, combatantId: string, amount: number)
 }
 
 /**
+ * Moves a combatant one place up or down in the combat order by swapping it with its
+ * neighbour (DC-064, DC-052). At the top or bottom nothing changes. Returns a new combat.
+ */
+export function moveCombatant(
+  combat: Combat,
+  combatantId: string,
+  direction: 'up' | 'down',
+): Combat {
+  const from = combat.combatants.findIndex((combatant) => combatant.id === combatantId);
+  const to = direction === 'up' ? from - 1 : from + 1;
+  if (from === -1 || to < 0 || to >= combat.combatants.length) return combat;
+
+  const combatants = [...combat.combatants];
+  [combatants[from], combatants[to]] = [combatants[to]!, combatants[from]!];
+  return { ...combat, combatants };
+}
+
+/**
  * DEAD is derived from HP, not stored: a combatant at 0 HP (DC-063). A dead combatant stays
  * in the combat at its position. Player characters are never dead (D3).
  */

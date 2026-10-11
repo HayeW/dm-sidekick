@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Campaign, Encounter } from './campaign';
 import type { Combat } from './combat';
-import { applyDamage, isDead, startCombat } from './combat';
+import { applyDamage, isDead, moveCombatant, startCombat } from './combat';
 import type { RandomSource } from './dice';
 
 /** Returns the given values in order; fails the test if more are asked for. */
@@ -230,5 +230,59 @@ describe('DC-063 — Dead combatant markeren', () => {
 
   it('never marks a player character dead (D3)', () => {
     expect(isDead({ id: 'pc:a', name: 'Aria', type: 'PLAYER', hp: null, maxHp: null })).toBe(false);
+  });
+});
+
+describe('DC-064 / DC-052 — Combatant verplaatsen', () => {
+  const combat: Combat = {
+    campaignId: 'c-1',
+    sceneId: 's-1',
+    encounterId: 'enc-1',
+    combatants: [
+      { id: 'a', name: 'Goblin 1', type: 'ENEMY', hp: 7, maxHp: 7 },
+      { id: 'b', name: 'Goblin 2', type: 'ENEMY', hp: 0, maxHp: 7 },
+      { id: 'c', name: 'Aria', type: 'PLAYER', hp: null, maxHp: null },
+    ],
+  };
+  const order = (c: Combat) => c.combatants.map((x) => x.id);
+
+  it('moves a combatant one place up', () => {
+    expect(order(moveCombatant(combat, 'c', 'up'))).toEqual(['a', 'c', 'b']);
+  });
+
+  it('moves a combatant one place down', () => {
+    expect(order(moveCombatant(combat, 'a', 'down'))).toEqual(['b', 'a', 'c']);
+  });
+
+  it('moves player characters too (DC-052)', () => {
+    expect(order(moveCombatant(moveCombatant(combat, 'c', 'up'), 'c', 'up'))).toEqual([
+      'c',
+      'a',
+      'b',
+    ]);
+  });
+
+  it('moves dead combatants too', () => {
+    expect(order(moveCombatant(combat, 'b', 'up'))).toEqual(['b', 'a', 'c']);
+  });
+
+  it('does nothing when moving the top combatant up', () => {
+    expect(order(moveCombatant(combat, 'a', 'up'))).toEqual(['a', 'b', 'c']);
+  });
+
+  it('does nothing when moving the bottom combatant down', () => {
+    expect(order(moveCombatant(combat, 'c', 'down'))).toEqual(['a', 'b', 'c']);
+  });
+
+  it('does nothing for an unknown combatant', () => {
+    expect(order(moveCombatant(combat, 'x', 'up'))).toEqual(['a', 'b', 'c']);
+  });
+
+  it('keeps HP and does not change the original combat', () => {
+    const before = structuredClone(combat);
+    const after = moveCombatant(combat, 'b', 'down');
+
+    expect(after.combatants.find((x) => x.id === 'b')?.hp).toBe(0);
+    expect(combat).toEqual(before);
   });
 });

@@ -18,6 +18,12 @@ function renderWithBrowserBack(path: string) {
 const pressBrowserBack = () =>
   userEvent.click(screen.getByRole('button', { name: 'Browser back' }));
 
+/** A combat row's name: its first innermost text (name comes before HP / PC / DEAD). */
+function combatantName(row: HTMLElement) {
+  return Array.from(row.querySelectorAll('span')).find((span) => span.children.length === 0)
+    ?.textContent;
+}
+
 function renderAt(path: string) {
   return render(
     <MemoryRouter initialEntries={[path]}>
@@ -607,20 +613,16 @@ describe('DC-061 / DC-063 — Damage toepassen en dead markeren', () => {
     }
     const view = renderAt(`/c/${campaign.id}/s/scene-mill-road`);
     await user.click(screen.getByRole('button', { name: 'Start combat' }));
+    await user.click(screen.getByRole('button', { name: 'Done' })); // leave reorder mode
     return { user, ...view };
   }
 
   const rows = () =>
     within(screen.getByRole('list', { name: 'Combat order' })).getAllByRole('listitem');
 
-  /** The name is the row's first innermost text. */
-  const nameOf = (item: HTMLElement) =>
-    Array.from(item.querySelectorAll('span')).find((span) => span.children.length === 0)
-      ?.textContent;
+  const row = (name: string) => rows().find((item) => combatantName(item) === name)!;
 
-  const row = (name: string) => rows().find((item) => nameOf(item) === name)!;
-
-  const rowNames = () => rows().map(nameOf);
+  const rowNames = () => rows().map(combatantName);
 
   it('lowers HP with one tap on a damage button, no confirmation', async () => {
     const { user } = await startCombat();
@@ -671,6 +673,138 @@ describe('DC-061 / DC-063 — Damage toepassen en dead markeren', () => {
 
     expect(row('Goblin 2')).toHaveTextContent('DEAD');
     expect(row('Goblin Boss')).toHaveTextContent('16/21 HP');
+  });
+});
+
+describe('DC-064 / DC-052 — Combatants verplaatsen (reorder mode)', () => {
+  const campaign = getCampaign('shadows-over-millbrook')!;
+  const sceneUrl = `/c/${campaign.id}/s/scene-mill-road`;
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  function rollInitiative() {
+    // Goblin 1: 5, Goblin 2: 18, Goblin 3: 11, Goblin Boss: 9 (all +2)
+    const random = vi.spyOn(Math, 'random');
+    for (const roll of [5, 18, 11, 9]) {
+      random.mockReturnValueOnce((roll - 0.5) / 20).mockReturnValueOnce(0.5);
+    }
+  }
+
+  const rows = () =>
+    within(screen.getByRole('list', { name: 'Combat order' })).getAllByRole('listitem');
+  const names = () => rows().map(combatantName);
+
+  async function startCombat(render = renderAt) {
+    const user = userEvent.setup();
+    rollInitiative();
+    const view = render(sceneUrl);
+    await user.click(screen.getByRole('button', { name: 'Start combat' }));
+    return { user, ...view };
+  }
+
+  it('opens a new combat in reorder mode (D17)', async () => {
+    await startCombat();
+
+    expect(screen.getByRole('button', { name: 'Done' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Move Alice up' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /damage to/ })).not.toBeInTheDocument();
+  });
+
+  it('moves a player character up with one tap per place', async () => {
+    const { user } = await startCombat();
+
+    await user.click(screen.getByRole('button', { name: 'Move Alice up' }));
+    await user.click(screen.getByRole('button', { name: 'Move Alice up' }));
+
+    expect(names()).toEqual([
+      'Goblin 2',
+      'Goblin 3',
+      'Alice',
+      'Goblin Boss',
+      'Goblin 1',
+      'Bob',
+      'Cora',
+      'Dain',
+    ]);
+  });
+
+  it('moves an enemy down', async () => {
+    const { user } = await startCombat();
+
+    await user.click(screen.getByRole('button', { name: 'Move Goblin 2 down' }));
+
+    expect(names().slice(0, 2)).toEqual(['Goblin 3', 'Goblin 2']);
+  });
+
+  it('cannot move the top combatant up or the bottom one down', async () => {
+    await startCombat();
+
+    expect(screen.getByRole('button', { name: 'Move Goblin 2 up' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Move Dain down' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Move Dain up' })).toBeEnabled();
+  });
+
+  it('shows the damage buttons again after Done, keeping the new order', async () => {
+    const { user } = await startCombat();
+    await user.click(screen.getByRole('button', { name: 'Move Goblin 2 down' }));
+
+    await user.click(screen.getByRole('button', { name: 'Done' }));
+
+    expect(screen.getByRole('button', { name: 'Reorder' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Move / })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '5 damage to Goblin 2' })).toBeInTheDocument();
+    expect(names().slice(0, 2)).toEqual(['Goblin 3', 'Goblin 2']);
+  });
+
+  it('enters reorder mode again with the Reorder button', async () => {
+    const { user } = await startCombat();
+    await user.click(screen.getByRole('button', { name: 'Done' }));
+
+    await user.click(screen.getByRole('button', { name: 'Reorder' }));
+
+    expect(screen.getByRole('button', { name: 'Move Alice up' })).toBeInTheDocument();
+  });
+
+  it('keeps the new order after a refresh', async () => {
+    const { user, unmount } = await startCombat();
+    await user.click(screen.getByRole('button', { name: 'Move Alice up' }));
+    unmount();
+    clearActiveCombats();
+
+    renderAt(`/c/${campaign.id}/combat`);
+
+    expect(names().slice(3, 5)).toEqual(['Alice', 'Goblin 1']);
+  });
+
+  it('keeps reorder mode after a refresh', async () => {
+    const { unmount } = await startCombat();
+    unmount();
+    clearActiveCombats();
+
+    renderAt(`/c/${campaign.id}/combat?mode=reorder`);
+
+    expect(screen.getByRole('button', { name: 'Done' })).toBeInTheDocument();
+  });
+
+  it('opens a resumed combat in normal mode', async () => {
+    const { user } = await startCombat();
+    await user.click(screen.getByRole('link', { name: /The Mill Road/ }));
+
+    await user.click(screen.getByRole('link', { name: 'Resume combat' }));
+
+    expect(screen.getByRole('button', { name: 'Reorder' })).toBeInTheDocument();
+  });
+
+  it('returns to the scene with one Back after switching modes', async () => {
+    const { user } = await startCombat(renderWithBrowserBack);
+    await user.click(screen.getByRole('button', { name: 'Done' }));
+    await user.click(screen.getByRole('button', { name: 'Reorder' }));
+
+    await pressBrowserBack();
+
+    expect(screen.getByRole('heading', { level: 1, name: 'The Mill Road' })).toBeInTheDocument();
   });
 });
 

@@ -171,7 +171,8 @@ UX details:
   `RESUME COMBAT` instead (see D1).
 - **Persistent "Combat" indicator:** while a combat is active, a small bar on the scene
   screen links back to it, so leaving and returning costs one tap (DC-070/071).
-- **Combat row:** `Goblin 2   7/7 HP   [−1] [−5] [−10]   [▲] [▼]  [⋯]`
+- **Combat row:** `Goblin 2   7/7 HP   [−1] [−5] [−10]   [⋯]`; ▲ ▼ replace the damage
+  buttons in reorder mode (D17).
   `⋯` reveals *Remove*. Dead combatants stay in place, greyed out with a `DEAD` label.
   Player character rows show only name, a `PC` marker and the move/remove controls — no HP.
 - **Add combatant:** a button below the list opens a small inline form (name + HP),
@@ -201,7 +202,7 @@ This is enough to demo and test the whole slice.
 
 Each step is small, ends with green tests and a working app, and is one commit.
 
-**Progress:** step 0 ✅ done · step 1 (DC-001) ✅ done · step 2 (DC-002, DC-010) ✅ done · step 3 (DC-011) ✅ done · step 4 (DC-015, DC-016) ✅ done · step 4a (DC-017) ✅ done · step 5 (DC-003, DC-080) ✅ done · step 6 (DC-043, DC-050, DC-051) ✅ done · step 7 (DC-053, DC-060) ✅ done · step 7a (DC-081) ✅ done · step 8 (DC-061, DC-063) ✅ done · **next: step 9**.
+**Progress:** step 0 ✅ done · step 1 (DC-001) ✅ done · step 2 (DC-002, DC-010) ✅ done · step 3 (DC-011) ✅ done · step 4 (DC-015, DC-016) ✅ done · step 4a (DC-017) ✅ done · step 5 (DC-003, DC-080) ✅ done · step 6 (DC-043, DC-050, DC-051) ✅ done · step 7 (DC-053, DC-060) ✅ done · step 7a (DC-081) ✅ done · step 8 (DC-061, DC-063) ✅ done · step 9 (DC-064, DC-052; DC-066 follows with step 10's added combatants) ✅ done · **next: step 10**.
 Update this line when a step is finished and committed.
 
 | Step | Content | Stories | Tests |
@@ -278,6 +279,13 @@ These are open questions from `requirements.md` that actually block this slice. 
   Known limitation: "active" is per campaign, so while a combat runs every encounter tile in
   the campaign shows RESUME COMBAT; starting a combat for another encounter needs "New
   combat" (not built yet) or a refresh. Fine for now: the seed has one encounter.
+- **D17 — Reorder mode** (product owner, 2026-10-11, step 9). Damage buttons and ▲ ▼ don't
+  both fit on one row on a phone, so moving happens in a reorder mode: a `Reorder` / `Done`
+  button next to the heading swaps the damage buttons for ▲ ▼ on every row (▲ disabled at
+  the top, ▼ at the bottom). A new combat opens in reorder mode, because placing the PCs is
+  the first thing to do; RESUME COMBAT opens normal mode. The mode is in the URL
+  (`/combat?mode=reorder`) so a refresh keeps it; switching replaces the history entry, so
+  Back still returns to the scene in one tap. This replaces the single-row layout in §5.
 
 Not blocking for this slice: combat lifetime/cleanup (old combat simply stays until replaced),
 healing controls, Quick Access contents, campaign editing.

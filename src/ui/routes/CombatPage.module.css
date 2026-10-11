@@ -13,6 +13,54 @@
   outline-offset: 2px;
 }
 
+/* Heading with the Reorder / Done button on the right. */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: var(--space);
+}
+
+.header h1 {
+  margin: 0;
+}
+
+.reorder,
+.done {
+  min-width: 96px;
+  padding: 0 var(--space);
+  border-radius: var(--radius);
+  font-weight: 700;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.reorder {
+  border: 1px solid var(--text-muted);
+  background: transparent;
+  color: var(--text);
+}
+
+/* Done stands out: it is the one thing to tap after placing everyone. */
+.done {
+  border: 0;
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.reorder:focus-visible,
+.done:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.hint {
+  margin: calc(var(--space) * -0.5) 0 12px;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
 .combatants {
   list-style: none;
   margin: 0;
@@ -56,12 +104,12 @@
   font-variant-numeric: tabular-nums;
 }
 
-.damage {
+.controls {
   display: flex;
   gap: 6px;
 }
 
-.damage button {
+.controls button {
   min-width: var(--touch);
   padding: 0 8px;
   border: 0;
@@ -75,16 +123,16 @@
   touch-action: manipulation; /* no double-tap zoom when tapping −1 quickly */
 }
 
-.damage button:active {
+.controls button:active {
   background: var(--danger);
 }
 
-.damage button:focus-visible {
+.controls button:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
-.damage button:disabled {
+.controls button:disabled {
   opacity: 0.4;
   cursor: default;
 }
@@ -107,6 +155,7 @@
 }
 
 .pc {
+  align-self: flex-start;
   padding: 2px 8px;
   border-radius: 6px;
   background: var(--bg);

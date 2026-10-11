@@ -45,7 +45,8 @@ export default function ScenePage() {
   const combatUrl = `/c/${campaign.id}/combat`;
   const startCombatFrom = (encounter: Encounter) => {
     setActiveCombat(startCombat(campaign, scene.id, encounter, Math.random));
-    navigate(combatUrl);
+    // A new combat opens in reorder mode: placing the PCs comes first (D17).
+    navigate(`${combatUrl}?mode=reorder`);
   };
   const combat = {
     to: combatUrl,
