@@ -170,8 +170,8 @@ UX details:
 - **Encounter tile:** shows `3 × Goblin, 1 × Goblin Boss` and a `START COMBAT` button
   directly on the tile (requirement §5). If a combat is already active, the tile shows
   `RESUME COMBAT` instead (see D1).
-- **Persistent "Combat" indicator:** while a combat is active, a small bar on the scene
-  screen links back to it, so leaving and returning costs one tap (DC-070/071).
+- **Way back to combat:** `RESUME COMBAT` on the encounter tile. No
+  separate Combat bar (D20); the Quick Access "Combat" item (requirements §6) comes later.
 - **Combat row:** `Goblin 2   7/7 HP   [−1] [−5] [−10]`; in reorder mode ▲ ▼ ✕ replace the
   damage buttons (D17, D18). Dead combatants stay in place, greyed out with a `DEAD` label.
   Player character rows show only name, a `PC` marker and, in reorder mode, ▲ ▼ ✕ — no HP.
@@ -203,7 +203,7 @@ This is enough to demo and test the whole slice.
 
 Each step is small, ends with green tests and a working app, and is one commit.
 
-**Progress:** step 0 ✅ done · step 1 (DC-001) ✅ done · step 2 (DC-002, DC-010) ✅ done · step 3 (DC-011) ✅ done · step 4 (DC-015, DC-016) ✅ done · step 4a (DC-017) ✅ done · step 5 (DC-003, DC-080) ✅ done · step 6 (DC-043, DC-050, DC-051) ✅ done · step 7 (DC-053, DC-060) ✅ done · step 7a (DC-081) ✅ done · step 8 (DC-061, DC-063) ✅ done · step 9 (DC-064, DC-052) ✅ done · step 10 (DC-065, DC-066, DC-067) ✅ done · **next: step 11**.
+**Progress:** step 0 ✅ done · step 1 (DC-001) ✅ done · step 2 (DC-002, DC-010) ✅ done · step 3 (DC-011) ✅ done · step 4 (DC-015, DC-016) ✅ done · step 4a (DC-017) ✅ done · step 5 (DC-003, DC-080) ✅ done · step 6 (DC-043, DC-050, DC-051) ✅ done · step 7 (DC-053, DC-060) ✅ done · step 7a (DC-081) ✅ done · step 8 (DC-061, DC-063) ✅ done · step 9 (DC-064, DC-052) ✅ done · step 10 (DC-065, DC-066, DC-067) ✅ done · step 11 (DC-070, DC-071, DC-081, DC-082) ✅ done · **next: step 12**.
 Update this line when a step is finished and committed.
 
 | Step | Content                                                                                                                       | Stories                        | Tests                                                                                        |
@@ -221,7 +221,7 @@ Update this line when a step is finished and committed.
 | 8    | Damage buttons (non-PCs only), DEAD display                                                                                   | DC-061, DC-063                 | HP decreases, clamps at 0, dead stays in place                                               |
 | 9    | Move up/down for any combatant                                                                                                | DC-064, DC-052                 | Swap logic incl. top/bottom edges                                                            |
 | 10   | Add combatant (bottom of list), move it into place, remove combatant                                                          | DC-065, DC-066, DC-067         | Appended at the bottom, not sorted; movable; removed                                         |
-| 11   | Every combat change saved; leave/return and refresh keep state; "Combat" bar on scene screen                                  | DC-070, DC-071, DC-081, DC-082 | State identical after navigation and reload                                                  |
+| 11   | Every combat change saved; leave/return and refresh keep state (no Combat bar, D20)                                           | DC-070, DC-071, DC-081, DC-082 | State identical after navigation and reload                                                  |
 | 12   | Mobile polish pass: touch targets ≥ 44 px, test on a real phone                                                               | DC-100                         | Manual check                                                                                 |
 
 ## 9. Decisions needed before or during the slice
@@ -278,7 +278,8 @@ These are open questions from `requirements.md` that actually block this slice. 
   Known limitation: if a later save fails (e.g. storage full), memory has the newest state
   but storage keeps the older one, so a refresh brings back the older combat.
   The encounter tile already shows RESUME COMBAT while a combat is active (D1), so a second
-  tap cannot wipe out a running combat. "New combat" and the Combat bar come later.
+  tap cannot wipe out a running combat. "New combat" comes later; the Combat bar was
+  dropped (D20).
   Known limitation: "active" is per campaign, so while a combat runs every encounter tile in
   the campaign shows RESUME COMBAT; starting a combat for another encounter needs "New
   combat" (not built yet) or a refresh. Fine for now: the seed has one encounter.
@@ -307,6 +308,12 @@ These are open questions from `requirements.md` that actually block this slice. 
   `EnemyGroup` loses `initiativeBonus`; `dice.ts` and the random source go. Dice in Quick
   Access is dropped from the requirements; Random NPC is left as it is until its epic.
 
+- **D20 — No Combat bar** (product owner, 2026-10-11, step 11). The requirements don't ask
+  for the "Combat" indicator from §5; their way back to combat is the Quick Access "Combat"
+  item (requirements §6), which is not in this slice. Until then the DM returns with
+  `RESUME COMBAT` on the encounter tile. Step 11 adds only the tests
+  that leaving, returning, refreshing and reopening keep the combat identical.
+
 Not blocking for this slice: combat lifetime/cleanup (old combat simply stays until replaced),
 healing controls, Quick Access contents, campaign editing.
 
@@ -320,6 +327,9 @@ healing controls, Quick Access contents, campaign editing.
 - **No Undo after removing a combatant** (from D18, accepted by the product owner on
   2026-10-11). A mis-tap on ✕ in reorder mode loses that combatant and its HP; the DM can
   add it again by hand. Revisit in step 12 (more room between ▼ and ✕) or with an Undo toast.
+- **No one-tap way back to combat from another scene** (from D20, accepted by the product
+  owner on 2026-10-11). After Next/Previous to another scene, the DM has to go back to the
+  encounter's scene to tap RESUME COMBAT. Fix with the Quick Access "Combat" item.
 
 ## 10. Working agreement
 

@@ -24,6 +24,18 @@ function combatantName(row: HTMLElement) {
     ?.textContent;
 }
 
+/** Every combat row as "name · HP / PC / DEAD", in combat order: the visible combat state. */
+const combatOrder = () =>
+  within(screen.getByRole('list', { name: 'Combat order' }))
+    .getAllByRole('listitem')
+    .map((row) =>
+      // The row's innermost texts, without the buttons.
+      Array.from(row.querySelectorAll('span'))
+        .filter((span) => span.children.length === 0)
+        .map((span) => span.textContent)
+        .join(' · '),
+    );
+
 function renderAt(path: string) {
   return render(
     <MemoryRouter initialEntries={[path]}>
@@ -456,17 +468,6 @@ describe('DC-043 / DC-053 / DC-060 / DC-081 — Combat starten, tonen en bewaren
   const sceneUrl = `/c/${campaign.id}/s/scene-mill-road`;
 
   const encounterTile = () => screen.getByRole('region', { name: 'Encounter' });
-
-  const combatOrder = () =>
-    within(screen.getByRole('list', { name: 'Combat order' }))
-      .getAllByRole('listitem')
-      .map((row) =>
-        // Name and HP / PC / DEAD: the row's innermost texts, without the buttons.
-        Array.from(row.querySelectorAll('span'))
-          .filter((span) => span.children.length === 0)
-          .map((span) => span.textContent)
-          .join(' · '),
-      );
 
   it('starts combat from the encounter tile with one tap, enemies in alphabetical order', async () => {
     const user = userEvent.setup();
@@ -928,6 +929,99 @@ describe('DC-065 / DC-066 / DC-067 — Combatant toevoegen en verwijderen', () =
     renderAt(`/c/${campaign.id}/combat`);
 
     expect(names()).not.toContain('Alice');
+  });
+});
+
+describe('DC-070 / DC-071 / DC-081 / DC-082 — Combat verlaten, terugkeren en herstellen', () => {
+  const campaign = getCampaign('shadows-over-millbrook')!;
+  const roadUrl = `/c/${campaign.id}/s/scene-mill-road`;
+
+  const sceneNav = (name: RegExp) =>
+    within(screen.getByRole('navigation', { name: 'Scenes' })).getByRole('link', { name });
+
+  const expectScene = (title: string) =>
+    expect(screen.getByRole('heading', { level: 1, name: title })).toBeInTheDocument();
+
+  /**
+   * Starts the combat and changes every part of its state: order (a PC moved up), HP, DEAD,
+   * added combatants (with and without HP) and a removed one. Returns the state the DM must find again.
+   */
+  async function playCombat(user: ReturnType<typeof userEvent.setup>) {
+    await user.click(screen.getByRole('button', { name: 'Start combat' }));
+    await user.click(screen.getByRole('button', { name: 'Move Alice up' }));
+    await user.click(screen.getByRole('button', { name: 'Remove Goblin 3' }));
+    await user.click(screen.getByRole('button', { name: '+ Add combatant' }));
+    await user.type(screen.getByRole('textbox', { name: 'Name' }), 'Wolf');
+    await user.type(screen.getByRole('spinbutton', { name: 'HP (optional)' }), '11');
+    await user.click(screen.getByRole('button', { name: 'Add' }));
+    await user.click(screen.getByRole('button', { name: '+ Add combatant' }));
+    await user.type(screen.getByRole('textbox', { name: 'Name' }), 'Hooded figure');
+    await user.click(screen.getByRole('button', { name: 'Add' })); // no HP (D8)
+    await user.click(screen.getByRole('button', { name: 'Done' }));
+    await user.click(screen.getByRole('button', { name: '10 damage to Goblin 1' }));
+    await user.click(screen.getByRole('button', { name: '5 damage to Goblin Boss' }));
+    await user.click(screen.getByRole('button', { name: '1 damage to Wolf' }));
+
+    const state = combatOrder();
+    expect(state).toEqual([
+      'Goblin 1 · DEAD',
+      'Goblin 2 · 7/7 HP',
+      'Alice · PC',
+      'Goblin Boss · 16/21 HP',
+      'Bob · PC',
+      'Cora · PC',
+      'Dain · PC',
+      'Wolf · 10/11 HP',
+      'Hooded figure',
+    ]);
+    return state;
+  }
+
+  it('keeps the combat while the DM looks at other scenes and descriptions', async () => {
+    const user = userEvent.setup();
+    renderAt(roadUrl);
+    const before = await playCombat(user);
+
+    // Combat → scene → description → scene → next scene → back → combat (requirements §14).
+    await user.click(screen.getByRole('link', { name: /The Mill Road/ }));
+    await user.click(screen.getByRole('link', { name: /^Descriptions/ }));
+    await user.click(screen.getByRole('button', { name: /The Mill Road/ }));
+    await user.click(sceneNav(/Next/));
+    expectScene('The Old Mill');
+    await user.click(sceneNav(/Previous/));
+    await user.click(screen.getByRole('link', { name: 'Resume combat' }));
+
+    expect(combatOrder()).toEqual(before);
+  });
+
+  it('keeps the combat after a refresh on the combat screen', async () => {
+    const user = userEvent.setup();
+    const { unmount } = renderAt(roadUrl);
+    const before = await playCombat(user);
+    unmount();
+    clearActiveCombats(); // refresh: only what was saved survives
+
+    renderAt(`/c/${campaign.id}/combat`);
+
+    expect(combatOrder()).toEqual(before);
+  });
+
+  it('restores the combat after closing and reopening the app', async () => {
+    const user = userEvent.setup();
+    const { unmount } = renderAt(roadUrl);
+    const before = await playCombat(user);
+    await user.click(screen.getByRole('link', { name: /The Mill Road/ }));
+    await user.click(sceneNav(/Next/));
+    unmount();
+    clearActiveCombats(); // the app is closed: only what was saved survives
+
+    renderAt('/');
+    await user.click(screen.getByRole('link', { name: new RegExp(campaign.name) }));
+    expectScene('The Old Mill'); // the last used scene (DC-003)
+    await user.click(sceneNav(/Previous/));
+    await user.click(screen.getByRole('link', { name: 'Resume combat' }));
+
+    expect(combatOrder()).toEqual(before);
   });
 });
 

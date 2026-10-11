@@ -8,7 +8,7 @@ no backend. Goal: as few taps as possible during play ("look → tap → continu
 - `requirements.md` — product requirements, domain model and user stories (Dutch).
   Story IDs look like `DC-001`. The requirements are the source of truth.
 - `docs/implementation-plan-slice-1.md` — the current plan: architecture, routes,
-  confirmed decisions (D1–D10) and the step-by-step build order with a **Progress** line.
+  confirmed decisions (D1, D2, …; see its decisions section) and the step-by-step build order with a **Progress** line.
 
 When asked to "do the next step", take the next step from the plan's build order.
 
