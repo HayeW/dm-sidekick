@@ -60,6 +60,50 @@ export function moveCombatant(
   return { ...combat, combatants };
 }
 
+/** What the DM fills in to add a combatant during combat (decision D8). */
+export type NewCombatant = {
+  name: string;
+  /** Optional: null when the DM doesn't track this combatant's HP. */
+  hp: number | null;
+};
+
+/**
+ * Adds a combatant at the bottom of the combat order, without an initiative roll (DC-065).
+ * It is an enemy by default (D8). Its id `added:<n>` cannot collide with the ids from
+ * `startCombat` (D15). A blank name changes nothing; HP that is not a whole number above 0
+ * counts as no HP. Returns a new combat.
+ */
+export function addCombatant(combat: Combat, newCombatant: NewCombatant): Combat {
+  const name = newCombatant.name.trim();
+  if (name === '') return combat;
+  const hp =
+    newCombatant.hp !== null && Number.isInteger(newCombatant.hp) && newCombatant.hp > 0
+      ? newCombatant.hp
+      : null;
+
+  const highest = Math.max(
+    0,
+    ...combat.combatants.map((combatant) =>
+      combatant.id.startsWith('added:') ? Number(combatant.id.slice('added:'.length)) || 0 : 0,
+    ),
+  );
+  return {
+    ...combat,
+    combatants: [
+      ...combat.combatants,
+      { id: `added:${highest + 1}`, name, type: 'ENEMY', hp, maxHp: hp },
+    ],
+  };
+}
+
+/** Takes a combatant out of the combat; the others keep their order (DC-067). */
+export function removeCombatant(combat: Combat, combatantId: string): Combat {
+  return {
+    ...combat,
+    combatants: combat.combatants.filter((combatant) => combatant.id !== combatantId),
+  };
+}
+
 /**
  * DEAD is derived from HP, not stored: a combatant at 0 HP (DC-063). A dead combatant stays
  * in the combat at its position. Player characters are never dead (D3).

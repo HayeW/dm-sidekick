@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import type { Campaign, Encounter } from './campaign';
 import type { Combat } from './combat';
-import { applyDamage, isDead, moveCombatant, startCombat } from './combat';
+import {
+  addCombatant,
+  applyDamage,
+  isDead,
+  moveCombatant,
+  removeCombatant,
+  startCombat,
+} from './combat';
 import type { RandomSource } from './dice';
 
 /** Returns the given values in order; fails the test if more are asked for. */
@@ -283,6 +290,107 @@ describe('DC-064 / DC-052 — Combatant verplaatsen', () => {
     const after = moveCombatant(combat, 'b', 'down');
 
     expect(after.combatants.find((x) => x.id === 'b')?.hp).toBe(0);
+    expect(combat).toEqual(before);
+  });
+});
+
+describe('DC-065 / DC-066 — Combatant toevoegen', () => {
+  const combat: Combat = {
+    campaignId: 'c-1',
+    sceneId: 's-1',
+    encounterId: 'enc-1',
+    combatants: [
+      { id: 'enemy:1', name: 'Goblin', type: 'ENEMY', hp: 7, maxHp: 7 },
+      { id: 'pc:pc-aria', name: 'Aria', type: 'PLAYER', hp: null, maxHp: null },
+    ],
+  };
+
+  it('adds the combatant at the bottom, with full HP', () => {
+    const after = addCombatant(combat, { name: 'Wolf', hp: 11 });
+
+    expect(after.combatants.map((c) => c.name)).toEqual(['Goblin', 'Aria', 'Wolf']);
+    expect(after.combatants[2]).toMatchObject({ type: 'ENEMY', hp: 11, maxHp: 11 });
+  });
+
+  it('adds a combatant without HP when none is given (D8)', () => {
+    const added = addCombatant(combat, { name: 'Strange voice', hp: null }).combatants[2];
+
+    expect(added).toMatchObject({ name: 'Strange voice', type: 'ENEMY', hp: null, maxHp: null });
+    expect(isDead(added!)).toBe(false);
+  });
+
+  it('treats HP that is not a whole number above 0 as no HP', () => {
+    for (const hp of [0, -3, 2.5, Number.NaN]) {
+      expect(addCombatant(combat, { name: 'Wolf', hp }).combatants[2]?.hp).toBeNull();
+    }
+  });
+
+  it('trims the name and ignores a blank name', () => {
+    expect(addCombatant(combat, { name: '  Wolf ', hp: 11 }).combatants[2]?.name).toBe('Wolf');
+    expect(addCombatant(combat, { name: '   ', hp: 11 })).toBe(combat);
+  });
+
+  it('gives every added combatant its own id that cannot collide with the others (D15)', () => {
+    const twice = addCombatant(addCombatant(combat, { name: 'Wolf', hp: 11 }), {
+      name: 'Wolf',
+      hp: 11,
+    });
+    const ids = twice.combatants.map((c) => c.id);
+
+    expect(ids.slice(2)).toEqual(['added:1', 'added:2']);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('does not reuse the id of an added combatant that is still in the combat', () => {
+    const two = addCombatant(addCombatant(combat, { name: 'A', hp: 1 }), { name: 'B', hp: 1 });
+    const afterRemove = removeCombatant(two, 'added:1');
+
+    expect(addCombatant(afterRemove, { name: 'C', hp: 1 }).combatants.at(-1)?.id).toBe('added:3');
+  });
+
+  it('can be moved into place like any other combatant (DC-066)', () => {
+    const after = moveCombatant(addCombatant(combat, { name: 'Wolf', hp: 11 }), 'added:1', 'up');
+
+    expect(after.combatants.map((c) => c.name)).toEqual(['Goblin', 'Wolf', 'Aria']);
+  });
+
+  it('does not change the original combat', () => {
+    const before = structuredClone(combat);
+    addCombatant(combat, { name: 'Wolf', hp: 11 });
+
+    expect(combat).toEqual(before);
+  });
+});
+
+describe('DC-067 — Combatant verwijderen', () => {
+  const combat: Combat = {
+    campaignId: 'c-1',
+    sceneId: 's-1',
+    encounterId: 'enc-1',
+    combatants: [
+      { id: 'a', name: 'Goblin 1', type: 'ENEMY', hp: 7, maxHp: 7 },
+      { id: 'b', name: 'Goblin 2', type: 'ENEMY', hp: 0, maxHp: 7 },
+      { id: 'c', name: 'Aria', type: 'PLAYER', hp: null, maxHp: null },
+    ],
+  };
+  const order = (c: Combat) => c.combatants.map((x) => x.id);
+
+  it('removes that combatant; the others keep their order', () => {
+    expect(order(removeCombatant(combat, 'b'))).toEqual(['a', 'c']);
+  });
+
+  it('removes player characters too', () => {
+    expect(order(removeCombatant(combat, 'c'))).toEqual(['a', 'b']);
+  });
+
+  it('does nothing for an unknown combatant', () => {
+    expect(order(removeCombatant(combat, 'x'))).toEqual(['a', 'b', 'c']);
+  });
+
+  it('does not change the original combat', () => {
+    const before = structuredClone(combat);
+    removeCombatant(combat, 'a');
+
     expect(combat).toEqual(before);
   });
 });

@@ -808,6 +808,177 @@ describe('DC-064 / DC-052 — Combatants verplaatsen (reorder mode)', () => {
   });
 });
 
+describe('DC-065 / DC-066 / DC-067 — Combatant toevoegen en verwijderen', () => {
+  const campaign = getCampaign('shadows-over-millbrook')!;
+  const sceneUrl = `/c/${campaign.id}/s/scene-mill-road`;
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  const rows = () =>
+    within(screen.getByRole('list', { name: 'Combat order' })).getAllByRole('listitem');
+  const names = () => rows().map(combatantName);
+
+  /** Starts the combat and taps Done, so the screen is in normal (damage) mode. */
+  async function startCombat(render = renderAt) {
+    const user = userEvent.setup();
+    // Goblin 1: 5, Goblin 2: 18, Goblin 3: 11, Goblin Boss: 9 (all +2)
+    const random = vi.spyOn(Math, 'random');
+    for (const roll of [5, 18, 11, 9]) {
+      random.mockReturnValueOnce((roll - 0.5) / 20).mockReturnValueOnce(0.5);
+    }
+    const view = render(sceneUrl);
+    await user.click(screen.getByRole('button', { name: 'Start combat' }));
+    await user.click(screen.getByRole('button', { name: 'Done' }));
+    return { user, ...view };
+  }
+
+  async function addCombatant(user: ReturnType<typeof userEvent.setup>, name: string, hp = '') {
+    await user.click(screen.getByRole('button', { name: '+ Add combatant' }));
+    await user.type(screen.getByRole('textbox', { name: 'Name' }), name);
+    if (hp) await user.type(screen.getByRole('spinbutton', { name: 'HP (optional)' }), hp);
+    await user.click(screen.getByRole('button', { name: 'Add' }));
+  }
+
+  it('adds a combatant at the bottom with its HP', async () => {
+    const { user } = await startCombat();
+
+    await addCombatant(user, 'Wolf', '11');
+
+    expect(names().at(-1)).toBe('Wolf');
+    expect(rows().at(-1)).toHaveTextContent('11/11 HP');
+  });
+
+  it('switches to reorder mode, so the new combatant can be moved into place (DC-066)', async () => {
+    const { user } = await startCombat();
+    await addCombatant(user, 'Wolf', '11');
+
+    expect(screen.getByRole('button', { name: 'Done' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Move Wolf up' }));
+
+    expect(names().slice(-2)).toEqual(['Wolf', 'Dain']);
+  });
+
+  it('can take damage once placed', async () => {
+    const { user } = await startCombat();
+    await addCombatant(user, 'Wolf', '11');
+    await user.click(screen.getByRole('button', { name: 'Done' }));
+
+    await user.click(screen.getByRole('button', { name: '5 damage to Wolf' }));
+
+    expect(rows().at(-1)).toHaveTextContent('6/11 HP');
+  });
+
+  it('adds a combatant without HP: no HP, no damage buttons, not a PC (D8)', async () => {
+    const { user } = await startCombat();
+    await addCombatant(user, 'Strange voice');
+    await user.click(screen.getByRole('button', { name: 'Done' }));
+
+    const row = rows().at(-1)!;
+    expect(combatantName(row)).toBe('Strange voice');
+    expect(row).not.toHaveTextContent(/HP|PC|DEAD/);
+    expect(within(row).queryByRole('button')).not.toBeInTheDocument();
+  });
+
+  it('cannot add without a name, or with HP that is not a whole number above 0', async () => {
+    const { user } = await startCombat();
+    await user.click(screen.getByRole('button', { name: '+ Add combatant' }));
+
+    expect(screen.getByRole('button', { name: 'Add' })).toBeDisabled();
+    await user.type(screen.getByRole('textbox', { name: 'Name' }), 'Wolf');
+    await user.type(screen.getByRole('spinbutton', { name: 'HP (optional)' }), '0');
+    expect(screen.getByRole('button', { name: 'Add' })).toBeDisabled();
+  });
+
+  it('stays in reorder mode when adding while reordering', async () => {
+    const { user } = await startCombat();
+    await user.click(screen.getByRole('button', { name: 'Reorder' }));
+
+    await addCombatant(user, 'Wolf', '11');
+
+    expect(screen.getByRole('button', { name: 'Done' })).toBeInTheDocument();
+  });
+
+  it('moves on to HP with Enter in the name field, and adds with Enter in HP', async () => {
+    const { user } = await startCombat();
+    await user.click(screen.getByRole('button', { name: '+ Add combatant' }));
+
+    await user.type(screen.getByRole('textbox', { name: 'Name' }), 'Wolf{Enter}');
+    expect(names()).not.toContain('Wolf');
+    expect(screen.getByRole('spinbutton', { name: 'HP (optional)' })).toHaveFocus();
+
+    await user.keyboard('11{Enter}');
+    expect(rows().at(-1)).toHaveTextContent('11/11 HP');
+  });
+
+  it('closes the form with Cancel without adding anything', async () => {
+    const { user } = await startCombat();
+    await user.click(screen.getByRole('button', { name: '+ Add combatant' }));
+    await user.type(screen.getByRole('textbox', { name: 'Name' }), 'Wolf');
+
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(names()).not.toContain('Wolf');
+    expect(screen.getByRole('button', { name: '+ Add combatant' })).toBeInTheDocument();
+  });
+
+  it('keeps an added combatant after a refresh', async () => {
+    const { user, unmount } = await startCombat();
+    await addCombatant(user, 'Wolf', '11');
+    unmount();
+    clearActiveCombats();
+
+    renderAt(`/c/${campaign.id}/combat`);
+
+    expect(names().at(-1)).toBe('Wolf');
+  });
+
+  it('removes a combatant with one tap in reorder mode, keeping the order (DC-067)', async () => {
+    const { user } = await startCombat();
+    await user.click(screen.getByRole('button', { name: 'Reorder' }));
+
+    await user.click(screen.getByRole('button', { name: 'Remove Goblin 3' }));
+
+    expect(names()).toEqual([
+      'Goblin 2',
+      'Goblin Boss',
+      'Goblin 1',
+      'Alice',
+      'Bob',
+      'Cora',
+      'Dain',
+    ]);
+  });
+
+  it('removes an added combatant', async () => {
+    const { user } = await startCombat();
+    await addCombatant(user, 'Wolf', '11');
+
+    await user.click(screen.getByRole('button', { name: 'Remove Wolf' }));
+
+    expect(names()).not.toContain('Wolf');
+  });
+
+  it('offers Remove only in reorder mode (D18)', async () => {
+    await startCombat();
+
+    expect(screen.queryByRole('button', { name: /^Remove / })).not.toBeInTheDocument();
+  });
+
+  it('keeps a removal after a refresh', async () => {
+    const { user, unmount } = await startCombat();
+    await user.click(screen.getByRole('button', { name: 'Reorder' }));
+    await user.click(screen.getByRole('button', { name: 'Remove Alice' }));
+    unmount();
+    clearActiveCombats();
+
+    renderAt(`/c/${campaign.id}/combat`);
+
+    expect(names()).not.toContain('Alice');
+  });
+});
+
 /** Stands in for the browser's / phone's back button. */
 function BrowserBack() {
   const navigate = useNavigate();

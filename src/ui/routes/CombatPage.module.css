@@ -164,3 +164,107 @@
   font-weight: 700;
   letter-spacing: 0.06em;
 }
+
+/* Remove (✕) in reorder mode (DC-067, D18): set apart from ▲ ▼ so it is not hit by accident. */
+.controls .remove {
+  margin-left: 6px;
+  color: var(--danger);
+}
+
+.controls .remove:active {
+  color: var(--text);
+}
+
+/* Add combatant below the list (DC-065). */
+.addButton {
+  width: 100%;
+  margin-top: 12px;
+  border: 1px dashed var(--text-muted);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text);
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.addForm {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 12px var(--space);
+  background: var(--surface);
+  border-radius: var(--radius);
+}
+
+.field {
+  flex: 1 1 160px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.hpField {
+  flex: 0 1 120px;
+}
+
+/* 16px text: iOS does not zoom in on focus. */
+.field input {
+  min-height: var(--touch);
+  padding: 0 12px;
+  border: 1px solid var(--text-muted);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 1rem;
+}
+
+.field input[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+
+.formButtons {
+  flex: 1 1 100%;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.cancel,
+.add {
+  min-width: 96px;
+  padding: 0 var(--space);
+  border-radius: var(--radius);
+  font-weight: 700;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cancel {
+  border: 1px solid var(--text-muted);
+  background: transparent;
+  color: var(--text);
+}
+
+.add {
+  border: 0;
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.add:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.addButton:focus-visible,
+.field input:focus-visible,
+.cancel:focus-visible,
+.add:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
