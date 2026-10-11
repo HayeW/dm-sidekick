@@ -42,8 +42,68 @@
   font-weight: 600;
 }
 
+/* Name with HP (or DEAD) below it, so the damage buttons fit next to it on a phone. */
+.info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 .hp {
+  color: var(--text-muted);
+  font-size: 0.875rem;
   font-variant-numeric: tabular-nums;
+}
+
+.damage {
+  display: flex;
+  gap: 6px;
+}
+
+.damage button {
+  min-width: var(--touch);
+  padding: 0 8px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation; /* no double-tap zoom when tapping −1 quickly */
+}
+
+.damage button:active {
+  background: var(--danger);
+}
+
+.damage button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.damage button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* DEAD: stays in its place in the list, greyed out (DC-063). */
+.dead {
+  border-left-color: var(--text-muted);
+}
+
+.dead .name {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+.deadLabel {
+  color: var(--danger);
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
 }
 
 .pc {

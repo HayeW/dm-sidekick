@@ -201,7 +201,7 @@ This is enough to demo and test the whole slice.
 
 Each step is small, ends with green tests and a working app, and is one commit.
 
-**Progress:** step 0 ✅ done · step 1 (DC-001) ✅ done · step 2 (DC-002, DC-010) ✅ done · step 3 (DC-011) ✅ done · step 4 (DC-015, DC-016) ✅ done · step 4a (DC-017) ✅ done · step 5 (DC-003, DC-080) ✅ done · step 6 (DC-043, DC-050, DC-051) ✅ done · step 7 (DC-053, DC-060) ✅ done · step 7a (DC-081) ✅ done · **next: step 8**.
+**Progress:** step 0 ✅ done · step 1 (DC-001) ✅ done · step 2 (DC-002, DC-010) ✅ done · step 3 (DC-011) ✅ done · step 4 (DC-015, DC-016) ✅ done · step 4a (DC-017) ✅ done · step 5 (DC-003, DC-080) ✅ done · step 6 (DC-043, DC-050, DC-051) ✅ done · step 7 (DC-053, DC-060) ✅ done · step 7a (DC-081) ✅ done · step 8 (DC-061, DC-063) ✅ done · **next: step 9**.
 Update this line when a step is finished and committed.
 
 | Step | Content | Stories | Tests |

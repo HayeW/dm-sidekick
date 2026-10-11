@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Campaign, Encounter } from './campaign';
-import { startCombat } from './combat';
+import type { Combat } from './combat';
+import { applyDamage, isDead, startCombat } from './combat';
 import type { RandomSource } from './dice';
 
 /** Returns the given values in order; fails the test if more are asked for. */
@@ -159,5 +160,75 @@ describe('DC-051 — Player Characters toevoegen aan combat', () => {
     const combat = startCombat(campaign, 's-1', empty, fixedRandom([]));
 
     expect(names(combat)).toEqual(['Aria', 'Dain']);
+  });
+});
+
+describe('DC-061 — Damage toepassen', () => {
+  const combat: Combat = {
+    campaignId: 'c-1',
+    sceneId: 's-1',
+    encounterId: 'enc-1',
+    combatants: [
+      { id: 'enemy:1', name: 'Goblin 1', type: 'ENEMY', hp: 7, maxHp: 7 },
+      { id: 'enemy:2', name: 'Goblin 2', type: 'ENEMY', hp: 7, maxHp: 7 },
+      { id: 'pc:pc-aria', name: 'Aria', type: 'PLAYER', hp: null, maxHp: null },
+    ],
+  };
+  const hpOf = (c: Combat, id: string) => c.combatants.find((x) => x.id === id)?.hp;
+
+  it('lowers the HP of that combatant only', () => {
+    const after = applyDamage(combat, 'enemy:2', 5);
+
+    expect(hpOf(after, 'enemy:2')).toBe(2);
+    expect(hpOf(after, 'enemy:1')).toBe(7);
+  });
+
+  it('adds up repeated damage', () => {
+    const after = applyDamage(applyDamage(combat, 'enemy:1', 1), 'enemy:1', 1);
+
+    expect(hpOf(after, 'enemy:1')).toBe(5);
+  });
+
+  it('never goes below 0 HP (D4)', () => {
+    const after = applyDamage(combat, 'enemy:1', 10);
+
+    expect(hpOf(after, 'enemy:1')).toBe(0);
+    expect(hpOf(applyDamage(after, 'enemy:1', 1), 'enemy:1')).toBe(0);
+  });
+
+  it('keeps max HP and the combat order', () => {
+    const after = applyDamage(combat, 'enemy:1', 5);
+
+    expect(after.combatants.map((c) => c.id)).toEqual(combat.combatants.map((c) => c.id));
+    expect(after.combatants[0]?.maxHp).toBe(7);
+  });
+
+  it('leaves player characters without HP (D3)', () => {
+    const after = applyDamage(combat, 'pc:pc-aria', 5);
+
+    expect(hpOf(after, 'pc:pc-aria')).toBeNull();
+  });
+
+  it('does not change the original combat', () => {
+    const before = structuredClone(combat);
+    applyDamage(combat, 'enemy:1', 5);
+
+    expect(combat).toEqual(before);
+  });
+});
+
+describe('DC-063 — Dead combatant markeren', () => {
+  const goblin = { id: 'enemy:1', name: 'Goblin 1', type: 'ENEMY' as const, maxHp: 7 };
+
+  it('is dead at 0 HP', () => {
+    expect(isDead({ ...goblin, hp: 0 })).toBe(true);
+  });
+
+  it('is alive above 0 HP', () => {
+    expect(isDead({ ...goblin, hp: 1 })).toBe(false);
+  });
+
+  it('never marks a player character dead (D3)', () => {
+    expect(isDead({ id: 'pc:a', name: 'Aria', type: 'PLAYER', hp: null, maxHp: null })).toBe(false);
   });
 });

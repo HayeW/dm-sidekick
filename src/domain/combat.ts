@@ -24,6 +24,32 @@ export type Combat = {
   combatants: Combatant[];
 };
 
+/** The damage buttons on every combatant with HP (DC-061). */
+export const DAMAGE_AMOUNTS = [1, 5, 10] as const;
+
+/**
+ * Lowers a combatant's HP by `amount`, never below 0 (DC-061, decision D4). Returns a new
+ * combat; the order stays the same. Player characters have no HP and are left unchanged (D3).
+ */
+export function applyDamage(combat: Combat, combatantId: string, amount: number): Combat {
+  return {
+    ...combat,
+    combatants: combat.combatants.map((combatant) =>
+      combatant.id === combatantId && combatant.hp !== null
+        ? { ...combatant, hp: Math.max(0, combatant.hp - amount) }
+        : combatant,
+    ),
+  };
+}
+
+/**
+ * DEAD is derived from HP, not stored: a combatant at 0 HP (DC-063). A dead combatant stays
+ * in the combat at its position. Player characters are never dead (D3).
+ */
+export function isDead(combatant: Combatant): boolean {
+  return combatant.hp === 0;
+}
+
 /**
  * Starts a combat from an encounter, without any configuration step (DC-043):
  * every enemy gets its own initiative roll and the enemies are sorted by it (DC-050), then

@@ -466,7 +466,13 @@ describe('DC-043 / DC-053 / DC-060 / DC-081 — Combat starten, tonen en bewaren
   const combatOrder = () =>
     within(screen.getByRole('list', { name: 'Combat order' }))
       .getAllByRole('listitem')
-      .map((row) => Array.from(row.children, (part) => part.textContent).join(' · '));
+      .map((row) =>
+        // Name and HP / PC / DEAD: the row's innermost texts, without the buttons.
+        Array.from(row.querySelectorAll('span'))
+          .filter((span) => span.children.length === 0)
+          .map((span) => span.textContent)
+          .join(' · '),
+      );
 
   it('starts combat from the encounter tile with one tap, in initiative order', async () => {
     const user = userEvent.setup();
@@ -582,6 +588,89 @@ describe('DC-043 / DC-053 / DC-060 / DC-081 — Combat starten, tonen en bewaren
 
     expect(screen.getByRole('heading', { name: 'No active combat' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Back to campaign' })).toBeInTheDocument();
+  });
+});
+
+describe('DC-061 / DC-063 — Damage toepassen en dead markeren', () => {
+  const campaign = getCampaign('shadows-over-millbrook')!;
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  async function startCombat() {
+    const user = userEvent.setup();
+    // Goblin 1: 5, Goblin 2: 18, Goblin 3: 11, Goblin Boss: 9 (all +2)
+    const random = vi.spyOn(Math, 'random');
+    for (const roll of [5, 18, 11, 9]) {
+      random.mockReturnValueOnce((roll - 0.5) / 20).mockReturnValueOnce(0.5);
+    }
+    const view = renderAt(`/c/${campaign.id}/s/scene-mill-road`);
+    await user.click(screen.getByRole('button', { name: 'Start combat' }));
+    return { user, ...view };
+  }
+
+  const rows = () =>
+    within(screen.getByRole('list', { name: 'Combat order' })).getAllByRole('listitem');
+
+  /** The name is the row's first innermost text. */
+  const nameOf = (item: HTMLElement) =>
+    Array.from(item.querySelectorAll('span')).find((span) => span.children.length === 0)
+      ?.textContent;
+
+  const row = (name: string) => rows().find((item) => nameOf(item) === name)!;
+
+  const rowNames = () => rows().map(nameOf);
+
+  it('lowers HP with one tap on a damage button, no confirmation', async () => {
+    const { user } = await startCombat();
+
+    await user.click(screen.getByRole('button', { name: '5 damage to Goblin 2' }));
+
+    expect(row('Goblin 2')).toHaveTextContent('2/7 HP');
+    expect(row('Goblin 3')).toHaveTextContent('7/7 HP');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('offers −1, −5 and −10 for every enemy', async () => {
+    await startCombat();
+
+    for (const amount of [1, 5, 10]) {
+      expect(
+        screen.getByRole('button', { name: `${amount} damage to Goblin Boss` }),
+      ).toBeInTheDocument();
+    }
+  });
+
+  it('has no damage buttons for player characters (D3)', async () => {
+    await startCombat();
+
+    expect(within(row('Alice')).queryAllByRole('button')).toHaveLength(0);
+  });
+
+  it('marks a combatant at 0 HP as DEAD, in the same place (D4)', async () => {
+    const { user } = await startCombat();
+    const orderBefore = rowNames();
+
+    await user.click(screen.getByRole('button', { name: '10 damage to Goblin 2' }));
+
+    expect(row('Goblin 2')).toHaveTextContent('DEAD');
+    expect(row('Goblin 2')).not.toHaveTextContent('HP');
+    expect(rowNames()).toEqual(orderBefore);
+    expect(screen.getByRole('button', { name: '1 damage to Goblin 2' })).toBeDisabled();
+  });
+
+  it('keeps damage and DEAD after a refresh', async () => {
+    const { user, unmount } = await startCombat();
+    await user.click(screen.getByRole('button', { name: '10 damage to Goblin 2' }));
+    await user.click(screen.getByRole('button', { name: '5 damage to Goblin Boss' }));
+    unmount();
+    clearActiveCombats();
+
+    renderAt(`/c/${campaign.id}/combat`);
+
+    expect(row('Goblin 2')).toHaveTextContent('DEAD');
+    expect(row('Goblin Boss')).toHaveTextContent('16/21 HP');
   });
 });
 
