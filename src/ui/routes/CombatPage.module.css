@@ -1,0 +1,57 @@
+.back {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch);
+  margin-bottom: 4px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.875rem;
+}
+
+.back:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.combatants {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 8px var(--space);
+  background: var(--surface);
+  border-radius: var(--radius);
+  border-left: 4px solid var(--danger);
+}
+
+.player {
+  border-left-color: var(--accent);
+}
+
+.name {
+  flex: 1;
+  font-weight: 600;
+}
+
+.hp {
+  font-variant-numeric: tabular-nums;
+}
+
+.pc {
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}

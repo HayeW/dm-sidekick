@@ -1,7 +1,10 @@
 import { useEffect } from 'react';
-import { Link, useParams } from 'react-router';
+import { Link, useNavigate, useParams } from 'react-router';
 import { getCampaign } from '../../data/campaigns';
+import { getActiveCombat, setActiveCombat } from '../../data/combats';
 import { saveSession } from '../../data/storage';
+import type { Encounter } from '../../domain/campaign';
+import { startCombat } from '../../domain/combat';
 import { canOpenTile, findScene, neighbours } from '../../domain/scene';
 import SceneTile from '../components/SceneTile';
 import StepNav from '../components/StepNav';
@@ -11,9 +14,11 @@ import styles from './ScenePage.module.css';
  * DC-010: a scene's content blocks as compact tiles, in array order.
  * DC-015, DC-016: previous/next scene with one tap.
  * DC-080: the scene shown is remembered as the current scene.
+ * DC-043: an encounter tile starts combat with one tap, or resumes the active one (D1).
  */
 export default function ScenePage() {
   const { campaignId = '', sceneId = '' } = useParams();
+  const navigate = useNavigate();
   const campaign = getCampaign(campaignId);
   const scene = campaign && findScene(campaign, sceneId);
   const currentSceneId = scene?.id;
@@ -37,6 +42,16 @@ export default function ScenePage() {
 
   const sceneUrl = (id: string) => `/c/${campaign.id}/s/${id}`;
   const { previous, next } = neighbours(campaign.scenes, scene.id);
+  const combatUrl = `/c/${campaign.id}/combat`;
+  const startCombatFrom = (encounter: Encounter) => {
+    setActiveCombat(startCombat(campaign, scene.id, encounter, Math.random));
+    navigate(combatUrl);
+  };
+  const combat = {
+    to: combatUrl,
+    active: getActiveCombat(campaign.id) !== undefined,
+    onStart: startCombatFrom,
+  };
 
   return (
     <main className="page">
@@ -51,6 +66,7 @@ export default function ScenePage() {
               block={block}
               campaign={campaign}
               openTo={canOpenTile(block) ? `${sceneUrl(scene.id)}/b/${block.id}` : undefined}
+              combat={combat}
             />
           </li>
         ))}

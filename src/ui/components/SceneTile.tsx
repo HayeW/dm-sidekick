@@ -1,5 +1,5 @@
 import { Link } from 'react-router';
-import type { Campaign, ContentBlock } from '../../domain/campaign';
+import type { Campaign, ContentBlock, Encounter } from '../../domain/campaign';
 import { enemySummary, findEncounter } from '../../domain/scene';
 import styles from './SceneTile.module.css';
 
@@ -16,10 +16,19 @@ type Props = {
   campaign: Campaign;
   /** Detail screen URL; when set, the whole tile opens it with one tap (DC-011). */
   openTo?: string;
+  /** Encounter tiles: start a new combat, or resume the active one (DC-043, decision D1). */
+  combat?: CombatAction;
+};
+
+type CombatAction = {
+  /** Combat screen URL, used to resume. */
+  to: string;
+  active: boolean;
+  onStart: (encounter: Encounter) => void;
 };
 
 /** DC-010: compact view of one content block. */
-export default function SceneTile({ block, campaign, openTo }: Props) {
+export default function SceneTile({ block, campaign, openTo, combat }: Props) {
   const label = labels[block.type];
   const content = (
     <>
@@ -28,7 +37,7 @@ export default function SceneTile({ block, campaign, openTo }: Props) {
           ? `${label} · ${block.descriptions.length}`
           : label}
       </h2>
-      <TileBody block={block} campaign={campaign} />
+      <TileBody block={block} campaign={campaign} combat={combat} />
     </>
   );
 
@@ -45,7 +54,7 @@ export default function SceneTile({ block, campaign, openTo }: Props) {
   );
 }
 
-function TileBody({ block, campaign }: Omit<Props, 'openTo'>) {
+function TileBody({ block, campaign, combat }: Omit<Props, 'openTo'>) {
   switch (block.type) {
     case 'descriptions': {
       const first = block.descriptions[0];
@@ -70,6 +79,20 @@ function TileBody({ block, campaign }: Omit<Props, 'openTo'>) {
         <>
           <p className={styles.title}>{encounter.name}</p>
           <p>{enemySummary(encounter)}</p>
+          {combat &&
+            (combat.active ? (
+              <Link to={combat.to} className={styles.combat}>
+                Resume combat
+              </Link>
+            ) : (
+              <button
+                type="button"
+                className={styles.combat}
+                onClick={() => combat.onStart(encounter)}
+              >
+                Start combat
+              </button>
+            ))}
         </>
       );
     }

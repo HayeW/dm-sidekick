@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, useNavigate } from 'react-router';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 import { getCampaign, getCampaigns } from './data/campaigns';
 
@@ -441,6 +441,103 @@ describe('DC-003 / DC-080 — Laatst gebruikte scene onthouden', () => {
     renderAt(`/c/${campaign.id}`);
 
     expectScene(first!.title);
+  });
+});
+
+describe('DC-043 / DC-053 / DC-060 — Combat starten en tonen', () => {
+  const campaign = getCampaign('shadows-over-millbrook')!;
+  const sceneUrl = `/c/${campaign.id}/s/scene-mill-road`;
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  /** Fixes the d20 rolls of the enemies, in encounter order (one tie-breaker each). */
+  function rollInitiative(...rolls: number[]) {
+    const random = vi.spyOn(Math, 'random');
+    for (const roll of rolls) {
+      random.mockReturnValueOnce((roll - 0.5) / 20).mockReturnValueOnce(0.5);
+    }
+  }
+
+  const encounterTile = () => screen.getByRole('region', { name: 'Encounter' });
+
+  const combatOrder = () =>
+    within(screen.getByRole('list', { name: 'Combat order' }))
+      .getAllByRole('listitem')
+      .map((row) => Array.from(row.children, (part) => part.textContent).join(' · '));
+
+  it('starts combat from the encounter tile with one tap, in initiative order', async () => {
+    const user = userEvent.setup();
+    // Goblin 1: 5, Goblin 2: 18, Goblin 3: 11, Goblin Boss: 9 (all +2)
+    rollInitiative(5, 18, 11, 9);
+    renderAt(sceneUrl);
+
+    await user.click(within(encounterTile()).getByRole('button', { name: 'Start combat' }));
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Combat' })).toBeInTheDocument();
+    expect(combatOrder()).toEqual([
+      'Goblin 2 · 7/7 HP',
+      'Goblin 3 · 7/7 HP',
+      'Goblin Boss · 21/21 HP',
+      'Goblin 1 · 7/7 HP',
+      'Alice · PC',
+      'Bob · PC',
+      'Cora · PC',
+      'Dain · PC',
+    ]);
+  });
+
+  it('shows HP for enemies but not for player characters (D3)', async () => {
+    const user = userEvent.setup();
+    renderAt(sceneUrl);
+
+    await user.click(within(encounterTile()).getByRole('button', { name: 'Start combat' }));
+
+    const rows = within(screen.getByRole('list', { name: 'Combat order' })).getAllByRole(
+      'listitem',
+    );
+    const alice = rows.find((row) => row.textContent?.startsWith('Alice'))!;
+    expect(alice).toHaveTextContent('PC');
+    expect(alice).not.toHaveTextContent('HP');
+    expect(rows.find((row) => row.textContent?.startsWith('Goblin Boss'))).toHaveTextContent(
+      '21/21 HP',
+    );
+  });
+
+  it('returns to the scene with one tap and offers to resume the combat (D1)', async () => {
+    const user = userEvent.setup();
+    rollInitiative(5, 18, 11, 9);
+    renderAt(sceneUrl);
+    await user.click(within(encounterTile()).getByRole('button', { name: 'Start combat' }));
+
+    await user.click(screen.getByRole('link', { name: /The Mill Road/ }));
+
+    expect(
+      within(encounterTile()).queryByRole('button', { name: 'Start combat' }),
+    ).not.toBeInTheDocument();
+    await user.click(within(encounterTile()).getByRole('link', { name: 'Resume combat' }));
+    expect(combatOrder()[0]).toBe('Goblin 2 · 7/7 HP');
+  });
+
+  it('returns to the scene with the browser back button, ready to resume', async () => {
+    const user = userEvent.setup();
+    renderWithBrowserBack(sceneUrl);
+    await user.click(within(encounterTile()).getByRole('button', { name: 'Start combat' }));
+
+    await pressBrowserBack();
+
+    expect(screen.getByRole('heading', { level: 1, name: 'The Mill Road' })).toBeInTheDocument();
+    expect(
+      within(encounterTile()).getByRole('link', { name: 'Resume combat' }),
+    ).toBeInTheDocument();
+  });
+
+  it('tells the DM when there is no active combat', () => {
+    renderAt(`/c/${campaign.id}/combat`);
+
+    expect(screen.getByRole('heading', { name: 'No active combat' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Back to campaign' })).toBeInTheDocument();
   });
 });
 

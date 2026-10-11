@@ -200,7 +200,7 @@ This is enough to demo and test the whole slice.
 
 Each step is small, ends with green tests and a working app, and is one commit.
 
-**Progress:** step 0 ✅ done · step 1 (DC-001) ✅ done · step 2 (DC-002, DC-010) ✅ done · step 3 (DC-011) ✅ done · step 4 (DC-015, DC-016) ✅ done · step 4a (DC-017) ✅ done · step 5 (DC-003, DC-080) ✅ done · step 6 (DC-043, DC-050, DC-051) ✅ done · **next: step 7**.
+**Progress:** step 0 ✅ done · step 1 (DC-001) ✅ done · step 2 (DC-002, DC-010) ✅ done · step 3 (DC-011) ✅ done · step 4 (DC-015, DC-016) ✅ done · step 4a (DC-017) ✅ done · step 5 (DC-003, DC-080) ✅ done · step 6 (DC-043, DC-050, DC-051) ✅ done · step 7 (DC-053, DC-060) ✅ done · **next: step 8**.
 Update this line when a step is finished and committed.
 
 | Step | Content | Stories | Tests |
@@ -264,9 +264,25 @@ These are open questions from `requirements.md` that actually block this slice. 
   Combatant ids are unique within a combat: `enemy:<n>` for encounter enemies and
   `pc:<playerCharacterId>` for player characters. Combatants added later (DC-065) must use
   their own scheme so they cannot collide with these.
+- **D16 — Active combat in memory until step 11** (product owner, 2026-10-11, step 7). The
+  active combat is kept in memory (`src/data/combats.ts`), so leaving and returning to the
+  combat screen keeps it, but a page refresh loses it until step 11 persists it (DC-081).
+  The encounter tile already shows RESUME COMBAT while a combat is active (D1), so a second
+  tap cannot wipe out a running combat. "New combat" and the Combat bar come later.
+  Known limitation: "active" is per campaign, so while a combat runs every encounter tile in
+  the campaign shows RESUME COMBAT; starting a combat for another encounter needs "New
+  combat" (not built yet) or a refresh. Fine for now: the seed has one encounter.
 
 Not blocking for this slice: combat lifetime/cleanup (old combat simply stays until replaced),
 healing controls, Quick Access contents, campaign editing.
+
+**Open follow-ups** (accepted for now, to be fixed later):
+
+- **Resume is per campaign, not per encounter** (from D16, accepted by the product owner on
+  2026-10-11). While a combat runs, every encounter tile in the campaign shows RESUME COMBAT,
+  so a combat for another encounter can only start after a refresh. Fix together with the
+  "New combat" option from D1, e.g. by letting a tile for a different encounter offer to
+  start a new combat.
 
 ## 10. Working agreement
 

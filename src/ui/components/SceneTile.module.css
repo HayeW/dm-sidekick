@@ -75,6 +75,35 @@
   overflow: hidden;
 }
 
+/* START / RESUME COMBAT: a big, full-width button directly on the encounter tile. */
+.combat {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 52px;
+  margin-top: 12px;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--danger);
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.combat:active {
+  opacity: 0.8;
+}
+
+.combat:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .missing {
   color: var(--text-muted);
   font-style: italic;

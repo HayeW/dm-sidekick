@@ -1,6 +1,7 @@
 import { Link, Route, Routes } from 'react-router';
 import CampaignListPage from './ui/routes/CampaignListPage';
 import CampaignPage from './ui/routes/CampaignPage';
+import CombatPage from './ui/routes/CombatPage';
 import ScenePage from './ui/routes/ScenePage';
 import TilePage from './ui/routes/TilePage';
 import ScrollToTop from './ui/components/ScrollToTop';
@@ -19,6 +20,7 @@ export default function App() {
           path="/c/:campaignId/s/:sceneId/b/:blockId/d/:descriptionId"
           element={<TilePage />}
         />
+        <Route path="/c/:campaignId/combat" element={<CombatPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>
