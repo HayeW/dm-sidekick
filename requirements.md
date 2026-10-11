@@ -89,7 +89,6 @@ Veelvoorkomende acties mogen niet onnodig achter detailpagina's of formulieren v
 De applicatie heeft een universeel Quick Access-menu.
 Quick Access is een escape hatch voor functionaliteit die niet direct onderdeel is van de huidige scene.
 Mogelijke items:
-- Dice
 - Combat
 - Random NPC
 - Rules / references
@@ -107,17 +106,19 @@ Combat kan rechtstreeks vanuit een encounter worden gestart.
 Bij het starten van combat:
 - worden alle enemies uit de encounter toegevoegd;
 - worden alle Player Characters van de campaign toegevoegd;
-- wordt voor enemies automatisch initiative gerold;
-- wordt een initiële combatvolgorde bepaald.
+- worden de enemies alfabetisch gesorteerd;
+- worden de Player Characters na de enemies geplaatst;
+- is daarmee de initiële combatvolgorde bepaald.
+Er worden geen dobbelstenen gerold.
 Er is geen configuratiescherm tussen encounter en combat.
 ## 8. Combat order
 De combatvolgorde is een geordende lijst van combatants.
 De lijstvolgorde bepaalt de volgorde waarin combatants normaal gesproken handelen.
-Voor enemies wordt bij het starten van combat initiative gebruikt om de initiële volgorde te bepalen.
-Voor Player Characters wordt geen initiativewaarde ingevoerd.
+Bij het starten van combat worden de enemies alfabetisch gesorteerd. Genummerde enemies staan in natuurlijke volgorde ("Goblin 2" vóór "Goblin 10"); hoofdletters tellen niet mee.
+Player Characters komen in campaign-volgorde na de enemies.
+De applicatie kent geen initiative: de DM zet combatants zelf op de juiste plek.
 De DM kan Player Characters handmatig omhoog en omlaag verplaatsen.
 De DM kan ook iedere andere combatant handmatig verplaatsen.
-Na het initialiseren van combat hoeft initiative niet als formele regeldata te worden beheerd.
 ## 9. Turns
 De applicatie houdt in v1 geen actieve beurt bij.
 Er is:
@@ -150,8 +151,7 @@ Goblin DEAD
 ## 12. Combatants toevoegen
 De DM kan tijdens een actieve combat een nieuwe combatant toevoegen.
 Bij toevoegen:
-- wordt geen initiative roll uitgevoerd;
-- wordt de nieuwe combatant onderaan de lijst geplaatst;
+- wordt de nieuwe combatant niet alfabetisch ingevoegd, maar onderaan de lijst geplaatst;
 - kan de DM de combatant daarna handmatig verplaatsen.
 Dezelfde ordering-mechaniek wordt gebruikt voor Player Characters en andere combatants.
 ## 13. Combatants verwijderen
@@ -206,8 +206,8 @@ De volgende aannames zijn momenteel gemaakt:
 - Combat wordt normaal gesproken binnen één speelsessie afgerond.
 - Een browser refresh mag geen actieve combat-state verliezen.
 - Lokale persistence is voldoende voor session state in v1.
-- Initiative is vooral relevant voor het bepalen van de initiële volgorde.
-- De uiteindelijke combatvolgorde is belangrijker dan het bewaren van initiativewaarden.
+- De applicatie rolt geen dobbelstenen en kent geen initiative.
+- De alfabetische beginvolgorde is een startpunt; de DM bepaalt de uiteindelijke combatvolgorde handmatig.
 - De DM is verantwoordelijk voor correcte interpretatie van D&D-regels.
 - Een combatant met 0 HP hoeft niet automatisch uit de combatvolgorde te verdwijnen.
 - Er is geen expliciete actie nodig om combat te beëindigen.
@@ -314,13 +314,12 @@ De positie in de collectie is dan de volgorde.
 Bij toevoegen:
 combatants.push(newCombatant) 
 Bij omhoog verplaatsen worden twee elementen verwisseld.
-## 11. Initiative
-Initiative hoeft niet noodzakelijk onderdeel te zijn van het permanente Combatant-model.
+## 11. Initiële volgorde
+De applicatie kent geen initiative en rolt geen dobbelstenen.
 Bij het starten van combat:
-Enemy[] ↓ roll initiative ↓ sort ↓ Combat.combatants 
+Enemy[] ↓ sorteer alfabetisch (natuurlijke volgorde) ↓ + PlayerCharacter[] ↓ Combat.combatants 
 Daarna is de lijstvolgorde leidend.
 Dit is een bewuste vereenvoudiging.
-Als later blijkt dat initiativewaarden nodig zijn, kan dit model worden uitgebreid.
 ## 12. Session state
 Naast campaign-data bestaat tijdelijke applicatiestate:
 SessionState - campaignId - currentSceneId - activeCombatId? 
@@ -336,9 +335,9 @@ NPCs en Locations kunnen door meerdere Scenes worden gerefereerd.
 Combatant ≠ Campaign entity
 Een PlayerCharacter of NPC bestaat onafhankelijk van een specifieke combat.
 Een Combatant is een tijdelijke representatie binnen een combat.
-Order is belangrijker dan initiative
-De DM werkt uiteindelijk met een geordende lijst.
-Initiative wordt alleen gebruikt om de initiële enemy-volgorde te bepalen.
+Order in plaats van initiative
+De DM werkt met een geordende lijst.
+De initiële volgorde is alfabetisch (enemies) gevolgd door de Player Characters; daarna ordent de DM handmatig.
 Geen Turn entity
 Er is geen apart Turn-model nodig voor v1.
 Geen Combat lifecycle nodig
@@ -476,12 +475,15 @@ Acceptance criteria
 - Alle Player Characters uit de campaign worden toegevoegd.
 - Er is geen configuratiescherm tussen encounter en combat.
 ## Epic 6 — Combat initialization
-### DC-050 — Enemy initiative rollen
+### DC-050 — Initiële enemy-volgorde
 P0
-Als DM wil ik dat initiative voor enemies automatisch wordt gerold wanneer combat start.
+Als DM wil ik dat de enemies bij het starten van combat in een voorspelbare volgorde staan.
 Acceptance criteria
-- Iedere enemy krijgt een initiative roll.
-- De initiële combatvolgorde wordt op basis daarvan bepaald.
+- Enemies worden alfabetisch gesorteerd, zonder onderscheid tussen hoofdletters en kleine letters.
+- Genummerde enemies staan in natuurlijke volgorde: "Goblin 2" vóór "Goblin 10".
+- Enemies met dezelfde naam (op hoofdletters na) houden de volgorde uit de encounter.
+- Er wordt geen dobbelsteen gerold.
+- Player Characters komen na de enemies (DC-051).
 ### DC-051 — Player Characters toevoegen aan combat
 P0
 Als DM wil ik dat alle campaign Player Characters automatisch aan combat worden toegevoegd.
@@ -525,8 +527,7 @@ P0
 Als DM wil ik tijdens combat een combatant kunnen toevoegen.
 Acceptance criteria
 - Een nieuwe combatant wordt aangemaakt.
-- Er wordt geen initiative roll uitgevoerd.
-- De combatant wordt onderaan geplaatst.
+- De combatant wordt onderaan geplaatst, niet alfabetisch ingevoegd.
 ### DC-066 — Nieuwe combatant verplaatsen
 P0
 Als DM wil ik een nieuw toegevoegde combatant naar de juiste positie kunnen verplaatsen.
@@ -605,7 +606,7 @@ Voor een eerste verticale slice:
 - DC-015 — Vorige scene
 - DC-016 — Volgende scene
 - DC-043 — Combat starten
-- DC-050 — Enemy initiative
+- DC-050 — Initiële enemy-volgorde
 - DC-051 — Players toevoegen
 - DC-053 — Combatvolgorde tonen
 - DC-060 — HP tonen

@@ -2,7 +2,6 @@
 // never changes the campaign (docs/implementation-plan-slice-1.md, §4).
 
 import type { Campaign, Encounter } from './campaign';
-import { rollD20, type RandomSource } from './dice';
 
 export type CombatantType = 'PLAYER' | 'ENEMY' | 'NPC';
 
@@ -20,9 +19,12 @@ export type Combat = {
   campaignId: string;
   sceneId: string;
   encounterId: string | null;
-  /** Array order is the combat order. Initiative is not stored. */
+  /** Array order is the combat order. There is no initiative (D19). */
   combatants: Combatant[];
 };
+
+/** Compares names alphabetically: case-insensitive, numbers in natural order (D19). */
+const byName = new Intl.Collator('en', { numeric: true, sensitivity: 'base' });
 
 /** The damage buttons on every combatant with HP (DC-061). */
 export const DAMAGE_AMOUNTS = [1, 5, 10] as const;
@@ -68,7 +70,7 @@ export type NewCombatant = {
 };
 
 /**
- * Adds a combatant at the bottom of the combat order, without an initiative roll (DC-065).
+ * Adds a combatant at the bottom of the combat order, not in its alphabetical place (DC-065).
  * It is an enemy by default (D8). Its id `added:<n>` cannot collide with the ids from
  * `startCombat` (D15). A blank name changes nothing; HP that is not a whole number above 0
  * counts as no HP. Returns a new combat.
@@ -114,28 +116,13 @@ export function isDead(combatant: Combatant): boolean {
 
 /**
  * Starts a combat from an encounter, without any configuration step (DC-043):
- * every enemy gets its own initiative roll and the enemies are sorted by it (DC-050), then
- * all player characters of the campaign are appended in campaign order (DC-051, decision D2).
+ * the enemies in alphabetical order (DC-050), then all player characters of the campaign in
+ * campaign order (DC-051, decision D2). No dice are rolled (decision D19).
  */
-export function startCombat(
-  campaign: Campaign,
-  sceneId: string,
-  encounter: Encounter,
-  random: RandomSource,
-): Combat {
-  const enemies = expandEnemies(encounter).map((enemy) => ({
-    ...enemy,
-    initiative: rollD20(random) + enemy.initiativeBonus,
-    tieBreaker: random(),
-  }));
-
-  // Higher initiative first; ties: higher bonus first, then random (decision D6).
-  enemies.sort(
-    (a, b) =>
-      b.initiative - a.initiative ||
-      b.initiativeBonus - a.initiativeBonus ||
-      b.tieBreaker - a.tieBreaker,
-  );
+export function startCombat(campaign: Campaign, sceneId: string, encounter: Encounter): Combat {
+  // Alphabetical, ignoring case, numbers in natural order: "Goblin 2" before "Goblin 10".
+  // The sort is stable, so equal names keep encounter order (D19).
+  const enemies = expandEnemies(encounter).sort((a, b) => byName.compare(a.name, b.name));
 
   const players: Combatant[] = campaign.playerCharacters.map((pc) => ({
     id: `pc:${pc.id}`,
@@ -149,7 +136,7 @@ export function startCombat(
     campaignId: campaign.id,
     sceneId,
     encounterId: encounter.id,
-    combatants: [...enemies.map(({ combatant }) => combatant), ...players],
+    combatants: [...enemies, ...players],
   };
 }
 
@@ -157,28 +144,25 @@ export function startCombat(
  * One combatant per enemy, in encounter order. Enemies that share a name are numbered
  * ("Goblin 1", "Goblin 2"); a single enemy keeps its plain name ("Goblin Boss") (decision D5).
  */
-function expandEnemies(encounter: Encounter): { combatant: Combatant; initiativeBonus: number }[] {
+function expandEnemies(encounter: Encounter): Combatant[] {
   const totalByName = new Map<string, number>();
   for (const group of encounter.enemies) {
     totalByName.set(group.name, (totalByName.get(group.name) ?? 0) + group.count);
   }
 
   const numberedByName = new Map<string, number>();
-  const enemies: { combatant: Combatant; initiativeBonus: number }[] = [];
+  const enemies: Combatant[] = [];
   for (const group of encounter.enemies) {
     for (let i = 0; i < group.count; i++) {
       const number = (numberedByName.get(group.name) ?? 0) + 1;
       numberedByName.set(group.name, number);
       const numbered = (totalByName.get(group.name) ?? 0) > 1;
       enemies.push({
-        combatant: {
-          id: `enemy:${enemies.length + 1}`,
-          name: numbered ? `${group.name} ${number}` : group.name,
-          type: 'ENEMY',
-          hp: group.hp,
-          maxHp: group.hp,
-        },
-        initiativeBonus: group.initiativeBonus,
+        id: `enemy:${enemies.length + 1}`,
+        name: numbered ? `${group.name} ${number}` : group.name,
+        type: 'ENEMY',
+        hp: group.hp,
+        maxHp: group.hp,
       });
     }
   }

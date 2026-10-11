@@ -23,7 +23,7 @@ import styles from './CombatPage.module.css';
  * DC-063: a combatant at 0 HP is shown as DEAD and stays in place.
  * DC-064, DC-052: in reorder mode every combatant can be moved up or down (decision D17).
  * A new combat opens in reorder mode, because placing the PCs is the first thing to do.
- * DC-065, DC-066: a combatant added below the list goes to the bottom, without initiative;
+ * DC-065, DC-066: a combatant added below the list goes to the bottom, not alphabetically;
  * the screen then switches to reorder mode to move it into place (decision D18).
  * DC-067: in reorder mode every combatant can be removed with one tap (D18).
  */

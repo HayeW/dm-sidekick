@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, useNavigate } from 'react-router';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import App from './App';
 import { getCampaign, getCampaigns } from './data/campaigns';
 import { clearActiveCombats } from './data/combats';
@@ -455,18 +455,6 @@ describe('DC-043 / DC-053 / DC-060 / DC-081 — Combat starten, tonen en bewaren
   const campaign = getCampaign('shadows-over-millbrook')!;
   const sceneUrl = `/c/${campaign.id}/s/scene-mill-road`;
 
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
-  /** Fixes the d20 rolls of the enemies, in encounter order (one tie-breaker each). */
-  function rollInitiative(...rolls: number[]) {
-    const random = vi.spyOn(Math, 'random');
-    for (const roll of rolls) {
-      random.mockReturnValueOnce((roll - 0.5) / 20).mockReturnValueOnce(0.5);
-    }
-  }
-
   const encounterTile = () => screen.getByRole('region', { name: 'Encounter' });
 
   const combatOrder = () =>
@@ -480,20 +468,18 @@ describe('DC-043 / DC-053 / DC-060 / DC-081 — Combat starten, tonen en bewaren
           .join(' · '),
       );
 
-  it('starts combat from the encounter tile with one tap, in initiative order', async () => {
+  it('starts combat from the encounter tile with one tap, enemies in alphabetical order', async () => {
     const user = userEvent.setup();
-    // Goblin 1: 5, Goblin 2: 18, Goblin 3: 11, Goblin Boss: 9 (all +2)
-    rollInitiative(5, 18, 11, 9);
     renderAt(sceneUrl);
 
     await user.click(within(encounterTile()).getByRole('button', { name: 'Start combat' }));
 
     expect(screen.getByRole('heading', { level: 1, name: 'Combat' })).toBeInTheDocument();
     expect(combatOrder()).toEqual([
+      'Goblin 1 · 7/7 HP',
       'Goblin 2 · 7/7 HP',
       'Goblin 3 · 7/7 HP',
       'Goblin Boss · 21/21 HP',
-      'Goblin 1 · 7/7 HP',
       'Alice · PC',
       'Bob · PC',
       'Cora · PC',
@@ -520,7 +506,6 @@ describe('DC-043 / DC-053 / DC-060 / DC-081 — Combat starten, tonen en bewaren
 
   it('returns to the scene with one tap and offers to resume the combat (D1)', async () => {
     const user = userEvent.setup();
-    rollInitiative(5, 18, 11, 9);
     renderAt(sceneUrl);
     await user.click(within(encounterTile()).getByRole('button', { name: 'Start combat' }));
 
@@ -530,7 +515,7 @@ describe('DC-043 / DC-053 / DC-060 / DC-081 — Combat starten, tonen en bewaren
       within(encounterTile()).queryByRole('button', { name: 'Start combat' }),
     ).not.toBeInTheDocument();
     await user.click(within(encounterTile()).getByRole('link', { name: 'Resume combat' }));
-    expect(combatOrder()[0]).toBe('Goblin 2 · 7/7 HP');
+    expect(combatOrder()[0]).toBe('Goblin 1 · 7/7 HP');
   });
 
   it('returns to the scene with the browser back button, ready to resume', async () => {
@@ -548,7 +533,6 @@ describe('DC-043 / DC-053 / DC-060 / DC-081 — Combat starten, tonen en bewaren
 
   it('keeps the combat after a refresh (DC-081)', async () => {
     const user = userEvent.setup();
-    rollInitiative(5, 18, 11, 9);
     const { unmount } = renderAt(sceneUrl);
     await user.click(within(encounterTile()).getByRole('button', { name: 'Start combat' }));
     const before = combatOrder();
@@ -562,7 +546,6 @@ describe('DC-043 / DC-053 / DC-060 / DC-081 — Combat starten, tonen en bewaren
 
   it('keeps the saved combat when the DM moves to another scene (DC-081)', async () => {
     const user = userEvent.setup();
-    rollInitiative(5, 18, 11, 9);
     const { unmount } = renderAt(sceneUrl);
     await user.click(within(encounterTile()).getByRole('button', { name: 'Start combat' }));
     const before = combatOrder();
@@ -600,17 +583,8 @@ describe('DC-043 / DC-053 / DC-060 / DC-081 — Combat starten, tonen en bewaren
 describe('DC-061 / DC-063 — Damage toepassen en dead markeren', () => {
   const campaign = getCampaign('shadows-over-millbrook')!;
 
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
   async function startCombat() {
     const user = userEvent.setup();
-    // Goblin 1: 5, Goblin 2: 18, Goblin 3: 11, Goblin Boss: 9 (all +2)
-    const random = vi.spyOn(Math, 'random');
-    for (const roll of [5, 18, 11, 9]) {
-      random.mockReturnValueOnce((roll - 0.5) / 20).mockReturnValueOnce(0.5);
-    }
     const view = renderAt(`/c/${campaign.id}/s/scene-mill-road`);
     await user.click(screen.getByRole('button', { name: 'Start combat' }));
     await user.click(screen.getByRole('button', { name: 'Done' })); // leave reorder mode
@@ -680,25 +654,12 @@ describe('DC-064 / DC-052 — Combatants verplaatsen (reorder mode)', () => {
   const campaign = getCampaign('shadows-over-millbrook')!;
   const sceneUrl = `/c/${campaign.id}/s/scene-mill-road`;
 
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
-  function rollInitiative() {
-    // Goblin 1: 5, Goblin 2: 18, Goblin 3: 11, Goblin Boss: 9 (all +2)
-    const random = vi.spyOn(Math, 'random');
-    for (const roll of [5, 18, 11, 9]) {
-      random.mockReturnValueOnce((roll - 0.5) / 20).mockReturnValueOnce(0.5);
-    }
-  }
-
   const rows = () =>
     within(screen.getByRole('list', { name: 'Combat order' })).getAllByRole('listitem');
   const names = () => rows().map(combatantName);
 
   async function startCombat(render = renderAt) {
     const user = userEvent.setup();
-    rollInitiative();
     const view = render(sceneUrl);
     await user.click(screen.getByRole('button', { name: 'Start combat' }));
     return { user, ...view };
@@ -719,11 +680,11 @@ describe('DC-064 / DC-052 — Combatants verplaatsen (reorder mode)', () => {
     await user.click(screen.getByRole('button', { name: 'Move Alice up' }));
 
     expect(names()).toEqual([
-      'Goblin 2',
-      'Goblin 3',
-      'Alice',
-      'Goblin Boss',
       'Goblin 1',
+      'Goblin 2',
+      'Alice',
+      'Goblin 3',
+      'Goblin Boss',
       'Bob',
       'Cora',
       'Dain',
@@ -735,13 +696,13 @@ describe('DC-064 / DC-052 — Combatants verplaatsen (reorder mode)', () => {
 
     await user.click(screen.getByRole('button', { name: 'Move Goblin 2 down' }));
 
-    expect(names().slice(0, 2)).toEqual(['Goblin 3', 'Goblin 2']);
+    expect(names().slice(1, 3)).toEqual(['Goblin 3', 'Goblin 2']);
   });
 
   it('cannot move the top combatant up or the bottom one down', async () => {
     await startCombat();
 
-    expect(screen.getByRole('button', { name: 'Move Goblin 2 up' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Move Goblin 1 up' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Move Dain down' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Move Dain up' })).toBeEnabled();
   });
@@ -755,7 +716,7 @@ describe('DC-064 / DC-052 — Combatants verplaatsen (reorder mode)', () => {
     expect(screen.getByRole('button', { name: 'Reorder' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^Move / })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: '5 damage to Goblin 2' })).toBeInTheDocument();
-    expect(names().slice(0, 2)).toEqual(['Goblin 3', 'Goblin 2']);
+    expect(names().slice(1, 3)).toEqual(['Goblin 3', 'Goblin 2']);
   });
 
   it('enters reorder mode again with the Reorder button', async () => {
@@ -775,7 +736,7 @@ describe('DC-064 / DC-052 — Combatants verplaatsen (reorder mode)', () => {
 
     renderAt(`/c/${campaign.id}/combat`);
 
-    expect(names().slice(3, 5)).toEqual(['Alice', 'Goblin 1']);
+    expect(names().slice(3, 5)).toEqual(['Alice', 'Goblin Boss']);
   });
 
   it('keeps reorder mode after a refresh', async () => {
@@ -812,10 +773,6 @@ describe('DC-065 / DC-066 / DC-067 — Combatant toevoegen en verwijderen', () =
   const campaign = getCampaign('shadows-over-millbrook')!;
   const sceneUrl = `/c/${campaign.id}/s/scene-mill-road`;
 
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
   const rows = () =>
     within(screen.getByRole('list', { name: 'Combat order' })).getAllByRole('listitem');
   const names = () => rows().map(combatantName);
@@ -823,11 +780,6 @@ describe('DC-065 / DC-066 / DC-067 — Combatant toevoegen en verwijderen', () =
   /** Starts the combat and taps Done, so the screen is in normal (damage) mode. */
   async function startCombat(render = renderAt) {
     const user = userEvent.setup();
-    // Goblin 1: 5, Goblin 2: 18, Goblin 3: 11, Goblin Boss: 9 (all +2)
-    const random = vi.spyOn(Math, 'random');
-    for (const roll of [5, 18, 11, 9]) {
-      random.mockReturnValueOnce((roll - 0.5) / 20).mockReturnValueOnce(0.5);
-    }
     const view = render(sceneUrl);
     await user.click(screen.getByRole('button', { name: 'Start combat' }));
     await user.click(screen.getByRole('button', { name: 'Done' }));
@@ -941,9 +893,9 @@ describe('DC-065 / DC-066 / DC-067 — Combatant toevoegen en verwijderen', () =
     await user.click(screen.getByRole('button', { name: 'Remove Goblin 3' }));
 
     expect(names()).toEqual([
+      'Goblin 1',
       'Goblin 2',
       'Goblin Boss',
-      'Goblin 1',
       'Alice',
       'Bob',
       'Cora',

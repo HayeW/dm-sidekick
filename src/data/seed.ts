@@ -18,8 +18,8 @@ export const seedCampaigns: Campaign[] = [
         id: 'enc-road-ambush',
         name: 'Ambush on the mill road',
         enemies: [
-          { name: 'Goblin', count: 3, hp: 7, initiativeBonus: 2 },
-          { name: 'Goblin Boss', count: 1, hp: 21, initiativeBonus: 2 },
+          { name: 'Goblin', count: 3, hp: 7 },
+          { name: 'Goblin Boss', count: 1, hp: 21 },
         ],
       },
     ],

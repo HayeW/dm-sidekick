@@ -55,5 +55,4 @@ export type EnemyGroup = {
   name: string;
   count: number;
   hp: number;
-  initiativeBonus: number;
 };

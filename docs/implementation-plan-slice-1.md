@@ -23,7 +23,7 @@ Stories in this slice (all from the "Eerste aanbevolen implementatievolgorde"):
 | DC-016 | Volgende scene                                  |
 | DC-017 | Swipen tussen beschrijvingen (added 2026-10-10) |
 | DC-043 | Combat starten                                  |
-| DC-050 | Enemy initiative                                |
+| DC-050 | Initiële enemy-volgorde (D19)                   |
 | DC-051 | Players toevoegen                               |
 | DC-053 | Combatvolgorde tonen                            |
 | DC-060 | HP tonen                                        |
@@ -68,7 +68,6 @@ src/
     campaign.ts    Campaign, Scene, ContentBlock, PlayerCharacter, Encounter types
     scene.ts       ordering, previous/next scene, which scene to open
     combat.ts      startCombat, applyDamage, move, add, remove
-    dice.ts        d20 with an injectable random source (deterministic tests)
   data/
     seed.ts        Bundled demo campaigns (read-only in this slice)
     storage.ts     load/save SessionState + Combat to localStorage, with schema version
@@ -117,7 +116,7 @@ type Encounter = {
   enemies: EnemyGroup[];
 };
 
-type EnemyGroup = { name: string; count: number; hp: number; initiativeBonus: number };
+type EnemyGroup = { name: string; count: number; hp: number };
 
 // Runtime / session state — separate from campaign data
 type Combatant = {
@@ -147,7 +146,7 @@ type SessionState = {
 Modelling choices (following the requirements' domain model):
 
 - **Order is the array order**, no `order` field. Move up/down = swap neighbours.
-- **Initiative is not stored.** Used once to sort enemies at combat start.
+- **No initiative** (D19). Enemies start in alphabetical order; after that the list order counts.
 - **DEAD is derived** from `hp === 0` rather than stored. One source of truth; healing a
   combatant later automatically "revives" it. Easy to change to an explicit state if needed.
 - **Combatant ≠ PlayerCharacter.** Combat copies names/HP; it never mutates campaign data.
@@ -177,7 +176,7 @@ UX details:
   damage buttons (D17, D18). Dead combatants stay in place, greyed out with a `DEAD` label.
   Player character rows show only name, a `PC` marker and, in reorder mode, ▲ ▼ ✕ — no HP.
 - **Add combatant:** a button below the list opens a small inline form (name + HP),
-  appended at the bottom. No initiative roll. Then the screen switches to reorder mode (D18).
+  appended at the bottom, not alphabetically. Then the screen switches to reorder mode (D18).
 
 ## 6. Persistence
 
@@ -207,23 +206,23 @@ Each step is small, ends with green tests and a working app, and is one commit.
 **Progress:** step 0 ✅ done · step 1 (DC-001) ✅ done · step 2 (DC-002, DC-010) ✅ done · step 3 (DC-011) ✅ done · step 4 (DC-015, DC-016) ✅ done · step 4a (DC-017) ✅ done · step 5 (DC-003, DC-080) ✅ done · step 6 (DC-043, DC-050, DC-051) ✅ done · step 7 (DC-053, DC-060) ✅ done · step 7a (DC-081) ✅ done · step 8 (DC-061, DC-063) ✅ done · step 9 (DC-064, DC-052) ✅ done · step 10 (DC-065, DC-066, DC-067) ✅ done · **next: step 11**.
 Update this line when a step is finished and committed.
 
-| Step | Content                                                                                                | Stories                        | Tests                                                                                        |
-| ---- | ------------------------------------------------------------------------------------------------------ | ------------------------------ | -------------------------------------------------------------------------------------------- |
-| 0    | Scaffold: Vite + React + TS, Vitest, RTL, ESLint, Prettier, React Router, git init, README             | —                              | Smoke test runs                                                                              |
-| 1    | Domain types + seed data; campaign list screen; tap navigates to `/c/:id` (placeholder)                | DC-001                         | List renders names; tap navigates                                                            |
-| 2    | Scene screen with compact tiles of all five types                                                      | DC-002, DC-010                 | Opening a campaign shows its first scene; tiles render                                       |
-| 3    | Descriptions detail screen with one-tap back; previous/next description (D11)                          | DC-011                         | Text shown; back returns to scene; navigation + edge cases                                   |
-| 4    | Previous/next navigation, disabled at the edges                                                        | DC-015, DC-016                 | Navigation + edge cases                                                                      |
-| 4a   | Swipe left/right between descriptions on the detail screen                                             | DC-017                         | Swipe direction rules (distance, mostly horizontal); swipe navigates like the buttons        |
-| 5    | Session storage: current scene remembered across refresh                                               | DC-003, DC-080                 | Storage round-trip; reopening goes to last scene                                             |
-| 6    | `startCombat` domain function: enemies expanded + numbered, initiative rolled and sorted, PCs appended | DC-043, DC-050, DC-051         | Deterministic tests with a fixed random source                                               |
-| 7    | Encounter tile + START COMBAT → combat screen showing order and HP (non-PCs only)                      | DC-053, DC-060                 | One tap from tile to combat list; PCs show no HP                                             |
-| 7a   | Persist the active combat, so a refresh keeps it (added 2026-10-11, see D16)                           | DC-081                         | Combat and RESUME COMBAT survive a reload; scene and combat saves don't overwrite each other |
-| 8    | Damage buttons (non-PCs only), DEAD display                                                            | DC-061, DC-063                 | HP decreases, clamps at 0, dead stays in place                                               |
-| 9    | Move up/down for any combatant                                                                         | DC-064, DC-052                 | Swap logic incl. top/bottom edges                                                            |
-| 10   | Add combatant (bottom of list), move it into place, remove combatant                                   | DC-065, DC-066, DC-067         | Appended without initiative; movable; removed                                                |
-| 11   | Every combat change saved; leave/return and refresh keep state; "Combat" bar on scene screen           | DC-070, DC-071, DC-081, DC-082 | State identical after navigation and reload                                                  |
-| 12   | Mobile polish pass: touch targets ≥ 44 px, test on a real phone                                        | DC-100                         | Manual check                                                                                 |
+| Step | Content                                                                                                                       | Stories                        | Tests                                                                                        |
+| ---- | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------ | -------------------------------------------------------------------------------------------- |
+| 0    | Scaffold: Vite + React + TS, Vitest, RTL, ESLint, Prettier, React Router, git init, README                                    | —                              | Smoke test runs                                                                              |
+| 1    | Domain types + seed data; campaign list screen; tap navigates to `/c/:id` (placeholder)                                       | DC-001                         | List renders names; tap navigates                                                            |
+| 2    | Scene screen with compact tiles of all five types                                                                             | DC-002, DC-010                 | Opening a campaign shows its first scene; tiles render                                       |
+| 3    | Descriptions detail screen with one-tap back; previous/next description (D11)                                                 | DC-011                         | Text shown; back returns to scene; navigation + edge cases                                   |
+| 4    | Previous/next navigation, disabled at the edges                                                                               | DC-015, DC-016                 | Navigation + edge cases                                                                      |
+| 4a   | Swipe left/right between descriptions on the detail screen                                                                    | DC-017                         | Swipe direction rules (distance, mostly horizontal); swipe navigates like the buttons        |
+| 5    | Session storage: current scene remembered across refresh                                                                      | DC-003, DC-080                 | Storage round-trip; reopening goes to last scene                                             |
+| 6    | `startCombat` domain function: enemies expanded + numbered, sorted alphabetically (D19; was an initiative roll), PCs appended | DC-043, DC-050, DC-051         | Alphabetical, natural order, case-insensitive                                                |
+| 7    | Encounter tile + START COMBAT → combat screen showing order and HP (non-PCs only)                                             | DC-053, DC-060                 | One tap from tile to combat list; PCs show no HP                                             |
+| 7a   | Persist the active combat, so a refresh keeps it (added 2026-10-11, see D16)                                                  | DC-081                         | Combat and RESUME COMBAT survive a reload; scene and combat saves don't overwrite each other |
+| 8    | Damage buttons (non-PCs only), DEAD display                                                                                   | DC-061, DC-063                 | HP decreases, clamps at 0, dead stays in place                                               |
+| 9    | Move up/down for any combatant                                                                                                | DC-064, DC-052                 | Swap logic incl. top/bottom edges                                                            |
+| 10   | Add combatant (bottom of list), move it into place, remove combatant                                                          | DC-065, DC-066, DC-067         | Appended at the bottom, not sorted; movable; removed                                         |
+| 11   | Every combat change saved; leave/return and refresh keep state; "Combat" bar on scene screen                                  | DC-070, DC-071, DC-081, DC-082 | State identical after navigation and reload                                                  |
+| 12   | Mobile polish pass: touch targets ≥ 44 px, test on a real phone                                                               | DC-100                         | Manual check                                                                                 |
 
 ## 9. Decisions needed before or during the slice
 
@@ -242,6 +241,7 @@ These are open questions from `requirements.md` that actually block this slice. 
 - **D5 — Duplicate enemies.** Proposal: **number them: "Goblin 1", "Goblin 2", "Goblin 3".**
   A group of one keeps its plain name ("Goblin Boss").
 - **D6 — Initiative ties.** Proposal: **higher bonus first, then random.**
+  _Replaced by D19: there is no initiative anymore._
 - **D7 — Remove combatant UX.** Proposal: **remove via the `⋯` menu, no confirmation dialog,
   with a short "Undo" toast.** (Undo can be dropped if it adds too much for this slice.)
   _Replaced by D18: ✕ in reorder mode, no Undo for now._
@@ -294,11 +294,18 @@ These are open questions from `requirements.md` that actually block this slice. 
   removes the combatant with one tap, no confirmation. Normal mode only has damage buttons,
   so a remove cannot happen by accident during play. The Undo toast from D7 is dropped for
   now (see open follow-ups). `+ Add combatant` below the list opens an inline form (name
-  required, HP optional, type ENEMY, D8); the combatant is appended at the bottom without
-  an initiative roll and the screen switches to reorder mode to move it into place
+  required, HP optional, type ENEMY, D8); the combatant is appended at the bottom, not
+  sorted, and the screen switches to reorder mode to move it into place
   (DC-066). Enter in the name field moves on to HP instead of adding. Added combatants get
   ids `added:<n>` (D15). An added combatant without HP shows its name only: no HP, no
   damage buttons, never DEAD, and it is not a PC (PC = type `PLAYER`).
+- **D19 — No dice: enemies start in alphabetical order** (product owner, 2026-10-11, after
+  step 10; replaces DC-050's initiative roll and D6). The app rolls no dice and has no
+  initiative. At combat start the enemies are sorted alphabetically, ignoring case and accents, in
+  natural order ("Goblin 2" before "Goblin 10"); equal names keep encounter order. PCs
+  still follow in campaign order (D2). Added combatants still go to the bottom (DC-065).
+  `EnemyGroup` loses `initiativeBonus`; `dice.ts` and the random source go. Dice in Quick
+  Access is dropped from the requirements; Random NPC is left as it is until its epic.
 
 Not blocking for this slice: combat lifetime/cleanup (old combat simply stays until replaced),
 healing controls, Quick Access contents, campaign editing.
