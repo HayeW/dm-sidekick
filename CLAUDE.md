@@ -32,14 +32,15 @@ The user is on Windows. The terminal may be PowerShell; use commands that work t
 ## Architecture rules
 
 - `src/domain/` — pure TypeScript game logic and types. No React, no storage, no browser APIs.
-  All rules (combat ordering, damage, initiative) live here and are unit-tested.
+  All rules (combat ordering, damage) live here and are unit-tested.
 - `src/data/` — seed data and persistence. Screens get campaigns via `src/data/campaigns.ts`,
   never by importing `seed.ts` directly.
 - `src/ui/` — screens (`routes/`) and components. They call domain functions and render results.
 - Order is array order (scenes, tiles, combatants). No `order` fields.
 - A combatant is not the same object as a PlayerCharacter; combat never changes campaign data.
 - Player characters have no HP (decision D3).
-- Randomness (dice) is injectable so tests are deterministic.
+- No dice and no initiative (decision D19). Any future randomness must be injectable so tests
+  are deterministic.
 
 ## UX rules
 

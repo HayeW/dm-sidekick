@@ -33,7 +33,7 @@ Read these first; they are the source of truth:
 3. **Architecture rules.** `src/domain/` is pure TypeScript (no React, storage or browser
    APIs). Screens get campaigns via `src/data/campaigns.ts`, never `seed.ts`. Order is array
    order, no `order` fields. Combat never mutates campaign data. Player characters have no HP.
-   Dice randomness is injectable.
+   No dice or initiative (D19); any randomness must be injectable.
 4. **UX rules.** Touch targets ≥ 44 px, frequent actions are one tap without confirmation
    dialogs, every screen has its own URL, UI text in English, dark theme variables used.
 5. **Tests.** Domain logic has unit tests; UI behaviour has component tests; `describe`
