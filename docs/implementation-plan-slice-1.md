@@ -184,8 +184,9 @@ UX details:
 - Loaded at startup / when a campaign is opened. If the stored JSON is invalid or the
   schema version doesn't match, it is discarded and the app starts fresh for that campaign.
 - Campaign data itself comes from `seed.ts` in this slice and is not stored.
-- Step 5 stores only `campaignId` and `currentSceneId`; `activeCombat` is added in step 11.
-  Data without it then means "no active combat", so no new key version is needed.
+- Step 5 stores only `campaignId` and `currentSceneId`; `activeCombat` is added in step 7a
+  (optional field). Data without it means "no active combat", so no new key version is needed.
+  Saving the current scene keeps the active combat and vice versa.
 
 ## 7. Seed data
 
@@ -200,7 +201,7 @@ This is enough to demo and test the whole slice.
 
 Each step is small, ends with green tests and a working app, and is one commit.
 
-**Progress:** step 0 ✅ done · step 1 (DC-001) ✅ done · step 2 (DC-002, DC-010) ✅ done · step 3 (DC-011) ✅ done · step 4 (DC-015, DC-016) ✅ done · step 4a (DC-017) ✅ done · step 5 (DC-003, DC-080) ✅ done · step 6 (DC-043, DC-050, DC-051) ✅ done · step 7 (DC-053, DC-060) ✅ done · **next: step 8**.
+**Progress:** step 0 ✅ done · step 1 (DC-001) ✅ done · step 2 (DC-002, DC-010) ✅ done · step 3 (DC-011) ✅ done · step 4 (DC-015, DC-016) ✅ done · step 4a (DC-017) ✅ done · step 5 (DC-003, DC-080) ✅ done · step 6 (DC-043, DC-050, DC-051) ✅ done · step 7 (DC-053, DC-060) ✅ done · step 7a (DC-081) ✅ done · **next: step 8**.
 Update this line when a step is finished and committed.
 
 | Step | Content | Stories | Tests |
@@ -214,10 +215,11 @@ Update this line when a step is finished and committed.
 | 5 | Session storage: current scene remembered across refresh | DC-003, DC-080 | Storage round-trip; reopening goes to last scene |
 | 6 | `startCombat` domain function: enemies expanded + numbered, initiative rolled and sorted, PCs appended | DC-043, DC-050, DC-051 | Deterministic tests with a fixed random source |
 | 7 | Encounter tile + START COMBAT → combat screen showing order and HP (non-PCs only) | DC-053, DC-060 | One tap from tile to combat list; PCs show no HP |
+| 7a | Persist the active combat, so a refresh keeps it (added 2026-10-11, see D16) | DC-081 | Combat and RESUME COMBAT survive a reload; scene and combat saves don't overwrite each other |
 | 8 | Damage buttons (non-PCs only), DEAD display | DC-061, DC-063 | HP decreases, clamps at 0, dead stays in place |
 | 9 | Move up/down for any combatant | DC-064, DC-052, DC-066 | Swap logic incl. top/bottom edges |
 | 10 | Add combatant (bottom of list), remove combatant | DC-065, DC-067 | Appended without initiative; removed |
-| 11 | Persist combat; leave/return and refresh keep state; "Combat" bar on scene screen | DC-070, DC-071, DC-081, DC-082 | State identical after navigation and reload |
+| 11 | Every combat change saved; leave/return and refresh keep state; "Combat" bar on scene screen | DC-070, DC-071, DC-081, DC-082 | State identical after navigation and reload |
 | 12 | Mobile polish pass: touch targets ≥ 44 px, test on a real phone | DC-100 | Manual check |
 
 ## 9. Decisions needed before or during the slice
@@ -264,9 +266,13 @@ These are open questions from `requirements.md` that actually block this slice. 
   Combatant ids are unique within a combat: `enemy:<n>` for encounter enemies and
   `pc:<playerCharacterId>` for player characters. Combatants added later (DC-065) must use
   their own scheme so they cannot collide with these.
-- **D16 — Active combat in memory until step 11** (product owner, 2026-10-11, step 7). The
-  active combat is kept in memory (`src/data/combats.ts`), so leaving and returning to the
-  combat screen keeps it, but a page refresh loses it until step 11 persists it (DC-081).
+- **D16 — Active combat persisted early** (product owner, 2026-10-11, steps 7 and 7a). Step 7
+  kept the active combat in memory only, so a refresh lost it. Because a phone can reload a
+  page on its own mid-session, saving it (DC-081) was moved forward into step 7a: the combat
+  is stored in the campaign's session; an in-memory copy keeps it working for the rest of the
+  visit when storage is blocked. Steps 8–10 save each change as they are built.
+  Known limitation: if a later save fails (e.g. storage full), memory has the newest state
+  but storage keeps the older one, so a refresh brings back the older combat.
   The encounter tile already shows RESUME COMBAT while a combat is active (D1), so a second
   tap cannot wipe out a running combat. "New combat" and the Combat bar come later.
   Known limitation: "active" is per campaign, so while a combat runs every encounter tile in

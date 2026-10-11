@@ -4,6 +4,7 @@ import { MemoryRouter, useNavigate } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 import { getCampaign, getCampaigns } from './data/campaigns';
+import { clearActiveCombats } from './data/combats';
 
 function renderWithBrowserBack(path: string) {
   return render(
@@ -444,7 +445,7 @@ describe('DC-003 / DC-080 — Laatst gebruikte scene onthouden', () => {
   });
 });
 
-describe('DC-043 / DC-053 / DC-060 — Combat starten en tonen', () => {
+describe('DC-043 / DC-053 / DC-060 / DC-081 — Combat starten, tonen en bewaren', () => {
   const campaign = getCampaign('shadows-over-millbrook')!;
   const sceneUrl = `/c/${campaign.id}/s/scene-mill-road`;
 
@@ -528,6 +529,49 @@ describe('DC-043 / DC-053 / DC-060 — Combat starten en tonen', () => {
     await pressBrowserBack();
 
     expect(screen.getByRole('heading', { level: 1, name: 'The Mill Road' })).toBeInTheDocument();
+    expect(
+      within(encounterTile()).getByRole('link', { name: 'Resume combat' }),
+    ).toBeInTheDocument();
+  });
+
+  it('keeps the combat after a refresh (DC-081)', async () => {
+    const user = userEvent.setup();
+    rollInitiative(5, 18, 11, 9);
+    const { unmount } = renderAt(sceneUrl);
+    await user.click(within(encounterTile()).getByRole('button', { name: 'Start combat' }));
+    const before = combatOrder();
+    unmount();
+    clearActiveCombats(); // refresh: only what was saved survives
+
+    renderAt(`/c/${campaign.id}/combat`);
+
+    expect(combatOrder()).toEqual(before);
+  });
+
+  it('keeps the saved combat when the DM moves to another scene (DC-081)', async () => {
+    const user = userEvent.setup();
+    rollInitiative(5, 18, 11, 9);
+    const { unmount } = renderAt(sceneUrl);
+    await user.click(within(encounterTile()).getByRole('button', { name: 'Start combat' }));
+    const before = combatOrder();
+    unmount();
+    renderAt(`/c/${campaign.id}/s/scene-old-mill`).unmount(); // saves the current scene
+    clearActiveCombats(); // refresh
+
+    renderAt(`/c/${campaign.id}/combat`);
+
+    expect(combatOrder()).toEqual(before);
+  });
+
+  it('still offers to resume the combat after a refresh (DC-081)', async () => {
+    const user = userEvent.setup();
+    const { unmount } = renderAt(sceneUrl);
+    await user.click(within(encounterTile()).getByRole('button', { name: 'Start combat' }));
+    unmount();
+    clearActiveCombats();
+
+    renderAt(sceneUrl);
+
     expect(
       within(encounterTile()).getByRole('link', { name: 'Resume combat' }),
     ).toBeInTheDocument();

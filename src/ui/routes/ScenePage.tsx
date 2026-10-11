@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { getCampaign } from '../../data/campaigns';
 import { getActiveCombat, setActiveCombat } from '../../data/combats';
-import { saveSession } from '../../data/storage';
+import { saveCurrentScene } from '../../data/storage';
 import type { Encounter } from '../../domain/campaign';
 import { startCombat } from '../../domain/combat';
 import { canOpenTile, findScene, neighbours } from '../../domain/scene';
@@ -26,7 +26,7 @@ export default function ScenePage() {
   // Saving is a side effect, so it runs in an effect after rendering, and only when the
   // shown scene changes. Hooks must run before the early return below.
   useEffect(() => {
-    if (currentSceneId) saveSession({ campaignId, currentSceneId });
+    if (currentSceneId) saveCurrentScene(campaignId, currentSceneId);
   }, [campaignId, currentSceneId]);
 
   if (!campaign || !scene) {

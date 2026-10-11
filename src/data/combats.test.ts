@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Combat } from '../domain/combat';
 import { clearActiveCombats, getActiveCombat, setActiveCombat } from './combats';
 
@@ -27,11 +27,26 @@ describe('DC-043 — Combat rechtstreeks starten', () => {
 
     expect(getActiveCombat('c-1')?.sceneId).toBe('s-2');
   });
+});
 
-  it('forgets all combats when cleared', () => {
+describe('DC-081 — Combat lokaal bewaren', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('keeps the active combat after a refresh', () => {
+    setActiveCombat(combat('c-1', 's-2'));
+    clearActiveCombats(); // page refresh: memory is gone, storage stays
+
+    expect(getActiveCombat('c-1')?.sceneId).toBe('s-2');
+  });
+
+  it('keeps working for the rest of the visit when storage is blocked', () => {
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('blocked');
+    });
     setActiveCombat(combat('c-1'));
-    clearActiveCombats();
 
-    expect(getActiveCombat('c-1')).toBeUndefined();
+    expect(getActiveCombat('c-1')?.campaignId).toBe('c-1');
   });
 });
