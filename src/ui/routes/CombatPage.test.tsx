@@ -2,7 +2,8 @@ import { fireEvent, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { getCampaign } from '../../data/campaigns';
-import { clearActiveCombats } from '../../data/combats';
+import { clearActiveCombats, setActiveCombat } from '../../data/combats';
+import { startCombat } from '../../domain/combat';
 import {
   combatantName,
   combatOrder,
@@ -196,6 +197,181 @@ describe('DC-061 / DC-063 — Damage toepassen en dead markeren', () => {
 
     expect(row('Goblin 2')).toHaveTextContent('DEAD');
     expect(row('Goblin Boss')).toHaveTextContent('16/21 HP');
+  });
+});
+
+describe('DC-062 — Healing toepassen (heal mode)', () => {
+  const campaign = getCampaign('shadows-over-millbrook')!;
+  const sceneUrl = `/c/${campaign.id}/s/scene-mill-road`;
+
+  /** Starts the combat in normal mode, with Goblin Boss at 11/21 and Goblin 1 DEAD. */
+  async function startHurtCombat(render = renderAt) {
+    const user = setupUser();
+    const view = render(sceneUrl);
+    await user.click(screen.getByRole('button', { name: 'Start combat' }));
+    await user.click(screen.getByRole('button', { name: 'Done' })); // leave reorder mode
+    await user.click(screen.getByRole('button', { name: '10 damage to Goblin Boss' }));
+    await user.click(screen.getByRole('button', { name: '10 damage to Goblin 1' }));
+    return { user, ...view };
+  }
+
+  const rows = () =>
+    within(screen.getByRole('list', { name: 'Combat order' })).getAllByRole('listitem');
+  const row = (name: string) => rows().find((item) => combatantName(item) === name)!;
+  /** An active combat for the Mill Road encounter, without going through the scene. */
+  const setActiveCombatFromSeed = () =>
+    setActiveCombat(startCombat(campaign, 'scene-mill-road', campaign.encounters[0]!));
+  const healButton = (amount: number, name: string) =>
+    screen.getByRole('button', { name: `${amount} healing to ${name}` });
+
+  it('switches every enemy to +1, +5 and +10 in heal mode, with a hint (D39, D41)', async () => {
+    const { user } = await startHurtCombat();
+
+    await user.click(screen.getByRole('button', { name: 'Heal' }));
+
+    for (const amount of [1, 5, 10]) expect(healButton(amount, 'Goblin 2')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /damage to/ })).not.toBeInTheDocument();
+    expect(
+      screen.getByText('Healing: tap +1, +5 or +10, then tap Done below.'),
+    ).toBeInTheDocument();
+  });
+
+  it('raises HP with one tap, no confirmation', async () => {
+    const { user } = await startHurtCombat();
+    await user.click(screen.getByRole('button', { name: 'Heal' }));
+
+    await user.click(healButton(5, 'Goblin Boss'));
+
+    expect(row('Goblin Boss')).toHaveTextContent('16/21 HP');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('stops at max HP and disables healing at full HP (D36)', async () => {
+    const { user } = await startHurtCombat();
+    await user.click(screen.getByRole('button', { name: 'Heal' }));
+
+    expect(healButton(10, 'Goblin 2')).toBeDisabled();
+    await user.click(healButton(10, 'Goblin Boss'));
+    await user.click(healButton(10, 'Goblin Boss'));
+
+    expect(row('Goblin Boss')).toHaveTextContent('21/21 HP');
+    expect(healButton(1, 'Goblin Boss')).toBeDisabled();
+  });
+
+  it('brings a DEAD combatant back (D37)', async () => {
+    const { user } = await startHurtCombat();
+    await user.click(screen.getByRole('button', { name: 'Heal' }));
+
+    await user.click(healButton(1, 'Goblin 1'));
+
+    expect(row('Goblin 1')).toHaveTextContent('1/7 HP');
+    expect(row('Goblin 1')).not.toHaveTextContent('DEAD');
+  });
+
+  it('offers no healing for player characters (D3)', async () => {
+    const { user } = await startHurtCombat();
+    await user.click(screen.getByRole('button', { name: 'Heal' }));
+
+    expect(within(row('Alice')).queryByRole('button')).not.toBeInTheDocument();
+  });
+
+  it('labels the heal toggle Done in heal mode, like reorder mode, read as Done healing (D41)', async () => {
+    const { user } = await startHurtCombat();
+
+    await user.click(screen.getByRole('button', { name: 'Heal' }));
+
+    expect(screen.getByRole('button', { name: 'Done healing' })).toHaveTextContent(/^Done$/);
+  });
+
+  it('stays in heal mode for several heals, until Done healing (D39)', async () => {
+    const { user } = await startHurtCombat();
+    await user.click(screen.getByRole('button', { name: 'Heal' }));
+    await user.click(healButton(5, 'Goblin Boss'));
+    await user.click(healButton(1, 'Goblin 1'));
+
+    await user.click(screen.getByRole('button', { name: 'Done healing' }));
+
+    expect(screen.getByRole('button', { name: '5 damage to Goblin Boss' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /healing to/ })).not.toBeInTheDocument();
+    expect(row('Goblin Boss')).toHaveTextContent('16/21 HP');
+  });
+
+  it('leaves heal mode when switching to reorder mode: one mode at a time (D39)', async () => {
+    const { user } = await startHurtCombat();
+    await user.click(screen.getByRole('button', { name: 'Heal' }));
+
+    await user.click(screen.getByRole('button', { name: 'Reorder' }));
+
+    expect(screen.getByRole('button', { name: 'Done' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Heal' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /healing to/ })).not.toBeInTheDocument();
+  });
+
+  it('leaves reorder mode when switching to heal mode', async () => {
+    const { user } = await startHurtCombat();
+    await user.click(screen.getByRole('button', { name: 'Reorder' }));
+
+    await user.click(screen.getByRole('button', { name: 'Heal' }));
+
+    expect(screen.getByRole('button', { name: 'Done healing' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Reorder' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Move / })).not.toBeInTheDocument();
+  });
+
+  it('switches to reorder mode after adding a combatant in heal mode (DC-066)', async () => {
+    const { user } = await startHurtCombat();
+    await user.click(screen.getByRole('button', { name: 'Heal' }));
+
+    await user.click(screen.getByRole('button', { name: '+ Add combatant' }));
+    await user.type(screen.getByRole('textbox', { name: 'Name' }), 'Wolf');
+    await user.click(screen.getByRole('button', { name: 'Add' }));
+
+    expect(screen.getByRole('button', { name: 'Done' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Heal' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /healing to/ })).not.toBeInTheDocument();
+  });
+
+  it('shows normal mode for an unknown mode in the URL', () => {
+    setActiveCombatFromSeed();
+    renderAt(`/c/${campaign.id}/combat?mode=bogus`);
+
+    expect(screen.getByRole('button', { name: '5 damage to Goblin 2' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Heal' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Reorder' })).toBeInTheDocument();
+  });
+
+  it('keeps heal mode and the healed HP after a refresh (D42)', async () => {
+    const { user, unmount } = await startHurtCombat();
+    await user.click(screen.getByRole('button', { name: 'Heal' }));
+    await user.click(healButton(5, 'Goblin Boss'));
+    unmount();
+    clearActiveCombats();
+
+    renderAt(`/c/${campaign.id}/combat?mode=heal`);
+
+    expect(row('Goblin Boss')).toHaveTextContent('16/21 HP');
+    expect(screen.getByRole('button', { name: 'Done healing' })).toBeInTheDocument();
+  });
+
+  it('still returns to the scene with one Back after switching modes (D42)', async () => {
+    const { user } = await startHurtCombat(renderWithBrowserBack);
+    await user.click(screen.getByRole('button', { name: 'Heal' }));
+    await user.click(screen.getByRole('button', { name: 'Done healing' }));
+
+    await pressBrowserBack();
+
+    expect(screen.getByRole('heading', { level: 1, name: 'The Mill Road' })).toBeInTheDocument();
+  });
+
+  it('opens a resumed combat in normal mode (D42)', async () => {
+    const { user } = await startHurtCombat();
+    await user.click(screen.getByRole('button', { name: 'Heal' }));
+    await user.click(screen.getByRole('link', { name: '‹ The Mill Road' }));
+
+    await user.click(screen.getByRole('link', { name: 'Resume combat' }));
+
+    expect(screen.getByRole('button', { name: 'Heal' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '5 damage to Goblin 2' })).toBeInTheDocument();
   });
 });
 

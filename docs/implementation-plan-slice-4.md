@@ -11,7 +11,7 @@ During combat the DM heals a combatant with as few taps as damage, without crowd
 row that already holds `−1 −5 −10`:
 
 ```
-Combat → Heal → tap +5 on Goblin Boss (16 → 21/21) → Done healing
+Combat → Heal → tap +5 on Goblin Boss (16 → 21/21) → Done
 ```
 
 | Story  | Title             | Priority | Notes                                    |
@@ -44,16 +44,16 @@ export function isFullHp(combatant: Combatant): boolean; // disables the heal bu
   buttons of a combatant at full HP are disabled. A DEAD combatant's buttons are enabled,
   so it can be revived.
 - A hint under the heading, like reorder mode's: "Healing: tap +1, +5 or +10, then tap
-  Done healing below."
+  Done below."
 - **Buttons below the list (D40):** `+ Add combatant`, `Heal`, `Reorder`. In heal mode
-  `Heal` becomes a filled green `Done healing`; in reorder mode `Reorder` becomes `Done`
+  `Heal` becomes a filled green `Done`; in reorder mode `Reorder` becomes `Done`
   as now.
 
 ## 4. Build order
 
 Each step is small, ends with `npm run check` green and a working app, and is one commit.
 
-**Progress:** step 1 (DC-062 domain) ✅ done · **next: step 2**.
+**Progress:** step 1 (DC-062 domain) ✅ done · step 2 (DC-062 heal mode) ✅ done · **next: step 3**.
 
 | Step | Content                                                       | Stories | Tests                                                                                              |
 | ---- | ------------------------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------- |
@@ -74,13 +74,15 @@ Numbering continues from the third slice. Answers in **bold**. **Status: all con
   answers DC-062's open point.
 - **D39 — Heal mode** (product owner, 2026-10-13: a mode toggle, not per-row healing or a
   long press). Decision: **a third mode in the URL (`?mode=heal`), exclusive with
-  reorder mode; it stays on until the DM taps Done healing**, so several combatants can be
+  reorder mode; it stays on until the DM taps Done**, so several combatants can be
   healed in a row.
 - **D40 — Where the Heal button goes.** Decision: **below the list, between
   `+ Add combatant` and `Reorder`**, in thumb reach and away from Quick (like D29).
 - **D41 — Making heal mode unmistakable.** Decision: **green heal buttons, a green filled
-  `Done healing` button, and the hint text**, so the DM never heals by accident thinking
-  it is damage.
+  `Done` button, and the hint text**, so the DM never heals by accident thinking it is
+  damage. Changed by the product owner on 2026-10-13 (step 2): the button reads `Done`, not
+  `Done healing`, so it keeps the width of `Heal` and the row below the list doesn't wrap
+  on a phone; screen readers hear "Done healing".
 - **D42 — Heal mode when leaving combat.** Decision: **like reorder mode: kept in the URL,
   so Back and a refresh keep it; Resume combat and the Quick Access Combat item open normal
   mode.**

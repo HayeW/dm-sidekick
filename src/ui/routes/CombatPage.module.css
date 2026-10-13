@@ -1,15 +1,24 @@
-/* Below the list: + Add combatant, with Reorder / Done on its right (D29). */
+/* Below the list: + Add combatant, then Heal and Reorder on its right (D29, D40). */
 .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 8px;
   margin-top: 12px;
 }
 
+/* Heal and Reorder: together at the right edge, also when they wrap below the add button
+   or the add form is open and the add button is gone. */
+.modeButtons {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.heal,
+.doneHealing,
 .reorder,
 .done {
-  margin-left: auto;
-  min-width: 96px;
+  min-width: 80px;
   padding: 0 var(--space);
   border-radius: var(--radius);
   font-weight: 700;
@@ -23,6 +32,32 @@
   color: var(--text);
 }
 
+/* Heal mode (D41): green, so it is never mistaken for damage. */
+.heal {
+  border: 1px solid var(--heal);
+  background: transparent;
+  color: var(--heal);
+}
+
+.doneHealing {
+  border: 0;
+  background: var(--heal);
+  color: var(--bg);
+}
+
+.healHint {
+  color: var(--heal);
+}
+
+.controls.healControls button {
+  color: var(--heal);
+}
+
+.controls.healControls button:active {
+  background: var(--heal);
+  color: var(--bg);
+}
+
 /* Done stands out: it is the one thing to tap after placing everyone. */
 .done {
   border: 0;
@@ -30,6 +65,8 @@
   color: var(--bg);
 }
 
+.heal:focus-visible,
+.doneHealing:focus-visible,
 .reorder:focus-visible,
 .done:focus-visible {
   outline: 2px solid var(--accent);
@@ -205,7 +242,9 @@
 
 /* Add combatant below the list (DC-065). */
 .addButton {
-  flex: 1;
+  /* One line; on a very narrow screen Heal and Reorder wrap below as a group. */
+  flex: 1 1 140px;
+  white-space: nowrap;
   border: 1px dashed var(--text-muted);
   border-radius: var(--radius);
   background: transparent;
@@ -216,7 +255,7 @@
 }
 
 .addForm {
-  /* Its own line, under the Reorder / Done button (D29). */
+  /* Its own line, under the Heal and Reorder buttons (D29, D40). */
   order: 1;
   flex: 1 1 100%;
   display: flex;

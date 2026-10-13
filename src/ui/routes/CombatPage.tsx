@@ -14,8 +14,11 @@ import { getActiveCombat, setActiveCombat } from '../../data/combats';
 import {
   addCombatant,
   applyDamage,
+  applyHealing,
   DAMAGE_AMOUNTS,
+  HEAL_AMOUNTS,
   isDead,
+  isFullHp,
   moveCombatant,
   moveCombatantTo,
   removeCombatant,
@@ -39,16 +42,22 @@ import styles from './CombatPage.module.css';
  * DC-065, DC-066: a combatant added below the list goes to the bottom, not alphabetically;
  * the screen then switches to reorder mode to move it into place (decision D18).
  * DC-067: in reorder mode every combatant can be removed with one tap (D18).
+ * DC-062: in heal mode the damage buttons become +1/+5/+10, up to max HP; healing revives
+ * the dead (D36–D41).
  * DC-020: Quick Access opens from the top bar (D22).
  */
 export default function CombatPage() {
   const { campaignId = '' } = useParams();
   // The mode is part of the URL, so a refresh keeps it. Switching replaces the history entry,
-  // so Back still returns to the scene in one tap.
+  // so Back still returns to the scene in one tap (D17, D42). Reorder and heal mode exclude
+  // each other (D39).
   const [searchParams, setSearchParams] = useSearchParams();
-  const reordering = searchParams.get('mode') === 'reorder';
-  const setReordering = (on: boolean) =>
-    setSearchParams(on ? { mode: 'reorder' } : {}, { replace: true });
+  const modeParam = searchParams.get('mode');
+  const mode: Mode = modeParam === 'reorder' || modeParam === 'heal' ? modeParam : 'normal';
+  const setMode = (next: Mode) =>
+    setSearchParams(next === 'normal' ? {} : { mode: next }, { replace: true });
+  const reordering = mode === 'reorder';
+  const healing = mode === 'heal';
   const campaign = getCampaign(campaignId);
   const combat = campaign && getActiveCombat(campaign.id);
   // The combat lives in the data layer; after changing it, render again to show it.
@@ -73,6 +82,8 @@ export default function CombatPage() {
   };
   const damage = (combatantId: string, amount: number) =>
     change((latest) => applyDamage(latest, combatantId, amount));
+  const heal = (combatantId: string, amount: number) =>
+    change((latest) => applyHealing(latest, combatantId, amount));
   const move = (combatantId: string, direction: 'up' | 'down') =>
     change((latest) => moveCombatant(latest, combatantId, direction));
   const moveTo = (combatantId: string, to: number) =>
@@ -80,7 +91,7 @@ export default function CombatPage() {
   const remove = (combatantId: string) => change((latest) => removeCombatant(latest, combatantId));
   const add = (newCombatant: NewCombatant) => {
     change((latest) => addCombatant(latest, newCombatant));
-    setReordering(true);
+    setMode('reorder');
   };
 
   return (
@@ -95,6 +106,11 @@ export default function CombatPage() {
       {reordering && (
         <p className={styles.hint}>Drag ≡ to move everyone into place, then tap Done below.</p>
       )}
+      {healing && (
+        <p className={`${styles.hint} ${styles.healHint}`}>
+          Healing: tap +1, +5 or +10, then tap Done below.
+        </p>
+      )}
       {reordering ? (
         <ReorderList
           combatants={combat.combatants}
@@ -108,7 +124,13 @@ export default function CombatPage() {
             <CombatantRow
               key={combatant.id}
               combatant={combatant}
-              controls={<DamageButtons combatant={combatant} onDamage={damage} />}
+              controls={
+                healing ? (
+                  <HealButtons combatant={combatant} onHeal={heal} />
+                ) : (
+                  <DamageButtons combatant={combatant} onDamage={damage} />
+                )
+              }
             />
           ))}
         </ol>
@@ -117,17 +139,33 @@ export default function CombatPage() {
           add form wraps onto its own line under these buttons. */}
       <div className={styles.actions}>
         <AddCombatant onAdd={add} />
-        <button
-          type="button"
-          className={reordering ? styles.done : styles.reorder}
-          onClick={() => setReordering(!reordering)}
-        >
-          {reordering ? 'Done' : 'Reorder'}
-        </button>
+        {/* Kept together, so they wrap as one group to the right. */}
+        <div className={styles.modeButtons}>
+          {/* Heal mode (D40, D41): green and unmistakable, so it is never mistaken for damage.
+              It reads "Done" like reorder mode's button, so it keeps its width and the row
+              doesn't wrap; screen readers hear "Done healing". */}
+          <button
+            type="button"
+            className={healing ? styles.doneHealing : styles.heal}
+            aria-label={healing ? 'Done healing' : undefined}
+            onClick={() => setMode(healing ? 'normal' : 'heal')}
+          >
+            {healing ? 'Done' : 'Heal'}
+          </button>
+          <button
+            type="button"
+            className={reordering ? styles.done : styles.reorder}
+            onClick={() => setMode(reordering ? 'normal' : 'reorder')}
+          >
+            {reordering ? 'Done' : 'Reorder'}
+          </button>
+        </div>
       </div>
     </main>
   );
 }
+
+type Mode = 'normal' | 'reorder' | 'heal';
 
 type RowProps = {
   combatant: Combatant;
@@ -187,6 +225,33 @@ function DamageButtons({
           onClick={() => onDamage(combatant.id, amount)}
         >
           −{amount}
+        </button>
+      ))}
+    </span>
+  );
+}
+
+/** Heal mode (DC-062): green +1/+5/+10; disabled at full HP, enabled for the dead (D36, D37). */
+function HealButtons({
+  combatant,
+  onHeal,
+}: {
+  combatant: Combatant;
+  onHeal: (combatantId: string, amount: number) => void;
+}) {
+  // Combatants without HP have nothing to heal: PCs (D3) and those added without HP (D8).
+  if (combatant.hp === null) return null;
+  return (
+    <span className={`${styles.controls} ${styles.healControls}`}>
+      {HEAL_AMOUNTS.map((amount) => (
+        <button
+          key={amount}
+          type="button"
+          aria-label={`${amount} healing to ${combatant.name}`}
+          disabled={isFullHp(combatant)}
+          onClick={() => onHeal(combatant.id, amount)}
+        >
+          +{amount}
         </button>
       ))}
     </span>

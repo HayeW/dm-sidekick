@@ -6,6 +6,7 @@
   --text-muted: #a0a0ad;
   --accent: #d4a24c;
   --danger: #d9534f;
+  --heal: #5fb37a; /* healing (DC-062) */
   --radius: 12px;
   --space: 16px;
   --touch: 44px; /* minimum touch target */
