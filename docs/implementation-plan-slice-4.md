@@ -1,7 +1,8 @@
 # DM Cockpit — Implementation plan: fourth slice (Healing)
 
-Status: **approved 2026-10-13.** D36–D42 confirmed by the product owner (D39–D42: all
-proposals).
+Status: **done 2026-10-13.** D36–D42 confirmed by the product owner (D39–D42: all
+proposals; D41 adjusted in step 2). All steps built; checked on a real phone by the product
+owner.
 Source: `requirements.md` (Epic 7: DC-062). Builds on the earlier slices; their architecture,
 decisions D1–D35 and working agreement still apply.
 
@@ -53,7 +54,7 @@ export function isFullHp(combatant: Combatant): boolean; // disables the heal bu
 
 Each step is small, ends with `npm run check` green and a working app, and is one commit.
 
-**Progress:** step 1 (DC-062 domain) ✅ done · step 2 (DC-062 heal mode) ✅ done · **next: step 3**.
+**Progress:** step 1 (DC-062 domain) ✅ done · step 2 (DC-062 heal mode) ✅ done · step 3 (phone check) ✅ done · **slice 4 complete**.
 
 | Step | Content                                                       | Stories | Tests                                                                                              |
 | ---- | ------------------------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------- |
