@@ -53,7 +53,7 @@ export function isFullHp(combatant: Combatant): boolean; // disables the heal bu
 
 Each step is small, ends with `npm run check` green and a working app, and is one commit.
 
-**Progress:** **next: step 1**.
+**Progress:** step 1 (DC-062 domain) ✅ done · **next: step 2**.
 
 | Step | Content                                                       | Stories | Tests                                                                                              |
 | ---- | ------------------------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------- |

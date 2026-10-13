@@ -44,6 +44,33 @@ export function applyDamage(combat: Combat, combatantId: string, amount: number)
   };
 }
 
+/** The heal buttons in heal mode: the same amounts as damage (DC-062, decision D38). */
+export const HEAL_AMOUNTS = [1, 5, 10] as const;
+
+/**
+ * Raises a combatant's HP by `amount`, never above its maximum (DC-062, decision D36).
+ * A combatant at 0 HP comes back: DEAD is derived from HP (D37). Returns a new combat; the
+ * order stays the same. Combatants without HP (player characters, D3) are left unchanged.
+ */
+export function applyHealing(combat: Combat, combatantId: string, amount: number): Combat {
+  return {
+    ...combat,
+    combatants: combat.combatants.map((combatant) =>
+      combatant.id === combatantId && combatant.hp !== null
+        ? {
+            ...combatant,
+            hp: Math.min(combatant.maxHp ?? Infinity, combatant.hp + amount),
+          }
+        : combatant,
+    ),
+  };
+}
+
+/** At maximum HP, so healing has no effect and its buttons are disabled (D36). */
+export function isFullHp(combatant: Combatant): boolean {
+  return combatant.hp !== null && combatant.maxHp !== null && combatant.hp >= combatant.maxHp;
+}
+
 /**
  * Moves a combatant one place up or down in the combat order by swapping it with its
  * neighbour (DC-064, DC-052). At the top or bottom nothing changes. Returns a new combat.

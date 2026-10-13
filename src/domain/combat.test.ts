@@ -4,7 +4,11 @@ import type { Combat } from './combat';
 import {
   addCombatant,
   applyDamage,
+  applyHealing,
+  DAMAGE_AMOUNTS,
+  HEAL_AMOUNTS,
   isDead,
+  isFullHp,
   moveCombatant,
   moveCombatantTo,
   removeCombatant,
@@ -232,6 +236,66 @@ describe('DC-061 — Damage toepassen', () => {
     applyDamage(combat, 'enemy:1', 5);
 
     expect(combat).toEqual(before);
+  });
+});
+
+describe('DC-062 — Healing toepassen', () => {
+  const combat: Combat = {
+    campaignId: 'c-1',
+    sceneId: 's-1',
+    encounterId: 'enc-1',
+    combatants: [
+      { id: 'enemy:1', name: 'Goblin Boss', type: 'ENEMY', hp: 10, maxHp: 21 },
+      { id: 'enemy:2', name: 'Goblin', type: 'ENEMY', hp: 0, maxHp: 7 },
+      { id: 'pc:pc-aria', name: 'Aria', type: 'PLAYER', hp: null, maxHp: null },
+      { id: 'added:1', name: 'Voice', type: 'ENEMY', hp: null, maxHp: null },
+    ],
+  };
+  const hpOf = (c: Combat, id: string) => c.combatants.find((x) => x.id === id)?.hp;
+
+  it('raises the HP of that combatant only', () => {
+    const after = applyHealing(combat, 'enemy:1', 5);
+
+    expect(hpOf(after, 'enemy:1')).toBe(15);
+    expect(hpOf(after, 'enemy:2')).toBe(0);
+  });
+
+  it('heals by the same amounts as damage: 1, 5 and 10 (D38)', () => {
+    expect(HEAL_AMOUNTS).toEqual(DAMAGE_AMOUNTS);
+  });
+
+  it('never goes above the maximum HP (D36)', () => {
+    expect(hpOf(applyHealing(combat, 'enemy:1', 10), 'enemy:1')).toBe(20);
+    expect(hpOf(applyHealing(applyHealing(combat, 'enemy:1', 10), 'enemy:1', 10), 'enemy:1')).toBe(
+      21,
+    );
+  });
+
+  it('brings a dead combatant back (D37)', () => {
+    const after = applyHealing(combat, 'enemy:2', 1);
+
+    expect(hpOf(after, 'enemy:2')).toBe(1);
+    expect(isDead(after.combatants[1]!)).toBe(false);
+  });
+
+  it('leaves combatants without HP unchanged: player characters and those added without HP', () => {
+    expect(hpOf(applyHealing(combat, 'pc:pc-aria', 5), 'pc:pc-aria')).toBeNull();
+    expect(hpOf(applyHealing(combat, 'added:1', 5), 'added:1')).toBeNull();
+  });
+
+  it('keeps the order and does not change the original combat', () => {
+    const before = structuredClone(combat);
+    const after = applyHealing(combat, 'enemy:2', 5);
+
+    expect(after.combatants.map((c) => c.id)).toEqual(combat.combatants.map((c) => c.id));
+    expect(combat).toEqual(before);
+  });
+
+  it('knows when a combatant is at full HP, so its heal buttons can be disabled', () => {
+    expect(isFullHp({ ...combat.combatants[0]!, hp: 21 })).toBe(true);
+    expect(isFullHp(combat.combatants[0]!)).toBe(false);
+    expect(isFullHp(combat.combatants[1]!)).toBe(false); // dead: can be healed
+    expect(isFullHp(combat.combatants[2]!)).toBe(false); // no HP: no heal buttons anyway
   });
 });
 
