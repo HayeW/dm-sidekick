@@ -4,6 +4,8 @@ import CampaignPage from './ui/routes/CampaignPage';
 import CombatPage from './ui/routes/CombatPage';
 import LocationListPage from './ui/routes/LocationListPage';
 import LocationPage from './ui/routes/LocationPage';
+import NoteListPage from './ui/routes/NoteListPage';
+import NotePage from './ui/routes/NotePage';
 import NpcListPage from './ui/routes/NpcListPage';
 import NpcPage from './ui/routes/NpcPage';
 import QuickAccessPage from './ui/routes/QuickAccessPage';
@@ -31,6 +33,8 @@ export default function App() {
         <Route path="/c/:campaignId/npcs/:npcId" element={<NpcPage />} />
         <Route path="/c/:campaignId/locations" element={<LocationListPage />} />
         <Route path="/c/:campaignId/locations/:locationId" element={<LocationPage />} />
+        <Route path="/c/:campaignId/notes" element={<NoteListPage />} />
+        <Route path="/c/:campaignId/notes/:noteId" element={<NotePage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>

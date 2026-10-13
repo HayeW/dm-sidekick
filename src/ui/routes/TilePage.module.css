@@ -23,3 +23,11 @@
 .screen {
   min-height: 100dvh;
 }
+
+/* DM notes (DC-014): the DM's own text, a little smaller than read-aloud text. */
+.notes {
+  margin: 0;
+  font-size: 1.125rem;
+  line-height: 1.7;
+  white-space: pre-line;
+}

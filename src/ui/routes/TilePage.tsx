@@ -1,19 +1,34 @@
 import { Link, useLocation, useNavigate, useParams } from 'react-router';
 import { getCampaign } from '../../data/campaigns';
 import type { Description, DescriptionsBlock, Scene } from '../../domain/campaign';
-import { findBlock, findDescription, findScene, neighbours } from '../../domain/scene';
+import { findBlock, findDescription, findScene, neighbours, tileTarget } from '../../domain/scene';
 import StepNav from '../components/StepNav';
 import TopBar from '../components/TopBar';
 import { useSwipe } from '../swipe';
 import styles from './TilePage.module.css';
 
-/** DC-011: an opened tile. Only Descriptions tiles open in this slice; others are P1. */
+/**
+ * An opened tile, on the scene's own tile screen (tileTarget): DC-011 a Descriptions tile,
+ * DC-014 a DM Notes tile.
+ */
 export default function TilePage() {
   const { campaignId = '', sceneId = '', blockId = '', descriptionId } = useParams();
   const campaign = getCampaign(campaignId);
   const scene = campaign && findScene(campaign, sceneId);
   const block = scene && findBlock(scene, blockId);
   const description = block?.type === 'descriptions' && findDescription(block, descriptionId);
+  const opens = campaign && block && tileTarget(campaign, block)?.kind === 'tile';
+
+  if (campaign && scene && opens && block.type === 'notes' && descriptionId === undefined) {
+    return (
+      <NotesView
+        campaignId={campaign.id}
+        sceneUrl={`/c/${campaign.id}/s/${scene.id}`}
+        scene={scene}
+        text={block.text}
+      />
+    );
+  }
 
   if (!campaign || !scene || !block || block.type !== 'descriptions' || !description) {
     // Back to the deepest level that does exist: the scene, else the campaign, else the list.
@@ -66,14 +81,7 @@ function DescriptionView({ campaignId, sceneUrl, scene, block, description }: Pr
     if (target) navigate(descriptionUrl(target.id), { replace: true, state: location.state });
   });
 
-  // Opened from the scene tile: go back in history, so the phone's back button doesn't
-  // return here. Opened directly (deep link): replace with the scene. Previous/next
-  // replace the history entry and keep this state, so Back is always one tap.
-  const fromScene = (location.state as { fromScene?: boolean } | null)?.fromScene === true;
-  function back() {
-    if (fromScene) navigate(-1);
-    else navigate(sceneUrl, { replace: true });
-  }
+  const back = useBackToScene(sceneUrl);
 
   return (
     <main className={`page ${styles.screen}`} {...swipe}>
@@ -96,6 +104,41 @@ function DescriptionView({ campaignId, sceneUrl, scene, block, description }: Pr
           state={location.state}
         />
       )}
+    </main>
+  );
+}
+
+/**
+ * Back from an opened tile. Opened from the scene tile: go back in history, so the phone's
+ * back button doesn't return here. Opened directly (deep link): replace with the scene.
+ * Previous/next descriptions replace the history entry and keep this state, so Back is
+ * always one tap (D11).
+ */
+function useBackToScene(sceneUrl: string) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const fromScene = (location.state as { fromScene?: boolean } | null)?.fromScene === true;
+  return () => {
+    if (fromScene) navigate(-1);
+    else navigate(sceneUrl, { replace: true });
+  };
+}
+
+type NotesProps = {
+  campaignId: string;
+  sceneUrl: string;
+  scene: Scene;
+  text: string;
+};
+
+/** DC-014: a scene's DM notes in full (D28), with one tap back to the scene. */
+function NotesView({ campaignId, sceneUrl, scene, text }: NotesProps) {
+  const back = useBackToScene(sceneUrl);
+  return (
+    <main className="page">
+      <TopBar back={{ onClick: back }} backLabel={scene.title} campaignId={campaignId} />
+      <h1>DM Notes</h1>
+      <p className={styles.notes}>{text}</p>
     </main>
   );
 }

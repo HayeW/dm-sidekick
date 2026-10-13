@@ -46,6 +46,7 @@ export default function QuickAccessPage() {
   const encounter = combat?.encounterId ? findEncounter(campaign, combat.encounterId) : undefined;
   const npcCount = campaign.npcs.length;
   const locationCount = campaign.locations.length;
+  const noteCount = campaign.notes.length;
 
   return (
     <main className="page">
@@ -77,6 +78,13 @@ export default function QuickAccessPage() {
             `/c/${campaign.id}/locations`,
             'Locations',
             locationCount === 1 ? '1 location' : `${locationCount} locations`,
+          )}
+        </li>
+        <li>
+          {item(
+            `/c/${campaign.id}/notes`,
+            'Campaign Notes',
+            noteCount === 1 ? '1 note' : `${noteCount} notes`,
           )}
         </li>
       </ul>

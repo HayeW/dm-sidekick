@@ -115,9 +115,16 @@ describe('DC-011 — Descriptions tile openen', () => {
     ).toBeUndefined();
   });
 
-  it('does not open NPC, Notes or Encounter tiles as a whole', () => {
+  it('opens a DM Notes tile on its own detail screen (DC-014)', () => {
+    expect(tileTarget(campaign, notes)).toEqual({ kind: 'tile' });
+  });
+
+  it('cannot open an empty DM Notes tile', () => {
+    expect(tileTarget(campaign, { ...notes, text: '  ' })).toBeUndefined();
+  });
+
+  it('does not open NPC or Encounter tiles as a whole', () => {
     expect(tileTarget(campaign, { id: 'b-npcs', type: 'npcs', npcIds: [] })).toBeUndefined();
-    expect(tileTarget(campaign, notes)).toBeUndefined();
     expect(
       tileTarget(campaign, { id: 'b-enc', type: 'encounter', encounterId: 'enc-1' }),
     ).toBeUndefined();

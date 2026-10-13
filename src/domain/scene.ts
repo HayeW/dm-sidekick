@@ -40,12 +40,13 @@ export type TileTarget =
   { kind: 'tile' } | { kind: 'location'; locationId: string };
 
 /**
- * Where a tile opens with one tap: a Descriptions tile its own detail screen when there is
- * something to read (DC-011); a Location tile its location, when it exists (DC-012).
- * NPC tiles open per NPC instead (DC-013); other tiles don't open.
+ * Where a tile opens with one tap: a Descriptions tile (DC-011) or DM Notes tile (DC-014)
+ * its own detail screen, when there is something to read; a Location tile its location,
+ * when it exists (DC-012). NPC tiles open per NPC instead (DC-013); encounter tiles don't open.
  */
 export function tileTarget(campaign: Campaign, block: ContentBlock): TileTarget | undefined {
   if (block.type === 'descriptions' && block.descriptions.length > 0) return { kind: 'tile' };
+  if (block.type === 'notes' && block.text.trim() !== '') return { kind: 'tile' };
   if (block.type === 'location' && findLocation(campaign, block.locationId)) {
     return { kind: 'location', locationId: block.locationId };
   }

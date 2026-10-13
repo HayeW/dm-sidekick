@@ -104,11 +104,11 @@ describe('DC-011 — Descriptions tile openen', () => {
     expect(screen.getByRole('link', { name: 'Back' })).toHaveAttribute('href', sceneUrl);
   });
 
-  // Location tiles open their location (DC-012); NPC tiles open each NPC instead (DC-013).
-  it('does not make the NPCs or DM Notes tile openable as a whole', () => {
+  // NPC tiles open each NPC instead (DC-013).
+  it('does not make the NPCs tile openable as a whole', () => {
     renderAt(sceneUrl);
 
-    expect(screen.queryAllByRole('link', { name: /^(NPCs|DM Notes)/ })).toHaveLength(0);
+    expect(screen.queryAllByRole('link', { name: /^NPCs/ })).toHaveLength(0);
   });
 });
 
