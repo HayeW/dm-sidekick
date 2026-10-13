@@ -347,6 +347,7 @@ healing controls, Quick Access contents, campaign editing.
 - **No one-tap way back to combat from another scene** (from D20, accepted by the product
   owner on 2026-10-11). After Next/Previous to another scene, the DM has to go back to the
   encounter's scene to tap RESUME COMBAT. Fix with the Quick Access "Combat" item.
+  _Resolved in slice 2 (step 3): Quick Access → Combat from any screen._
 
 ## 10. Working agreement
 

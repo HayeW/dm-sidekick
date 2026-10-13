@@ -1,7 +1,8 @@
 # DM Cockpit — Implementation plan: second slice (Quick Access)
 
-Status: **approved 2026-10-13.** Decisions D22–D28 confirmed by the product owner: all
-proposals, with option C for D25.
+Status: **done 2026-10-13.** Decisions D22–D28 confirmed by the product owner: all
+proposals, with option C for D25. All steps built; checked on a real phone by the product
+owner.
 Source: `requirements.md` (§6 Quick Access, Epic 3, domain model §2, §5, §6, §13).
 Builds on the first slice (`docs/implementation-plan-slice-1.md`): its architecture,
 decisions D1–D21 and working agreement still apply.
@@ -114,7 +115,7 @@ type ContentBlock =
 Each step is small, ends with green checks (`npm run check`) and a working app, and is one
 commit.
 
-**Progress:** step 1 (DC-020) ✅ done · step 2 (DC-020) ✅ done · step 3 (DC-021) ✅ done · step 4 (entities) ✅ done · step 5 (DC-021, DC-013) ✅ done · step 6 (DC-021, DC-012) ✅ done · step 7 (DC-021, DC-014) ✅ done · **next: step 8**.
+**Progress:** step 1 (DC-020) ✅ done · step 2 (DC-020) ✅ done · step 3 (DC-021) ✅ done · step 4 (entities) ✅ done · step 5 (DC-021, DC-013) ✅ done · step 6 (DC-021, DC-012) ✅ done · step 7 (DC-021, DC-014) ✅ done · step 8 (phone check) ✅ done · **slice 2 complete**.
 
 | Step | Content                                                                                  | Stories        | Tests                                                                                             |
 | ---- | ---------------------------------------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------- |
@@ -170,6 +171,9 @@ Numbering continues from the first slice. Answers in **bold**. **Status: all con
   outlined buttons, easy to mix up. Reorder / Done now sits to the right of `+ Add combatant`
   below the list, which also puts Done in thumb reach. An open add form takes its own line
   under these buttons.
+
+**Resolved in this slice:** no one-tap way back to combat from another scene (D20) — Quick
+Access → Combat from any screen (step 3).
 
 **Open follow-ups from slice 1 that stay open:** resume per encounter / "New combat" (D1,
 D16), Undo after removing a combatant (D18), screen readers on a phone cannot reorder (D21),
