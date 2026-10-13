@@ -1,7 +1,7 @@
 # DM Cockpit — Implementation plan: third slice (Spare NPCs)
 
-Status: **approved 2026-10-13.** Decisions D30–D35 confirmed by the product owner: all
-proposals.
+Status: **done 2026-10-13.** Decisions D30–D35 confirmed by the product owner: all
+proposals. All steps built; checked on a real phone by the product owner.
 Source: `requirements.md` (§6 Quick Access, Epic 10 as changed on 2026-10-13: DC-090).
 Builds on the first two slices (`docs/implementation-plan-slice-1.md`,
 `docs/implementation-plan-slice-2.md`): their architecture, decisions D1–D29 and working
@@ -68,7 +68,7 @@ type SpareNpc = {
 
 Each step is small, ends with `npm run check` green and a working app, and is one commit.
 
-**Progress:** step 1 (DC-090 data) ✅ done · step 2 (DC-090 screen) ✅ done · **next: step 3**.
+**Progress:** step 1 (DC-090 data) ✅ done · step 2 (DC-090 screen) ✅ done · step 3 (phone check) ✅ done · **slice 3 complete**.
 
 | Step | Content                                                            | Stories | Tests                                                                                             |
 | ---- | ------------------------------------------------------------------ | ------- | ------------------------------------------------------------------------------------------------- |
