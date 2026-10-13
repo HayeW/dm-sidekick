@@ -8,7 +8,6 @@ import type {
   Scene,
 } from './campaign';
 import {
-  canOpenTile,
   enemySummary,
   findBlock,
   findDescription,
@@ -16,6 +15,7 @@ import {
   findScene,
   neighbours,
   openingScene,
+  tileTarget,
 } from './scene';
 
 const encounter: Encounter = {
@@ -33,7 +33,7 @@ const campaign: Campaign = {
   playerCharacters: [],
   encounters: [encounter],
   npcs: [],
-  locations: [],
+  locations: [{ id: 'loc-1', name: 'Inn', description: 'Smoky' }],
   notes: [],
   scenes: [
     { id: 's-1', title: 'First', blocks: [] },
@@ -94,17 +94,33 @@ describe('DC-011 — Descriptions tile openen', () => {
     expect(findBlock(scene, 'nope')).toBeUndefined();
   });
 
-  it('can open a Descriptions tile', () => {
-    expect(canOpenTile(descriptions)).toBe(true);
+  it('opens a Descriptions tile on its own detail screen', () => {
+    expect(tileTarget(campaign, descriptions)).toEqual({ kind: 'tile' });
   });
 
   it('cannot open an empty Descriptions tile', () => {
-    expect(canOpenTile({ ...descriptions, descriptions: [] })).toBe(false);
+    expect(tileTarget(campaign, { ...descriptions, descriptions: [] })).toBeUndefined();
   });
 
-  it('cannot open other tiles yet', () => {
-    expect(canOpenTile(notes)).toBe(false);
-    expect(canOpenTile({ id: 'b-enc', type: 'encounter', encounterId: 'enc-1' })).toBe(false);
+  it('opens a Location tile on its location (DC-012)', () => {
+    expect(tileTarget(campaign, { id: 'b-loc', type: 'location', locationId: 'loc-1' })).toEqual({
+      kind: 'location',
+      locationId: 'loc-1',
+    });
+  });
+
+  it('cannot open a Location tile whose location does not exist', () => {
+    expect(
+      tileTarget(campaign, { id: 'b-loc', type: 'location', locationId: 'loc-gone' }),
+    ).toBeUndefined();
+  });
+
+  it('does not open NPC, Notes or Encounter tiles as a whole', () => {
+    expect(tileTarget(campaign, { id: 'b-npcs', type: 'npcs', npcIds: [] })).toBeUndefined();
+    expect(tileTarget(campaign, notes)).toBeUndefined();
+    expect(
+      tileTarget(campaign, { id: 'b-enc', type: 'encounter', encounterId: 'enc-1' }),
+    ).toBeUndefined();
   });
 
   it('shows the first description when none is chosen', () => {

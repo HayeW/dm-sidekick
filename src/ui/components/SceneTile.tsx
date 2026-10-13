@@ -15,7 +15,11 @@ const labels: Record<ContentBlock['type'], string> = {
 type Props = {
   block: ContentBlock;
   campaign: Campaign;
-  /** Detail screen URL; when set, the whole tile opens it with one tap (DC-011). */
+  /**
+   * What the tile opens: its detail screen (DC-011) or its location (DC-012). When set, the
+   * whole tile opens it with one tap. The `fromScene` state it passes is only read by the
+   * tile detail screen.
+   */
   openTo?: string;
   /** Encounter tiles: start a new combat, or resume the active one (DC-043, decision D1). */
   combat?: CombatAction;

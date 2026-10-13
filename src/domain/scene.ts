@@ -6,6 +6,7 @@ import type {
   Encounter,
   Scene,
 } from './campaign';
+import { findLocation } from './entities';
 
 /**
  * The scene to show when a campaign is opened (DC-002): the last used scene (DC-003) if it
@@ -33,12 +34,22 @@ export function findBlock(scene: Scene, blockId: string): ContentBlock | undefin
   return scene.blocks.find((block) => block.id === blockId);
 }
 
+/** What a tap on a whole tile opens, if anything. */
+export type TileTarget =
+  /** The scene's own tile detail screen. */
+  { kind: 'tile' } | { kind: 'location'; locationId: string };
+
 /**
- * Tiles that open a detail screen. Only Descriptions in this slice (DC-011), and only
- * when there is something to read; Location/NPCs/Notes are P1.
+ * Where a tile opens with one tap: a Descriptions tile its own detail screen when there is
+ * something to read (DC-011); a Location tile its location, when it exists (DC-012).
+ * NPC tiles open per NPC instead (DC-013); other tiles don't open.
  */
-export function canOpenTile(block: ContentBlock): boolean {
-  return block.type === 'descriptions' && block.descriptions.length > 0;
+export function tileTarget(campaign: Campaign, block: ContentBlock): TileTarget | undefined {
+  if (block.type === 'descriptions' && block.descriptions.length > 0) return { kind: 'tile' };
+  if (block.type === 'location' && findLocation(campaign, block.locationId)) {
+    return { kind: 'location', locationId: block.locationId };
+  }
+  return undefined;
 }
 
 /** The description to show: the given one, or the first when no id is given (D11). */

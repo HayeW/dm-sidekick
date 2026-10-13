@@ -2,6 +2,8 @@ import { Link, Route, Routes } from 'react-router';
 import CampaignListPage from './ui/routes/CampaignListPage';
 import CampaignPage from './ui/routes/CampaignPage';
 import CombatPage from './ui/routes/CombatPage';
+import LocationListPage from './ui/routes/LocationListPage';
+import LocationPage from './ui/routes/LocationPage';
 import NpcListPage from './ui/routes/NpcListPage';
 import NpcPage from './ui/routes/NpcPage';
 import QuickAccessPage from './ui/routes/QuickAccessPage';
@@ -27,6 +29,8 @@ export default function App() {
         <Route path="/c/:campaignId/quick" element={<QuickAccessPage />} />
         <Route path="/c/:campaignId/npcs" element={<NpcListPage />} />
         <Route path="/c/:campaignId/npcs/:npcId" element={<NpcPage />} />
+        <Route path="/c/:campaignId/locations" element={<LocationListPage />} />
+        <Route path="/c/:campaignId/locations/:locationId" element={<LocationPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>
