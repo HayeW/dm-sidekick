@@ -1,6 +1,8 @@
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { getCampaign } from '../../data/campaigns';
+import { setActiveCombat } from '../../data/combats';
+import { startCombat } from '../../domain/combat';
 import {
   combatOrder,
   pressBrowserBack,
@@ -160,5 +162,115 @@ describe('DC-020 — Quick Access openen vanaf beschrijving en combat', () => {
     await user.click(screen.getByRole('link', { name: '‹ The Mill Road' }));
 
     expectHeading('The Mill Road');
+  });
+});
+
+describe('DC-021 — Quick Access items tonen: Combat', () => {
+  const campaign = getCampaign('shadows-over-millbrook')!;
+  const roadUrl = `/c/${campaign.id}/s/scene-mill-road`;
+
+  const expectHeading = (name: string) =>
+    expect(screen.getByRole('heading', { level: 1, name })).toBeInTheDocument();
+  /** The first Quick Access item: Combat, always in that place (D24, D27). */
+  const combatItem = () =>
+    within(screen.getByRole('list', { name: 'Quick Access items' })).getAllByRole('listitem')[0]!;
+
+  /** Starts the combat, taps Done and goes back to the scene: a combat runs in the background. */
+  async function startCombatAndLeave(user: ReturnType<typeof setupUser>) {
+    await user.click(screen.getByRole('button', { name: 'Start combat' }));
+    await user.click(screen.getByRole('button', { name: 'Done' }));
+    await user.click(screen.getByRole('button', { name: '5 damage to Goblin Boss' }));
+    const state = combatOrder();
+    await user.click(screen.getByRole('link', { name: '‹ The Mill Road' }));
+    return state;
+  }
+
+  it('shows Combat disabled when no combat is running (D27)', async () => {
+    const user = setupUser();
+    renderAt(roadUrl);
+    await user.click(screen.getByRole('link', { name: 'Quick' }));
+
+    const item = within(combatItem()).getByRole('button', { name: /Combat/ });
+    expect(item).toBeDisabled();
+    expect(item).toHaveTextContent('No active combat');
+  });
+
+  it('shows the encounter of the active combat', async () => {
+    const user = setupUser();
+    renderAt(roadUrl);
+    await startCombatAndLeave(user);
+
+    await user.click(screen.getByRole('link', { name: 'Quick' }));
+
+    expect(within(combatItem()).getByRole('link', { name: /Combat/ })).toHaveTextContent(
+      'Ambush on the mill road',
+    );
+  });
+
+  it('returns to the same combat from another scene in two taps, in normal mode', async () => {
+    const user = setupUser();
+    renderAt(roadUrl);
+    const before = await startCombatAndLeave(user);
+    await user.click(screen.getByRole('link', { name: /Next/ }));
+    expectHeading('The Old Mill');
+
+    await user.click(screen.getByRole('link', { name: 'Quick' }));
+    await user.click(screen.getByRole('link', { name: /Combat/ }));
+
+    expectHeading('Combat');
+    expect(combatOrder()).toEqual(before);
+    expect(screen.getByRole('button', { name: 'Reorder' })).toBeInTheDocument();
+  });
+
+  it('replaces Quick Access in the history: Back from combat returns to the scene (D23)', async () => {
+    const user = setupUser();
+    renderWithBrowserBack(roadUrl);
+    await startCombatAndLeave(user);
+    await user.click(screen.getByRole('link', { name: /Next/ }));
+    await user.click(screen.getByRole('link', { name: 'Quick' }));
+    await user.click(screen.getByRole('link', { name: /Combat/ }));
+
+    await pressBrowserBack();
+
+    expectHeading('The Old Mill');
+  });
+
+  it('just closes when opened from the combat itself, leaving no extra history entry', async () => {
+    const user = setupUser();
+    renderWithBrowserBack(roadUrl);
+    await user.click(screen.getByRole('button', { name: 'Start combat' })); // reorder mode
+    await user.click(screen.getByRole('link', { name: 'Quick' }));
+
+    await user.click(screen.getByRole('button', { name: /Combat/ }));
+    expectHeading('Combat');
+    expect(screen.getByRole('button', { name: 'Done' })).toBeInTheDocument();
+
+    await pressBrowserBack();
+    expectHeading('The Mill Road');
+  });
+
+  it('shows "In progress" for a combat without a known encounter', async () => {
+    const user = setupUser();
+    const encounter = campaign.encounters[0]!;
+    setActiveCombat({ ...startCombat(campaign, 'scene-mill-road', encounter), encounterId: null });
+    renderAt(roadUrl);
+
+    await user.click(screen.getByRole('link', { name: 'Quick' }));
+
+    expect(within(combatItem()).getByRole('link', { name: /Combat/ })).toHaveTextContent(
+      'In progress',
+    );
+  });
+
+  it('keeps Quick Access in the history when it was opened directly, so Back stays in the app', async () => {
+    const user = setupUser();
+    setActiveCombat(startCombat(campaign, 'scene-mill-road', campaign.encounters[0]!));
+    renderWithBrowserBack(`/c/${campaign.id}/quick`);
+
+    await user.click(screen.getByRole('link', { name: /Combat/ }));
+    expectHeading('Combat');
+    await pressBrowserBack();
+
+    expectHeading('Quick Access');
   });
 });

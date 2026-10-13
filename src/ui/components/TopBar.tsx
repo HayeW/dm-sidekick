@@ -1,5 +1,8 @@
-import { Link } from 'react-router';
+import { Link, useLocation } from 'react-router';
 import styles from './TopBar.module.css';
+
+/** Router state for the Quick Access screen: the path of the screen that opened it. */
+export type QuickAccessState = { quickFrom: string };
 
 type Props = {
   /**
@@ -16,9 +19,11 @@ type Props = {
 /**
  * Top of every screen inside a campaign: the back control on the left, the Quick Access
  * button on the right (DC-020, decision D22). Opening Quick Access adds a history entry, so
- * the phone's Back closes it again (D23).
+ * the phone's Back closes it again (D23). It is told which screen opened it, so an item that
+ * leads back to that screen can simply close Quick Access.
  */
 export default function TopBar({ back, backLabel, campaignId }: Props) {
+  const { pathname } = useLocation();
   const label = `‹ ${backLabel}`;
   return (
     <div className={styles.bar}>
@@ -31,7 +36,11 @@ export default function TopBar({ back, backLabel, campaignId }: Props) {
           {label}
         </button>
       )}
-      <Link to={`/c/${campaignId}/quick`} className={styles.quick}>
+      <Link
+        to={`/c/${campaignId}/quick`}
+        state={{ quickFrom: pathname } satisfies QuickAccessState}
+        className={styles.quick}
+      >
         Quick
       </Link>
     </div>

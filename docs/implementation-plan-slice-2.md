@@ -110,7 +110,7 @@ type ContentBlock =
 Each step is small, ends with green checks (`npm run check`) and a working app, and is one
 commit.
 
-**Progress:** step 1 (DC-020) ✅ done · step 2 (DC-020) ✅ done · **next: step 3**.
+**Progress:** step 1 (DC-020) ✅ done · step 2 (DC-020) ✅ done · step 3 (DC-021) ✅ done · **next: step 4**.
 
 | Step | Content                                                                                  | Stories        | Tests                                                                                             |
 | ---- | ---------------------------------------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------- |
@@ -134,7 +134,11 @@ Numbering continues from the first slice. Answers in **bold**. **Status: all con
   easier to reach with a thumb, but the combat screen has no bottom bar and would need one.
 - **D23 — Quick Access is a screen with its own URL** (`/c/:campaignId/quick`), not an
   overlay. Decision: **yes** — the UX rules say every screen has its own URL, so Back closes
-  it and refresh works. Choosing an item replaces the Quick Access history entry.
+  it and refresh works. Choosing an item replaces the Quick Access history entry. Two
+  refinements (step 3): an item that leads back to the screen Quick Access was opened from
+  just closes it (so Combat opened from combat in reorder mode stays in reorder mode), and
+  when Quick Access was opened directly (new tab) an item adds an entry instead, so Back
+  stays in the app.
 - **D24 — Which items in v1** (requirements §20 open question; DC-021 says "the final list is
   still open"). Decision: **Combat, Campaign NPCs, Locations, Campaign Notes.** Not Random NPC
   (Epic 10, its own slice), Rules / references or Global Notes (no story).
