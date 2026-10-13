@@ -21,7 +21,7 @@ In scope
 - Player Characters
 - Notes
 - Quick Access
-- Random NPC
+- Kant-en-klare NPC's (voorheen Random NPC)
 - Combat
 - Combatants
 - HP management
@@ -90,17 +90,19 @@ De applicatie heeft een universeel Quick Access-menu.
 Quick Access is een escape hatch voor functionaliteit die niet direct onderdeel is van de huidige scene.
 Mogelijke items:
 - Combat
-- Random NPC
+- Kant-en-klare NPC's
 - Rules / references
 - Campaign NPCs
 - Campaign Locations
 - Campaign Notes
 - Global Notes
 Quick Access is niet bedoeld als volledig hoofdmenu.
-Random NPC
-De Random NPC-flow is:
-Scene ↓ Quick Access ↓ Random NPC ↓ NPC result ↓ Save to campaign / Discard 
-Random NPC hoeft niet permanent zichtbaar te zijn in de scene-UI.
+Kant-en-klare NPC's
+Een vaste selectie van vooraf gemaakte NPC's, voor als het verhaal onverwacht een NPC nodig heeft. De selectie is globaal: in elke campaign dezelfde. Er wordt niets willekeurig gegenereerd.
+De flow is:
+Scene ↓ Quick Access ↓ Kant-en-klare NPC's ↓ lijst ↓ DM leest een NPC af en speelt verder
+Een gebruikte NPC wordt niet bewaard of gemarkeerd; de lijst blijft hetzelfde.
+De lijst hoeft niet permanent zichtbaar te zijn in de scene-UI.
 ## 7. Combat
 Combat kan rechtstreeks vanuit een encounter worden gestart.
 Bij het starten van combat:
@@ -436,7 +438,7 @@ P1
 Als DM wil ik beschikbare Quick Access-functies kunnen kiezen.
 Voor v1 kunnen dit onder andere zijn:
 - Combat
-- Random NPC
+- Kant-en-klare NPC's
 - Campaign NPCs
 - Campaign Locations
 - Campaign Notes
@@ -563,16 +565,22 @@ Minimaal behouden:
 - volgorde;
 - HP;
 - dead-status.
-## Epic 10 — Random NPC
-### DC-090 — Random NPC genereren
+## Epic 10 — Kant-en-klare NPC's
+Gewijzigd door de product owner op 2026-10-13. Eerst "Random NPC": een NPC genereren, aan de campaign toevoegen of weggooien. Nu een vaste, globale selectie vooraf gemaakte NPC's. DC-091 en DC-092 vervallen.
+### DC-090 — Kant-en-klare NPC's bekijken
 P1
-Als DM wil ik via Quick Access een random NPC kunnen genereren.
-### DC-091 — Random NPC bewaren
-P1
-Als DM wil ik een gegenereerde NPC aan de campaign kunnen toevoegen.
-### DC-092 — Random NPC weggooien
-P1
-Als DM wil ik een gegenereerde NPC kunnen weggooien zonder deze aan de campaign toe te voegen.
+Als DM wil ik via Quick Access een selectie kant-en-klare NPC's kunnen bekijken, zodat ik er snel één kan gebruiken als het verhaal onverwacht een NPC nodig heeft.
+Acceptance criteria
+- De selectie is globaal: in elke campaign dezelfde.
+- Iedere NPC heeft een naam, een ras en een zeer korte beschrijving (één of twee zinnen).
+- De lijst toont van iedere NPC naam, ras en beschrijving, zodat de DM niets hoeft te openen.
+- De lijst is vanuit elk scherm binnen een campaign met twee taps bereikbaar (Quick Access).
+- Er wordt niets willekeurig gegenereerd; de selectie wordt met de app meegeleverd.
+- Een gebruikte NPC wordt niet bewaard of gemarkeerd; de lijst blijft hetzelfde.
+### DC-091 — Vervallen
+Was: Random NPC bewaren.
+### DC-092 — Vervallen
+Was: Random NPC weggooien.
 ## Epic 11 — UX quality
 ### DC-100 — Mobile-first layout
 P0
