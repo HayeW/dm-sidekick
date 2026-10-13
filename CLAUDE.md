@@ -20,12 +20,19 @@ Vitest + React Testing Library, ESLint + Prettier. Persistence: `localStorage`. 
 ## Commands
 
 ```
+npm run check       # everything a step needs: prettier --check, typecheck, lint, all tests
 npm test            # all tests once
-npm run typecheck
-npm run lint
+npx vitest run src/ui/routes/CombatPage.test.tsx   # one test file, while iterating
+npm run format      # fix Prettier formatting
 npm run build       # typecheck + production build
 npm run dev         # dev server, http://localhost:5173
 ```
+
+Screen tests live next to their screen (`src/ui/routes/<Screen>.test.tsx`) and render the
+whole app at a URL; shared helpers are in `src/test/app.tsx`. Use its `setupUser()`
+(user-event without delays) rather than `userEvent.setup()`. While iterating, run only the
+relevant test file; run `npm run check` once at the end. `requirements.md` is excluded from
+Prettier: it is the product owner's document, keep its formatting as is.
 
 The user is on Windows. The terminal may be PowerShell; use commands that work there.
 
@@ -49,6 +56,12 @@ The user is on Windows. The terminal may be PowerShell; use commands that work t
 - Every screen has its own URL so back button and refresh work.
 - UI text is English (decision D10).
 
+## Verifying in the browser
+
+- For gesture and touch changes (drag, swipe, long press), verify in the desktop viewport
+  only (`resize_window` preset `desktop`): the mobile preset scales the page, so mouse
+  coordinates miss their target. The product owner tests the touch feel on a real phone.
+
 ## Working agreement
 
 1. Work on **one step / story at a time**. Don't build features outside the story.
@@ -56,8 +69,8 @@ The user is on Windows. The terminal may be PowerShell; use commands that work t
    and wait for approval if anything in the story is ambiguous.
 3. Domain logic gets unit tests; UI behaviour gets at least one component test.
    Name test `describe` blocks after the story, e.g. `DC-001 — Campaigns tonen`.
-4. A step is done only when `npm test`, `npm run typecheck` and `npm run lint` all pass.
-   Run them yourself and fix failures before reporting.
+4. A step is done only when `npm run check` passes (formatting, types, lint, all tests).
+   Run it yourself and fix failures before reporting.
 5. No new dependencies without asking. Never approve npm install scripts (`allowScripts`,
    `npm install-scripts approve`) without asking; npm blocks them by default as protection
    against supply-chain attacks. esbuild's blocked postinstall is known and harmless.

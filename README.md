@@ -22,13 +22,14 @@ on a phone connected to the same Wi-Fi.
 ## Scripts
 
 | Command              | What it does                                  |
-|----------------------|-----------------------------------------------|
+| -------------------- | --------------------------------------------- |
 | `npm run dev`        | Dev server with instant reload                |
 | `npm run dev:phone`  | Same, reachable from other devices on the LAN |
 | `npm test`           | Run all tests once                            |
 | `npm run test:watch` | Re-run tests on every save                    |
 | `npm run typecheck`  | TypeScript type check                         |
 | `npm run lint`       | ESLint                                        |
+| `npm run check`      | Prettier check + type check + lint + tests    |
 | `npm run format`     | Format all files with Prettier                |
 | `npm run build`      | Type check + production build into `dist/`    |
 

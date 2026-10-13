@@ -15,6 +15,7 @@
     "test:watch": "vitest",
     "typecheck": "tsc",
     "lint": "eslint .",
+    "check": "prettier --check . && tsc && eslint . && vitest run",
     "format": "prettier --write ."
   },
   "dependencies": {
