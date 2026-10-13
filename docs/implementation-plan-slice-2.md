@@ -82,12 +82,12 @@ campaign data, and scene tiles refer to them by id, as the encounter tile alread
 type Campaign = {
   // existing: id, name, scenes, playerCharacters, encounters
   npcs: Npc[]; // array order = list order
-  locations: Location[];
+  locations: CampaignLocation[];
   notes: Note[]; // campaign notes, not tied to a scene (D28)
 };
 
 type Npc = { id: string; name: string; description: string }; // D26
-type Location = { id: string; name: string; description: string }; // D26
+type CampaignLocation = { id: string; name: string; description: string }; // D26; not `Location` (browser/router type)
 type Note = { id: string; title: string; text: string };
 
 type ContentBlock =
@@ -99,9 +99,13 @@ type ContentBlock =
 ```
 
 - The seed data moves its NPC and location texts into `campaign.npcs` / `campaign.locations`
-  and gets a few campaign notes. The scene screen must look the same as before.
-- An id that refers to nothing (bad seed data) shows nothing for that NPC/location rather
-  than crashing; covered by unit tests.
+  and gets a few campaign notes. The scene screen must look the same as before, with one
+  accepted exception (product owner, 2026-10-13): the NPC tile shows names only ("Marta
+  Hollow, Old Fenn"); roles like "innkeeper" moved into the NPC's description.
+- An id that refers to nothing (bad seed data) never crashes: an unknown NPC is left out of
+  the NPCs tile ("No NPCs" when none is left), an unknown location shows "Location not
+  found", like "Encounter not found". Covered by unit tests, and a seed test checks that
+  every reference resolves.
 - No persistence changes: campaign data is still seed data; session and combat storage are
   untouched.
 
@@ -110,7 +114,7 @@ type ContentBlock =
 Each step is small, ends with green checks (`npm run check`) and a working app, and is one
 commit.
 
-**Progress:** step 1 (DC-020) ✅ done · step 2 (DC-020) ✅ done · step 3 (DC-021) ✅ done · **next: step 4**.
+**Progress:** step 1 (DC-020) ✅ done · step 2 (DC-020) ✅ done · step 3 (DC-021) ✅ done · step 4 (entities) ✅ done · **next: step 5**.
 
 | Step | Content                                                                                  | Stories        | Tests                                                                                             |
 | ---- | ---------------------------------------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------- |

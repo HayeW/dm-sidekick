@@ -1,5 +1,6 @@
 import { Link } from 'react-router';
 import type { Campaign, ContentBlock, Encounter } from '../../domain/campaign';
+import { findLocation, findNpcs } from '../../domain/entities';
 import { enemySummary, findEncounter } from '../../domain/scene';
 import styles from './SceneTile.module.css';
 
@@ -63,15 +64,22 @@ function TileBody({ block, campaign, combat }: Omit<Props, 'openTo'>) {
     }
     case 'notes':
       return <p className={styles.clamp}>{block.text}</p>;
-    case 'location':
+    case 'location': {
+      // Locations and NPCs are campaign data; the tile refers to them by id (D25).
+      const location = findLocation(campaign, block.locationId);
+      if (!location) return <p className={styles.missing}>Location not found</p>;
       return (
         <>
-          <p className={styles.title}>{block.title}</p>
-          <p className={styles.clamp}>{block.text}</p>
+          <p className={styles.title}>{location.name}</p>
+          <p className={styles.clamp}>{location.description}</p>
         </>
       );
-    case 'npcs':
-      return <p className={styles.clamp}>{block.names.join(', ')}</p>;
+    }
+    case 'npcs': {
+      const npcs = findNpcs(campaign, block.npcIds);
+      if (npcs.length === 0) return <p className={styles.missing}>No NPCs</p>;
+      return <p className={styles.clamp}>{npcs.map((npc) => npc.name).join(', ')}</p>;
+    }
     case 'encounter': {
       const encounter = findEncounter(campaign, block.encounterId);
       if (!encounter) return <p className={styles.missing}>Encounter not found</p>;

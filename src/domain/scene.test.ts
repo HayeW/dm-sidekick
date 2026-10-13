@@ -32,6 +32,9 @@ const campaign: Campaign = {
   name: 'Test campaign',
   playerCharacters: [],
   encounters: [encounter],
+  npcs: [],
+  locations: [],
+  notes: [],
   scenes: [
     { id: 's-1', title: 'First', blocks: [] },
     { id: 's-2', title: 'Second', blocks: [] },

@@ -29,6 +29,9 @@ const campaign: Campaign = {
     { id: 'pc-dain', name: 'Dain' },
   ],
   encounters: [ambush],
+  npcs: [],
+  locations: [],
+  notes: [],
 };
 
 const names = (combat: ReturnType<typeof startCombat>) => combat.combatants.map((c) => c.name);

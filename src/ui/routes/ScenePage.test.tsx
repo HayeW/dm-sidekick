@@ -17,7 +17,7 @@ describe('DC-010 — Scene tonen', () => {
       'DM Notes',
     ]);
     expect(screen.getByText('The Crooked Kettle')).toBeInTheDocument();
-    expect(screen.getByText('Marta Hollow (innkeeper), Old Fenn')).toBeInTheDocument();
+    expect(screen.getByText('Marta Hollow, Old Fenn')).toBeInTheDocument();
   });
 
   it('shows an encounter tile with a compact enemy summary', () => {

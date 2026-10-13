@@ -1,7 +1,7 @@
 import type { Campaign } from '../domain/campaign';
 
 // Demo campaigns bundled with the app. There is no story yet for creating campaigns,
-// so this is the only campaign data in the first slice. Content is original.
+// so this is the only campaign data. Content is original.
 
 export const seedCampaigns: Campaign[] = [
   {
@@ -21,6 +21,51 @@ export const seedCampaigns: Campaign[] = [
           { name: 'Goblin', count: 3, hp: 7 },
           { name: 'Goblin Boss', count: 1, hp: 21 },
         ],
+      },
+    ],
+    npcs: [
+      {
+        id: 'npc-marta',
+        name: 'Marta Hollow',
+        description:
+          'Innkeeper of the Crooked Kettle. Warm to regulars, wary of strangers; ' +
+          'keeps a cudgel under the bar.',
+      },
+      {
+        id: 'npc-fenn',
+        name: 'Old Fenn',
+        description:
+          'Retired ferryman who drinks by the hearth every night. ' +
+          'Talks freely for a mug of ale, and exaggerates everything.',
+      },
+    ],
+    locations: [
+      {
+        id: 'loc-crooked-kettle',
+        name: 'The Crooked Kettle',
+        description:
+          'Low-beamed inn, smoky hearth, six rooms upstairs. Usually busy; tonight half empty.',
+      },
+      {
+        id: 'loc-mill-cellar',
+        name: 'Mill cellar',
+        description: 'Damp stone cellar under the grinding floor. Trapdoor behind the flour sacks.',
+      },
+    ],
+    notes: [
+      {
+        id: 'note-millbrook',
+        title: 'Millbrook',
+        text:
+          'A village of about eighty people on the river Wend. The mill grinds for three villages; ' +
+          'without it, bread runs out within a week.',
+      },
+      {
+        id: 'note-miller',
+        title: 'The missing miller',
+        text:
+          'Joren the miller owes the goblin boss for safe passage of his grain barges. ' +
+          'He is hiding in the tunnels below the mill cellar.',
       },
     ],
     scenes: [
@@ -49,13 +94,8 @@ export const seedCampaigns: Campaign[] = [
               },
             ],
           },
-          {
-            id: 'b-arrival-location',
-            type: 'location',
-            title: 'The Crooked Kettle',
-            text: 'Low-beamed inn, smoky hearth, six rooms upstairs. Usually busy; tonight half empty.',
-          },
-          { id: 'b-arrival-npcs', type: 'npcs', names: ['Marta Hollow (innkeeper)', 'Old Fenn'] },
+          { id: 'b-arrival-location', type: 'location', locationId: 'loc-crooked-kettle' },
+          { id: 'b-arrival-npcs', type: 'npcs', npcIds: ['npc-marta', 'npc-fenn'] },
           {
             id: 'b-arrival-notes',
             type: 'notes',
@@ -112,12 +152,7 @@ export const seedCampaigns: Campaign[] = [
               },
             ],
           },
-          {
-            id: 'b-mill-location',
-            type: 'location',
-            title: 'Mill cellar',
-            text: 'Damp stone cellar under the grinding floor. Trapdoor behind the flour sacks.',
-          },
+          { id: 'b-mill-location', type: 'location', locationId: 'loc-mill-cellar' },
         ],
       },
     ],
@@ -130,6 +165,9 @@ export const seedCampaigns: Campaign[] = [
       { id: 'pc-finn', name: 'Finn' },
     ],
     encounters: [],
+    npcs: [],
+    locations: [],
+    notes: [],
     scenes: [
       {
         id: 'scene-harbour',
