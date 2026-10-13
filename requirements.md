@@ -596,6 +596,38 @@ Als DM wil ik veelgebruikte acties zonder onnodige navigatiestappen kunnen uitvo
 ### DC-102 — Context behouden bij navigatie
 P0
 Als DM wil ik vanuit een context naar andere informatie kunnen navigeren zonder mijn huidige werk kwijt te raken.
+## Epic 12 — Campaign importeren
+Toegevoegd door de product owner op 2026-10-13. De DM bereidt een campaign voor op de PC, in een Markdown-bestand, en importeert dat bestand op het apparaat waarop gespeeld wordt. Het formaat staat beschreven in docs/campaign-format.md. Bewerken in de app (Epic 4 en 5) kan later; import en export blijven dan de manier om een campaign van de PC naar de telefoon te krijgen.
+### DC-110 — Campaign importeren uit een Markdown-bestand
+P1
+Als DM wil ik een campaign die ik op de PC heb voorbereid in een Markdown-bestand kunnen importeren, zodat ik hem tijdens de sessie op mijn telefoon kan gebruiken.
+Acceptance criteria
+- Vanuit de campaign-lijst kan de DM een Markdown-bestand op het apparaat kiezen.
+- De campaign wordt gelezen volgens het formaat in docs/campaign-format.md: scenes met tiles, Player Characters, NPC's, locations, encounters en campaign notes.
+- Na het importeren staat de campaign in de campaign-lijst en kan hij worden geopend zoals elke andere campaign.
+- De campaign wordt lokaal bewaard en blijft na een refresh of het sluiten van de app beschikbaar.
+- De demo campaigns blijven beschikbaar.
+### DC-111 — Bestaande campaign vervangen
+P1
+Als DM wil ik een campaign opnieuw kunnen importeren nadat ik het bestand heb aangepast, zodat de nieuwe versie de oude vervangt.
+Acceptance criteria
+- Een campaign met dezelfde naam als een eerder geïmporteerde campaign geldt als dezelfde campaign.
+- Voordat die wordt vervangen, vraagt de app om bevestiging. Dit is een bewuste uitzondering op "geen bevestigingsschermen": importeren is zeldzaam en vervangt alles.
+- Bij annuleren verandert er niets.
+### DC-112 — Duidelijke foutmeldingen bij importeren
+P1
+Als DM wil ik bij een fout in het bestand precies zien wat er mis is en waar, zodat ik het snel kan verbeteren.
+Acceptance criteria
+- Bij een fout wordt er niets geïmporteerd of vervangen.
+- De melding noemt het regelnummer en wat er mis is, bijvoorbeeld een verwijzing naar een NPC die niet bestaat.
+- Alle gevonden fouten worden tegelijk getoond, niet alleen de eerste.
+### DC-113 — Geïmporteerde campaign verwijderen
+P1
+Als DM wil ik een geïmporteerde campaign kunnen verwijderen, bijvoorbeeld de oude versie nadat ik een campaign een andere naam heb gegeven.
+Acceptance criteria
+- Alleen geïmporteerde campaigns kunnen worden verwijderd, de demo campaigns niet.
+- De app vraagt om bevestiging voordat de campaign wordt verwijderd.
+- Ook de opgeslagen session state van die campaign (laatste scene, actieve combat) wordt verwijderd.
 Niet gepland voor v1
 De volgende features krijgen geen implementation story voor de eerste versie:
 - AI in de applicatie
