@@ -1,4 +1,13 @@
-import { useReducer, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import {
+  useEffect,
+  useReducer,
+  useRef,
+  useState,
+  type CSSProperties,
+  type FormEvent,
+  type KeyboardEvent,
+  type ReactNode,
+} from 'react';
 import { Link, useParams, useSearchParams } from 'react-router';
 import { getCampaign } from '../../data/campaigns';
 import { getActiveCombat, setActiveCombat } from '../../data/combats';
@@ -8,12 +17,14 @@ import {
   DAMAGE_AMOUNTS,
   isDead,
   moveCombatant,
+  moveCombatantTo,
   removeCombatant,
   type Combat,
   type Combatant,
   type NewCombatant,
 } from '../../domain/combat';
 import { findScene } from '../../domain/scene';
+import { useDragReorder } from '../dragReorder';
 import styles from './CombatPage.module.css';
 
 /**
@@ -21,7 +32,8 @@ import styles from './CombatPage.module.css';
  * DC-060: current HP for every combatant that is not a player character (decision D3).
  * DC-061: one tap on a damage button lowers HP straight away; every change is saved.
  * DC-063: a combatant at 0 HP is shown as DEAD and stays in place.
- * DC-064, DC-052: in reorder mode every combatant can be moved up or down (decision D17).
+ * DC-064, DC-052: in reorder mode every combatant can be dragged to its place by its handle,
+ * or moved one place with the arrow keys on the handle (decisions D17, D21).
  * A new combat opens in reorder mode, because placing the PCs is the first thing to do.
  * DC-065, DC-066: a combatant added below the list goes to the bottom, not alphabetically;
  * the screen then switches to reorder mode to move it into place (decision D18).
@@ -61,12 +73,13 @@ export default function CombatPage() {
     change((latest) => applyDamage(latest, combatantId, amount));
   const move = (combatantId: string, direction: 'up' | 'down') =>
     change((latest) => moveCombatant(latest, combatantId, direction));
+  const moveTo = (combatantId: string, to: number) =>
+    change((latest) => moveCombatantTo(latest, combatantId, to));
   const remove = (combatantId: string) => change((latest) => removeCombatant(latest, combatantId));
   const add = (newCombatant: NewCombatant) => {
     change((latest) => addCombatant(latest, newCombatant));
     setReordering(true);
   };
-  const last = combat.combatants.length - 1;
 
   return (
     <main className="page">
@@ -87,28 +100,27 @@ export default function CombatPage() {
           {reordering ? 'Done' : 'Reorder'}
         </button>
       </div>
-      {reordering && <p className={styles.hint}>Move everyone into place, then tap Done.</p>}
-      <ol className={styles.combatants} aria-label="Combat order">
-        {combat.combatants.map((combatant, index) => (
-          <CombatantRow
-            key={combatant.id}
-            combatant={combatant}
-            controls={
-              reordering ? (
-                <MoveButtons
-                  combatant={combatant}
-                  isFirst={index === 0}
-                  isLast={index === last}
-                  onMove={move}
-                  onRemove={remove}
-                />
-              ) : (
-                <DamageButtons combatant={combatant} onDamage={damage} />
-              )
-            }
-          />
-        ))}
-      </ol>
+      {reordering && (
+        <p className={styles.hint}>Drag ≡ to move everyone into place, then tap Done.</p>
+      )}
+      {reordering ? (
+        <ReorderList
+          combatants={combat.combatants}
+          onMove={move}
+          onMoveTo={moveTo}
+          onRemove={remove}
+        />
+      ) : (
+        <ol className={styles.combatants} aria-label="Combat order">
+          {combat.combatants.map((combatant) => (
+            <CombatantRow
+              key={combatant.id}
+              combatant={combatant}
+              controls={<DamageButtons combatant={combatant} onDamage={damage} />}
+            />
+          ))}
+        </ol>
+      )}
       <AddCombatant onAdd={add} />
     </main>
   );
@@ -116,15 +128,23 @@ export default function CombatPage() {
 
 type RowProps = {
   combatant: Combatant;
-  /** Damage buttons, or move buttons in reorder mode. */
+  /** Before the name: the remove button in reorder mode. */
+  leading?: ReactNode;
+  /** After the name: damage buttons, or the drag handle in reorder mode. */
   controls: ReactNode;
+  dragged?: boolean;
+  style?: CSSProperties;
 };
 
-function CombatantRow({ combatant, controls }: RowProps) {
+function CombatantRow({ combatant, leading, controls, dragged = false, style }: RowProps) {
   const isPlayer = combatant.type === 'PLAYER';
   const dead = isDead(combatant);
   return (
-    <li className={`${styles.row} ${isPlayer ? styles.player : ''} ${dead ? styles.dead : ''}`}>
+    <li
+      className={`${styles.row} ${isPlayer ? styles.player : ''} ${dead ? styles.dead : ''} ${dragged ? styles.dragged : ''}`}
+      style={style}
+    >
+      {leading}
       <span className={styles.info}>
         <span className={styles.name}>{combatant.name}</span>
         {isPlayer ? (
@@ -170,47 +190,86 @@ function DamageButtons({
   );
 }
 
-function MoveButtons({
-  combatant,
-  isFirst,
-  isLast,
+/**
+ * Reorder mode (D17, D21): every row has ✕ on the left and a ≡ drag handle on the right, far
+ * apart so grabbing the handle never removes anyone. Dragging the handle moves the combatant
+ * to where it is dropped; the arrow keys on the handle move it one place.
+ */
+function ReorderList({
+  combatants,
   onMove,
+  onMoveTo,
   onRemove,
 }: {
-  combatant: Combatant;
-  isFirst: boolean;
-  isLast: boolean;
+  combatants: Combatant[];
   onMove: (combatantId: string, direction: 'up' | 'down') => void;
+  onMoveTo: (combatantId: string, to: number) => void;
   onRemove: (combatantId: string) => void;
 }) {
+  const listRef = useRef<HTMLOListElement>(null);
+  const drag = useDragReorder(
+    listRef,
+    combatants.map((combatant) => combatant.id),
+    onMoveTo,
+  );
+  // Moving a row can move its DOM node, which loses focus; this handle gets it back.
+  const refocus = useRef<string | null>(null);
+  useEffect(() => {
+    const id = refocus.current;
+    if (id === null || !listRef.current) return;
+    refocus.current = null;
+    Array.from(listRef.current.querySelectorAll<HTMLElement>('[data-handle]'))
+      .find((handle) => handle.dataset.handle === id)
+      ?.focus();
+  });
+
+  const onKeyDown = (event: KeyboardEvent, combatantId: string) => {
+    const direction = { ArrowUp: 'up', ArrowDown: 'down' } as const;
+    if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+    event.preventDefault(); // don't scroll the page
+    refocus.current = combatantId;
+    onMove(combatantId, direction[event.key]);
+  };
+
   return (
-    <span className={styles.controls}>
-      <button
-        type="button"
-        aria-label={`Move ${combatant.name} up`}
-        disabled={isFirst}
-        onClick={() => onMove(combatant.id, 'up')}
-      >
-        ▲
-      </button>
-      <button
-        type="button"
-        aria-label={`Move ${combatant.name} down`}
-        disabled={isLast}
-        onClick={() => onMove(combatant.id, 'down')}
-      >
-        ▼
-      </button>
-      {/* One tap, no confirmation (D7, D18): only reachable in reorder mode. */}
-      <button
-        type="button"
-        className={styles.remove}
-        aria-label={`Remove ${combatant.name}`}
-        onClick={() => onRemove(combatant.id)}
-      >
-        ✕
-      </button>
-    </span>
+    <ol
+      ref={listRef}
+      className={`${styles.combatants} ${drag.dragging ? styles.sorting : ''}`}
+      aria-label="Combat order"
+    >
+      {combatants.map((combatant, index) => (
+        <CombatantRow
+          key={combatant.id}
+          combatant={combatant}
+          dragged={drag.isDragged(index)}
+          style={drag.rowStyle(index)}
+          leading={
+            // One tap, no confirmation (D7, D18): only reachable in reorder mode.
+            <button
+              type="button"
+              className={styles.remove}
+              aria-label={`Remove ${combatant.name}`}
+              onClick={() => onRemove(combatant.id)}
+            >
+              ✕
+            </button>
+          }
+          controls={
+            <button
+              type="button"
+              className={styles.handle}
+              aria-label={`Move ${combatant.name}`}
+              aria-keyshortcuts="ArrowUp ArrowDown"
+              data-handle={combatant.id}
+              onKeyDown={(event) => onKeyDown(event, combatant.id)}
+              {...drag.handleProps(combatant.id, index)}
+            >
+              ≡
+            </button>
+          }
+        />
+      ))}
+    </ol>
   );
 }
 

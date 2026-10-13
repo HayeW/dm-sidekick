@@ -6,6 +6,7 @@ import {
   applyDamage,
   isDead,
   moveCombatant,
+  moveCombatantTo,
   removeCombatant,
   startCombat,
 } from './combat';
@@ -298,6 +299,45 @@ describe('DC-064 / DC-052 — Combatant verplaatsen', () => {
 
     expect(after.combatants.find((x) => x.id === 'b')?.hp).toBe(0);
     expect(combat).toEqual(before);
+  });
+
+  describe('to a position, as when dragged (D21)', () => {
+    const four: Combat = {
+      ...combat,
+      combatants: [
+        ...combat.combatants,
+        { id: 'd', name: 'Dain', type: 'PLAYER', hp: null, maxHp: null },
+      ],
+    };
+
+    it('moves a combatant several places up in one go', () => {
+      expect(order(moveCombatantTo(four, 'd', 0))).toEqual(['d', 'a', 'b', 'c']);
+    });
+
+    it('moves a combatant several places down in one go', () => {
+      expect(order(moveCombatantTo(four, 'a', 2))).toEqual(['b', 'c', 'a', 'd']);
+    });
+
+    it('does nothing when dropped at its own place', () => {
+      expect(order(moveCombatantTo(four, 'b', 1))).toEqual(['a', 'b', 'c', 'd']);
+    });
+
+    it('clamps a position outside the list to the top or bottom', () => {
+      expect(order(moveCombatantTo(four, 'c', -3))).toEqual(['c', 'a', 'b', 'd']);
+      expect(order(moveCombatantTo(four, 'a', 99))).toEqual(['b', 'c', 'd', 'a']);
+    });
+
+    it('does nothing for an unknown combatant', () => {
+      expect(order(moveCombatantTo(four, 'x', 0))).toEqual(['a', 'b', 'c', 'd']);
+    });
+
+    it('keeps HP and does not change the original combat', () => {
+      const before = structuredClone(four);
+      const after = moveCombatantTo(four, 'b', 3);
+
+      expect(after.combatants.find((x) => x.id === 'b')?.hp).toBe(0);
+      expect(four).toEqual(before);
+    });
   });
 });
 

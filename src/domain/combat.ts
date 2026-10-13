@@ -62,6 +62,21 @@ export function moveCombatant(
   return { ...combat, combatants };
 }
 
+/**
+ * Moves a combatant to position `to` in the combat order, as when it is dragged there
+ * (DC-064, DC-052, decision D21). The others keep their order. A position outside the list
+ * is clamped to the top or bottom. Returns a new combat.
+ */
+export function moveCombatantTo(combat: Combat, combatantId: string, to: number): Combat {
+  const from = combat.combatants.findIndex((combatant) => combatant.id === combatantId);
+  if (from === -1) return combat;
+
+  const combatants = [...combat.combatants];
+  const [moved] = combatants.splice(from, 1);
+  combatants.splice(Math.max(0, Math.min(to, combatants.length)), 0, moved!);
+  return { ...combat, combatants };
+}
+
 /** What the DM fills in to add a combatant during combat (decision D8). */
 export type NewCombatant = {
   name: string;

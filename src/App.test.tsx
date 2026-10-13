@@ -18,6 +18,16 @@ function renderWithBrowserBack(path: string) {
 const pressBrowserBack = () =>
   userEvent.click(screen.getByRole('button', { name: 'Browser back' }));
 
+/** Moves a combatant one place with the arrow keys on its drag handle (reorder mode, D21). */
+async function moveByKey(
+  user: ReturnType<typeof userEvent.setup>,
+  name: string,
+  direction: 'up' | 'down',
+) {
+  screen.getByRole('button', { name: `Move ${name}` }).focus();
+  await user.keyboard(direction === 'up' ? '{ArrowUp}' : '{ArrowDown}');
+}
+
 /** A combat row's name: its first innermost text (name comes before HP / PC / DEAD). */
 function combatantName(row: HTMLElement) {
   return Array.from(row.querySelectorAll('span')).find((span) => span.children.length === 0)
@@ -497,12 +507,10 @@ describe('DC-043 / DC-053 / DC-060 / DC-081 — Combat starten, tonen en bewaren
     const rows = within(screen.getByRole('list', { name: 'Combat order' })).getAllByRole(
       'listitem',
     );
-    const alice = rows.find((row) => row.textContent?.startsWith('Alice'))!;
+    const alice = rows.find((row) => combatantName(row) === 'Alice')!;
     expect(alice).toHaveTextContent('PC');
     expect(alice).not.toHaveTextContent('HP');
-    expect(rows.find((row) => row.textContent?.startsWith('Goblin Boss'))).toHaveTextContent(
-      '21/21 HP',
-    );
+    expect(rows.find((row) => combatantName(row) === 'Goblin Boss')).toHaveTextContent('21/21 HP');
   });
 
   it('returns to the scene with one tap and offers to resume the combat (D1)', async () => {
@@ -670,17 +678,25 @@ describe('DC-064 / DC-052 — Combatants verplaatsen (reorder mode)', () => {
     await startCombat();
 
     expect(screen.getByRole('button', { name: 'Done' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Move Alice up' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Move Alice' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /damage to/ })).not.toBeInTheDocument();
   });
 
-  it('moves a player character up with one tap per place', async () => {
-    const { user } = await startCombat();
+  /**
+   * Lays the rows out 60 px apart (52 px high, 8 px gap), as jsdom has no layout, and
+   * returns the drag handle of the named combatant.
+   */
+  function layOutRows(name: string) {
+    rows().forEach((row, index) =>
+      vi
+        .spyOn(row, 'getBoundingClientRect')
+        .mockReturnValue({ top: index * 60, bottom: index * 60 + 52, height: 52 } as DOMRect),
+    );
+    return screen.getByRole('button', { name: `Move ${name}` });
+  }
 
-    await user.click(screen.getByRole('button', { name: 'Move Alice up' }));
-    await user.click(screen.getByRole('button', { name: 'Move Alice up' }));
-
-    expect(names()).toEqual([
+  describe('dragging the handle (D21)', () => {
+    const order = [
       'Goblin 1',
       'Goblin 2',
       'Alice',
@@ -689,28 +705,197 @@ describe('DC-064 / DC-052 — Combatants verplaatsen (reorder mode)', () => {
       'Bob',
       'Cora',
       'Dain',
-    ]);
+    ];
+
+    it('moves a player character several places up in one drag', async () => {
+      await startCombat();
+      const handle = layOutRows('Alice'); // 5th row, middle at 266 px
+
+      fireEvent.pointerDown(handle, { pointerId: 1, clientY: 266 });
+      fireEvent.pointerMove(handle, { pointerId: 1, clientY: 136 }); // past Goblin 3 and 4
+      fireEvent.pointerUp(handle, { pointerId: 1, clientY: 136 });
+
+      expect(names()).toEqual(order);
+    });
+
+    it('slides the passed rows aside while dragging, and changes nothing before release', async () => {
+      await startCombat();
+      const handle = layOutRows('Alice');
+
+      fireEvent.pointerDown(handle, { pointerId: 1, clientY: 266 });
+      fireEvent.pointerMove(handle, { pointerId: 1, clientY: 136 });
+
+      expect(names()[4]).toBe('Alice');
+      expect(rows()[4]).toHaveStyle({ transform: 'translateY(-130px)' });
+      expect(rows()[2]).toHaveStyle({ transform: 'translateY(60px)' });
+      expect(rows()[3]).toHaveStyle({ transform: 'translateY(60px)' });
+      expect(rows()[1]).not.toHaveStyle({ transform: 'translateY(60px)' });
+    });
+
+    it('moves an enemy down', async () => {
+      await startCombat();
+      const handle = layOutRows('Goblin 2'); // middle at 86 px
+
+      fireEvent.pointerDown(handle, { pointerId: 1, clientY: 86 });
+      fireEvent.pointerMove(handle, { pointerId: 1, clientY: 150 });
+      fireEvent.pointerUp(handle, { pointerId: 1, clientY: 150 });
+
+      expect(names().slice(1, 3)).toEqual(['Goblin 3', 'Goblin 2']);
+    });
+
+    it('keeps the order when dropped close to where it started', async () => {
+      await startCombat();
+      const handle = layOutRows('Alice');
+
+      fireEvent.pointerDown(handle, { pointerId: 1, clientY: 266 });
+      fireEvent.pointerUp(handle, { pointerId: 1, clientY: 240 });
+
+      expect(names()[4]).toBe('Alice');
+    });
+
+    it('keeps the order when the browser cancels the drag', async () => {
+      await startCombat();
+      const handle = layOutRows('Alice');
+
+      fireEvent.pointerDown(handle, { pointerId: 1, clientY: 266 });
+      fireEvent.pointerMove(handle, { pointerId: 1, clientY: 136 });
+      fireEvent.pointerCancel(handle, { pointerId: 1 });
+
+      expect(names()[4]).toBe('Alice');
+      expect(rows()[2]).not.toHaveStyle({ transform: 'translateY(60px)' });
+    });
+
+    const transformed = () => rows().filter((row) => row.style.transform !== '');
+
+    it('puts every row back in place after the drop', async () => {
+      await startCombat();
+      const handle = layOutRows('Alice');
+
+      fireEvent.pointerDown(handle, { pointerId: 1, clientY: 266 });
+      fireEvent.pointerMove(handle, { pointerId: 1, clientY: 136 });
+      fireEvent.pointerUp(handle, { pointerId: 1, clientY: 136 });
+
+      expect(transformed()).toEqual([]);
+    });
+
+    it('drags the last row up past its neighbour', async () => {
+      await startCombat();
+      const handle = layOutRows('Dain'); // 8th row, middle at 446 px
+
+      fireEvent.pointerDown(handle, { pointerId: 1, clientY: 446 });
+      fireEvent.pointerMove(handle, { pointerId: 1, clientY: 380 });
+      expect(rows()[6]).toHaveStyle({ transform: 'translateY(60px)' });
+      fireEvent.pointerUp(handle, { pointerId: 1, clientY: 380 });
+
+      expect(names().slice(-2)).toEqual(['Dain', 'Cora']);
+    });
+
+    it('ignores a second finger while dragging', async () => {
+      await startCombat();
+      const alice = layOutRows('Alice');
+      const bob = screen.getByRole('button', { name: 'Move Bob' });
+
+      fireEvent.pointerDown(alice, { pointerId: 1, clientY: 266 });
+      fireEvent.pointerDown(bob, { pointerId: 2, clientY: 326 });
+      fireEvent.pointerMove(bob, { pointerId: 2, clientY: 0 });
+      fireEvent.pointerUp(bob, { pointerId: 2, clientY: 0 });
+      expect(names()).toEqual([
+        'Goblin 1',
+        'Goblin 2',
+        'Goblin 3',
+        'Goblin Boss',
+        'Alice',
+        'Bob',
+        'Cora',
+        'Dain',
+      ]);
+
+      fireEvent.pointerUp(alice, { pointerId: 1, clientY: 136 });
+      expect(names()).toEqual(order);
+    });
+
+    it('does not drag with the right mouse button', async () => {
+      await startCombat();
+      const handle = layOutRows('Alice');
+
+      fireEvent.pointerDown(handle, { pointerId: 1, button: 2, clientY: 266 });
+      fireEvent.pointerMove(handle, { pointerId: 1, clientY: 136 });
+      fireEvent.pointerUp(handle, { pointerId: 1, clientY: 136 });
+
+      expect(names()[4]).toBe('Alice');
+    });
+
+    it('cancels the drag when the list changes during it', async () => {
+      await startCombat();
+      const handle = layOutRows('Alice');
+
+      fireEvent.pointerDown(handle, { pointerId: 1, clientY: 266 });
+      fireEvent.pointerMove(handle, { pointerId: 1, clientY: 136 });
+      fireEvent.click(screen.getByRole('button', { name: 'Remove Goblin 1' }));
+      expect(transformed()).toEqual([]);
+      fireEvent.pointerUp(handle, { pointerId: 1, clientY: 136 });
+
+      expect(names()).toEqual([
+        'Goblin 2',
+        'Goblin 3',
+        'Goblin Boss',
+        'Alice',
+        'Bob',
+        'Cora',
+        'Dain',
+      ]);
+      // A new drag works again afterwards.
+      const again = layOutRows('Alice'); // now 4th row, middle at 206 px
+      fireEvent.pointerDown(again, { pointerId: 1, clientY: 206 });
+      fireEvent.pointerUp(again, { pointerId: 1, clientY: 20 });
+      expect(names()[0]).toBe('Alice');
+    });
   });
 
-  it('moves an enemy down', async () => {
+  it('moves a combatant one place with the arrow keys on its handle', async () => {
     const { user } = await startCombat();
 
-    await user.click(screen.getByRole('button', { name: 'Move Goblin 2 down' }));
+    await moveByKey(user, 'Alice', 'up');
+    await moveByKey(user, 'Alice', 'up');
+    await moveByKey(user, 'Goblin 2', 'down');
 
-    expect(names().slice(1, 3)).toEqual(['Goblin 3', 'Goblin 2']);
+    expect(names().slice(1, 4)).toEqual(['Alice', 'Goblin 2', 'Goblin 3']);
+  });
+
+  // jsdom keeps focus on a moved DOM node anyway, unlike browsers; checked by hand in Chrome.
+  it('keeps focus on the handle, so the arrow keys can move it further', async () => {
+    const { user } = await startCombat();
+    await moveByKey(user, 'Alice', 'up');
+
+    await user.keyboard('{ArrowUp}');
+
+    expect(screen.getByRole('button', { name: 'Move Alice' })).toHaveFocus();
+    expect(names()[2]).toBe('Alice');
   });
 
   it('cannot move the top combatant up or the bottom one down', async () => {
-    await startCombat();
+    const { user } = await startCombat();
 
-    expect(screen.getByRole('button', { name: 'Move Goblin 1 up' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Move Dain down' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Move Dain up' })).toBeEnabled();
+    await moveByKey(user, 'Goblin 1', 'up');
+    await moveByKey(user, 'Dain', 'down');
+
+    expect(names()[0]).toBe('Goblin 1');
+    expect(names().at(-1)).toBe('Dain');
+  });
+
+  it('puts Remove and the drag handle at opposite ends of the row (D21)', async () => {
+    await startCombat();
+    const buttons = within(rows()[0]!).getAllByRole('button');
+
+    expect(buttons.map((button) => button.getAttribute('aria-label'))).toEqual([
+      'Remove Goblin 1',
+      'Move Goblin 1',
+    ]);
   });
 
   it('shows the damage buttons again after Done, keeping the new order', async () => {
     const { user } = await startCombat();
-    await user.click(screen.getByRole('button', { name: 'Move Goblin 2 down' }));
+    await moveByKey(user, 'Goblin 2', 'down');
 
     await user.click(screen.getByRole('button', { name: 'Done' }));
 
@@ -726,12 +911,12 @@ describe('DC-064 / DC-052 — Combatants verplaatsen (reorder mode)', () => {
 
     await user.click(screen.getByRole('button', { name: 'Reorder' }));
 
-    expect(screen.getByRole('button', { name: 'Move Alice up' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Move Alice' })).toBeInTheDocument();
   });
 
   it('keeps the new order after a refresh', async () => {
     const { user, unmount } = await startCombat();
-    await user.click(screen.getByRole('button', { name: 'Move Alice up' }));
+    await moveByKey(user, 'Alice', 'up');
     unmount();
     clearActiveCombats();
 
@@ -808,7 +993,7 @@ describe('DC-065 / DC-066 / DC-067 — Combatant toevoegen en verwijderen', () =
     await addCombatant(user, 'Wolf', '11');
 
     expect(screen.getByRole('button', { name: 'Done' })).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Move Wolf up' }));
+    await moveByKey(user, 'Wolf', 'up');
 
     expect(names().slice(-2)).toEqual(['Wolf', 'Dain']);
   });
@@ -948,7 +1133,7 @@ describe('DC-070 / DC-071 / DC-081 / DC-082 — Combat verlaten, terugkeren en h
    */
   async function playCombat(user: ReturnType<typeof userEvent.setup>) {
     await user.click(screen.getByRole('button', { name: 'Start combat' }));
-    await user.click(screen.getByRole('button', { name: 'Move Alice up' }));
+    await moveByKey(user, 'Alice', 'up');
     await user.click(screen.getByRole('button', { name: 'Remove Goblin 3' }));
     await user.click(screen.getByRole('button', { name: '+ Add combatant' }));
     await user.type(screen.getByRole('textbox', { name: 'Name' }), 'Wolf');

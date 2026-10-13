@@ -165,14 +165,61 @@
   letter-spacing: 0.06em;
 }
 
-/* Remove (✕) in reorder mode (DC-067, D18): set apart from ▲ ▼ so it is not hit by accident. */
-.controls .remove {
-  margin-left: 6px;
-  color: var(--danger);
+/* Reorder mode (D21): ✕ on the left, the ≡ drag handle on the right, far apart. */
+.remove,
+.handle {
+  flex: none;
+  min-width: var(--touch);
+  min-height: var(--touch);
+  border: 0;
+  border-radius: 8px;
+  background: var(--bg);
+  font-size: 1.25rem;
+  font-weight: 700;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.controls .remove:active {
+/* Remove (DC-067, D18). */
+.remove {
+  color: var(--danger);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.remove:active {
   color: var(--text);
+}
+
+/* The handle takes the touch itself, so dragging it never scrolls the page. */
+.handle {
+  color: var(--text-muted);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.remove:focus-visible,
+.handle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* While dragging, the other rows slide aside smoothly; on drop everything snaps in place. */
+.sorting .row {
+  transition: transform 150ms ease;
+}
+
+.sorting .dragged {
+  position: relative;
+  z-index: 1;
+  transition: none;
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.5);
+}
+
+.sorting .dragged .handle {
+  cursor: grabbing;
+  color: var(--accent);
 }
 
 /* Add combatant below the list (DC-065). */

@@ -172,9 +172,10 @@ UX details:
   `RESUME COMBAT` instead (see D1).
 - **Way back to combat:** `RESUME COMBAT` on the encounter tile. No
   separate Combat bar (D20); the Quick Access "Combat" item (requirements §6) comes later.
-- **Combat row:** `Goblin 2   7/7 HP   [−1] [−5] [−10]`; in reorder mode ▲ ▼ ✕ replace the
-  damage buttons (D17, D18). Dead combatants stay in place, greyed out with a `DEAD` label.
-  Player character rows show only name, a `PC` marker and, in reorder mode, ▲ ▼ ✕ — no HP.
+- **Combat row:** `Goblin 2   7/7 HP   [−1] [−5] [−10]`; in reorder mode the row is
+  `[✕]  Goblin 2  7/7 HP  [≡]`: ✕ on the left, a drag handle on the right (D17, D18, D21).
+  Dead combatants stay in place, greyed out with a `DEAD` label.
+  Player character rows show only name, a `PC` marker and, in reorder mode, ✕ and ≡ — no HP.
 - **Add combatant:** a button below the list opens a small inline form (name + HP),
   appended at the bottom, not alphabetically. Then the screen switches to reorder mode (D18).
 
@@ -203,7 +204,7 @@ This is enough to demo and test the whole slice.
 
 Each step is small, ends with green tests and a working app, and is one commit.
 
-**Progress:** step 0 ✅ done · step 1 (DC-001) ✅ done · step 2 (DC-002, DC-010) ✅ done · step 3 (DC-011) ✅ done · step 4 (DC-015, DC-016) ✅ done · step 4a (DC-017) ✅ done · step 5 (DC-003, DC-080) ✅ done · step 6 (DC-043, DC-050, DC-051) ✅ done · step 7 (DC-053, DC-060) ✅ done · step 7a (DC-081) ✅ done · step 8 (DC-061, DC-063) ✅ done · step 9 (DC-064, DC-052) ✅ done · step 10 (DC-065, DC-066, DC-067) ✅ done · step 11 (DC-070, DC-071, DC-081, DC-082) ✅ done · **next: step 12**.
+**Progress:** step 0 ✅ done · step 1 (DC-001) ✅ done · step 2 (DC-002, DC-010) ✅ done · step 3 (DC-011) ✅ done · step 4 (DC-015, DC-016) ✅ done · step 4a (DC-017) ✅ done · step 5 (DC-003, DC-080) ✅ done · step 6 (DC-043, DC-050, DC-051) ✅ done · step 7 (DC-053, DC-060) ✅ done · step 7a (DC-081) ✅ done · step 8 (DC-061, DC-063) ✅ done · step 9 (DC-064, DC-052) ✅ done · step 10 (DC-065, DC-066, DC-067) ✅ done · step 11 (DC-070, DC-071, DC-081, DC-082) ✅ done · step 12 (DC-100, drag to reorder D21) ✅ done · **slice 1 complete**.
 Update this line when a step is finished and committed.
 
 | Step | Content                                                                                                                       | Stories                        | Tests                                                                                        |
@@ -222,7 +223,7 @@ Update this line when a step is finished and committed.
 | 9    | Move up/down for any combatant                                                                                                | DC-064, DC-052                 | Swap logic incl. top/bottom edges                                                            |
 | 10   | Add combatant (bottom of list), move it into place, remove combatant                                                          | DC-065, DC-066, DC-067         | Appended at the bottom, not sorted; movable; removed                                         |
 | 11   | Every combat change saved; leave/return and refresh keep state (no Combat bar, D20)                                           | DC-070, DC-071, DC-081, DC-082 | State identical after navigation and reload                                                  |
-| 12   | Mobile polish pass: touch targets ≥ 44 px, test on a real phone                                                               | DC-100                         | Manual check                                                                                 |
+| 12   | Mobile polish pass: touch targets ≥ 44 px, test on a real phone; drag to reorder instead of ▲ ▼ (D21)                         | DC-100, DC-064, DC-052         | Manual check; drop position, drag, keyboard moves                                            |
 
 ## 9. Decisions needed before or during the slice
 
@@ -308,6 +309,15 @@ These are open questions from `requirements.md` that actually block this slice. 
   `EnemyGroup` loses `initiativeBonus`; `dice.ts` and the random source go. Dice in Quick
   Access is dropped from the requirements; Random NPC is left as it is until its epic.
 
+- **D21 — Drag to reorder** (product owner, 2026-10-13, step 12; replaces the ▲ ▼ buttons
+  of D17). In reorder mode every row has a ≡ drag handle on the right and ✕ on the left, as in
+  iOS edit mode, so grabbing the handle never hits ✕. Dragging the handle moves the combatant
+  to where it is dropped, in one go; the other rows slide aside while dragging, and nothing is
+  saved until the release (a cancelled drag changes nothing). Only the handle starts a drag,
+  so the list still scrolls with the thumb. Own code with pointer events, no library. The
+  arrow keys on a focused handle move one place, for keyboard users. A drag in progress is
+  cancelled when the list changes under it (e.g. ✕ tapped with another finger).
+
 - **D20 — No Combat bar** (product owner, 2026-10-11, step 11). The requirements don't ask
   for the "Combat" indicator from §5; their way back to combat is the Quick Access "Combat"
   item (requirements §6), which is not in this slice. Until then the DM returns with
@@ -326,7 +336,14 @@ healing controls, Quick Access contents, campaign editing.
   start a new combat.
 - **No Undo after removing a combatant** (from D18, accepted by the product owner on
   2026-10-11). A mis-tap on ✕ in reorder mode loses that combatant and its HP; the DM can
-  add it again by hand. Revisit in step 12 (more room between ▼ and ✕) or with an Undo toast.
+  add it again by hand. Since D21, ✕ is at the other end of the row from the drag handle;
+  an Undo toast is still open.
+- **Screen readers on a phone cannot reorder** (from D21, 2026-10-13, code review).
+  VoiceOver and TalkBack send no arrow keys, and nothing announces a move. Fix with visually
+  hidden "Move up" / "Move down" buttons or a live "Alice moved to position 3" message.
+- **No auto-scroll while dragging** (from D21, 2026-10-13). A drag cannot scroll the page, so
+  in a combat longer than the screen a combatant is moved to an off-screen place in two
+  drags, scrolling in between. Add auto-scroll near the screen edges if this bothers in play.
 - **No one-tap way back to combat from another scene** (from D20, accepted by the product
   owner on 2026-10-11). After Next/Previous to another scene, the DM has to go back to the
   encounter's scene to tap RESUME COMBAT. Fix with the Quick Access "Combat" item.
