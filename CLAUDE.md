@@ -7,10 +7,11 @@ no backend. Goal: as few taps as possible during play ("look → tap → continu
 
 - `requirements.md` — product requirements, domain model and user stories (Dutch).
   Story IDs look like `DC-001`. The requirements are the source of truth.
-- `docs/implementation-plan-slice-4.md` — the current plan (Healing): domain, combat
-  screen, decisions D36–D42 and the step-by-step build order with a **Progress** line.
-- `docs/implementation-plan-slice-1.md` to `-slice-3.md` — the earlier slices, done:
-  architecture and decisions D1–D35, which still apply.
+- `docs/implementation-plan-slice-5.md` — the current plan (Campaign import): architecture,
+  screens, decisions D43–D51 and the step-by-step build order with a **Progress** line.
+- `docs/campaign-format.md` — the Markdown campaign file format the import reads.
+- `docs/implementation-plan-slice-1.md` to `-slice-4.md` — the earlier slices, done:
+  architecture and decisions D1–D42, which still apply.
 
 When asked to "do the next step", take the next step from the plan's build order.
 
