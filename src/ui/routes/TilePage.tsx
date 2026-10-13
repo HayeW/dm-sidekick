@@ -3,6 +3,7 @@ import { getCampaign } from '../../data/campaigns';
 import type { Description, DescriptionsBlock, Scene } from '../../domain/campaign';
 import { findBlock, findDescription, findScene, neighbours } from '../../domain/scene';
 import StepNav from '../components/StepNav';
+import TopBar from '../components/TopBar';
 import { useSwipe } from '../swipe';
 import styles from './TilePage.module.css';
 
@@ -30,6 +31,7 @@ export default function TilePage() {
 
   return (
     <DescriptionView
+      campaignId={campaign.id}
       sceneUrl={`/c/${campaign.id}/s/${scene.id}`}
       scene={scene}
       block={block}
@@ -39,6 +41,7 @@ export default function TilePage() {
 }
 
 type Props = {
+  campaignId: string;
   sceneUrl: string;
   scene: Scene;
   block: DescriptionsBlock;
@@ -47,9 +50,9 @@ type Props = {
 
 /**
  * One read-aloud text, large and readable, with previous/next by button (D11) or by
- * swiping (DC-017), and one tap back to the scene.
+ * swiping (DC-017), and one tap back to the scene. Quick Access opens from the top bar (DC-020).
  */
-function DescriptionView({ sceneUrl, scene, block, description }: Props) {
+function DescriptionView({ campaignId, sceneUrl, scene, block, description }: Props) {
   const navigate = useNavigate();
   const location = useLocation();
   const descriptionUrl = (id: string) => `${sceneUrl}/b/${block.id}/d/${id}`;
@@ -74,9 +77,7 @@ function DescriptionView({ sceneUrl, scene, block, description }: Props) {
 
   return (
     <main className={`page ${styles.screen}`} {...swipe}>
-      <button type="button" className={styles.back} onClick={back}>
-        ‹ {scene.title}
-      </button>
+      <TopBar back={{ onClick: back }} backLabel={scene.title} campaignId={campaignId} />
       <div className={styles.heading}>
         <h1>{description.title}</h1>
         {total > 1 && (

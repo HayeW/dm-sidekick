@@ -1,7 +1,13 @@
 import { screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { getCampaign } from '../../data/campaigns';
-import { pressBrowserBack, renderAt, renderWithBrowserBack, setupUser } from '../../test/app';
+import {
+  combatOrder,
+  pressBrowserBack,
+  renderAt,
+  renderWithBrowserBack,
+  setupUser,
+} from '../../test/app';
 
 describe('DC-020 — Quick Access openen', () => {
   const campaign = getCampaign('shadows-over-millbrook')!;
@@ -80,5 +86,79 @@ describe('DC-020 — Quick Access openen', () => {
 
     expectHeading('Campaign not found');
     expect(screen.getByRole('link', { name: 'Back to campaigns' })).toHaveAttribute('href', '/');
+  });
+});
+
+describe('DC-020 — Quick Access openen vanaf beschrijving en combat', () => {
+  const campaign = getCampaign('shadows-over-millbrook')!;
+  const roadUrl = `/c/${campaign.id}/s/scene-mill-road`;
+
+  const expectHeading = (name: string) =>
+    expect(screen.getByRole('heading', { level: 1, name })).toBeInTheDocument();
+
+  it('opens from a description and returns to it with Close', async () => {
+    const user = setupUser();
+    renderAt(roadUrl);
+    await user.click(screen.getByRole('link', { name: /^Descriptions/ }));
+
+    await user.click(screen.getByRole('link', { name: 'Quick' }));
+    expectHeading('Quick Access');
+    await user.click(screen.getByRole('button', { name: 'Close' }));
+
+    expectHeading('Intro');
+  });
+
+  it('still returns from the description to the scene in one tap afterwards (D11)', async () => {
+    const user = setupUser();
+    renderWithBrowserBack('/');
+    await user.click(screen.getByRole('link', { name: new RegExp(campaign.name) })); // first scene
+    await user.click(screen.getByRole('link', { name: /^Descriptions/ }));
+    await user.click(screen.getByRole('link', { name: 'Quick' }));
+    await pressBrowserBack();
+
+    await user.click(screen.getByRole('button', { name: '‹ Arrival in Millbrook' }));
+    expectHeading('Arrival in Millbrook');
+
+    // The description went back in history rather than adding the scene again, so one more
+    // Back leaves the campaign.
+    await pressBrowserBack();
+    expectHeading('Campaigns');
+  });
+
+  it('opens from combat and returns to the same combat state', async () => {
+    const user = setupUser();
+    renderAt(roadUrl);
+    await user.click(screen.getByRole('button', { name: 'Start combat' }));
+    await user.click(screen.getByRole('button', { name: 'Done' }));
+    await user.click(screen.getByRole('button', { name: '5 damage to Goblin Boss' }));
+    const before = combatOrder();
+
+    await user.click(screen.getByRole('link', { name: 'Quick' }));
+    expectHeading('Quick Access');
+    await user.click(screen.getByRole('button', { name: 'Close' }));
+
+    expectHeading('Combat');
+    expect(combatOrder()).toEqual(before);
+  });
+
+  it('returns to combat in reorder mode with the phone’s Back', async () => {
+    const user = setupUser();
+    renderWithBrowserBack(roadUrl);
+    await user.click(screen.getByRole('button', { name: 'Start combat' })); // opens in reorder mode
+
+    await user.click(screen.getByRole('link', { name: 'Quick' }));
+    await pressBrowserBack();
+
+    expect(screen.getByRole('button', { name: 'Done' })).toBeInTheDocument();
+  });
+
+  it('keeps the back link from combat to its scene', async () => {
+    const user = setupUser();
+    renderAt(roadUrl);
+    await user.click(screen.getByRole('button', { name: 'Start combat' }));
+
+    await user.click(screen.getByRole('link', { name: '‹ The Mill Road' }));
+
+    expectHeading('The Mill Road');
   });
 });

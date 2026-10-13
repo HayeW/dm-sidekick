@@ -58,7 +58,7 @@ export default function ScenePage() {
 
   return (
     <main className="page">
-      <TopBar backTo="/" backLabel={campaign.name} campaignId={campaign.id} />
+      <TopBar back={{ to: '/' }} backLabel={campaign.name} campaignId={campaign.id} />
       <h1>{scene.title}</h1>
       <ul className={styles.tiles}>
         {scene.blocks.map((block) => (

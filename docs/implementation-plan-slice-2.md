@@ -110,7 +110,7 @@ type ContentBlock =
 Each step is small, ends with green checks (`npm run check`) and a working app, and is one
 commit.
 
-**Progress:** step 1 (DC-020) ✅ done · **next: step 2**.
+**Progress:** step 1 (DC-020) ✅ done · step 2 (DC-020) ✅ done · **next: step 3**.
 
 | Step | Content                                                                                  | Stories        | Tests                                                                                             |
 | ---- | ---------------------------------------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------- |
@@ -157,6 +157,11 @@ Numbering continues from the first slice. Answers in **bold**. **Status: all con
   The Notes tile stays the scene's own text and opens full-screen (DC-014). Campaign Notes is
   a separate campaign-level list, not tied to a scene. Global Notes (across campaigns) stays
   out.
+- **D29 — Reorder / Done below the combat list** (product owner, 2026-10-13, step 2; changes
+  where D17 put the button). With Quick in the top bar, `Quick` sat right above `Reorder`: two
+  outlined buttons, easy to mix up. Reorder / Done now sits to the right of `+ Add combatant`
+  below the list, which also puts Done in thumb reach. An open add form takes its own line
+  under these buttons.
 
 **Open follow-ups from slice 1 that stay open:** resume per encounter / "New combat" (D1,
 D16), Undo after removing a combatant (D18), screen readers on a phone cannot reorder (D21),

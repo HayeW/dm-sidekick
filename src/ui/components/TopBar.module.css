@@ -11,9 +11,14 @@
   align-items: center;
   min-width: 0;
   min-height: var(--touch);
+  padding: 0 12px 0 0;
+  border: 0;
+  background: none;
   color: var(--text-muted);
   text-decoration: none;
   font-size: 0.875rem;
+  text-align: left;
+  cursor: pointer;
 }
 
 /* Quick Access (D22): a clear target on the right, always in the same place. */

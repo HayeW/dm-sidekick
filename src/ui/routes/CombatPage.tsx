@@ -24,6 +24,7 @@ import {
   type NewCombatant,
 } from '../../domain/combat';
 import { findScene } from '../../domain/scene';
+import TopBar from '../components/TopBar';
 import { useDragReorder } from '../dragReorder';
 import styles from './CombatPage.module.css';
 
@@ -38,6 +39,7 @@ import styles from './CombatPage.module.css';
  * DC-065, DC-066: a combatant added below the list goes to the bottom, not alphabetically;
  * the screen then switches to reorder mode to move it into place (decision D18).
  * DC-067: in reorder mode every combatant can be removed with one tap (D18).
+ * DC-020: Quick Access opens from the top bar (D22).
  */
 export default function CombatPage() {
   const { campaignId = '' } = useParams();
@@ -84,24 +86,14 @@ export default function CombatPage() {
   return (
     <main className="page">
       {/* Back to where the combat started; to the campaign if that scene no longer exists. */}
-      <Link
-        to={scene ? `/c/${campaign.id}/s/${scene.id}` : `/c/${campaign.id}`}
-        className={styles.back}
-      >
-        ‹ {scene?.title ?? campaign.name}
-      </Link>
-      <div className={styles.header}>
-        <h1>Combat</h1>
-        <button
-          type="button"
-          className={reordering ? styles.done : styles.reorder}
-          onClick={() => setReordering(!reordering)}
-        >
-          {reordering ? 'Done' : 'Reorder'}
-        </button>
-      </div>
+      <TopBar
+        back={{ to: scene ? `/c/${campaign.id}/s/${scene.id}` : `/c/${campaign.id}` }}
+        backLabel={scene?.title ?? campaign.name}
+        campaignId={campaign.id}
+      />
+      <h1>Combat</h1>
       {reordering && (
-        <p className={styles.hint}>Drag ≡ to move everyone into place, then tap Done.</p>
+        <p className={styles.hint}>Drag ≡ to move everyone into place, then tap Done below.</p>
       )}
       {reordering ? (
         <ReorderList
@@ -121,7 +113,18 @@ export default function CombatPage() {
           ))}
         </ol>
       )}
-      <AddCombatant onAdd={add} />
+      {/* Below the list, in thumb reach and away from Quick in the top bar (D29). An open
+          add form wraps onto its own line under these buttons. */}
+      <div className={styles.actions}>
+        <AddCombatant onAdd={add} />
+        <button
+          type="button"
+          className={reordering ? styles.done : styles.reorder}
+          onClick={() => setReordering(!reordering)}
+        >
+          {reordering ? 'Done' : 'Reorder'}
+        </button>
+      </div>
     </main>
   );
 }
