@@ -7,8 +7,10 @@ no backend. Goal: as few taps as possible during play ("look → tap → continu
 
 - `requirements.md` — product requirements, domain model and user stories (Dutch).
   Story IDs look like `DC-001`. The requirements are the source of truth.
-- `docs/implementation-plan-slice-1.md` — the current plan: architecture, routes,
-  confirmed decisions (D1, D2, …; see its decisions section) and the step-by-step build order with a **Progress** line.
+- `docs/implementation-plan-slice-2.md` — the current plan (Quick Access): routes, domain
+  changes, decisions D22–D28 and the step-by-step build order with a **Progress** line.
+- `docs/implementation-plan-slice-1.md` — the first slice, done: architecture and decisions
+  D1–D21, which still apply.
 
 When asked to "do the next step", take the next step from the plan's build order.
 
@@ -75,7 +77,7 @@ The user is on Windows. The terminal may be PowerShell; use commands that work t
    `npm install-scripts approve`) without asking; npm blocks them by default as protection
    against supply-chain attacks. esbuild's blocked postinstall is known and harmless.
 6. If a requirement is unclear or contradicts the plan, stop and ask; don't guess.
-   Record new decisions in the plan's decisions section.
+   Record new decisions in the current plan's decisions section.
 7. When the checks pass, have the `code-reviewer` agent (`.claude/agents/code-reviewer.md`)
    review the uncommitted changes. Fix clear bugs and test gaps it finds and re-run the checks;
    report the remaining findings to the user with a recommendation instead of deciding alone.
