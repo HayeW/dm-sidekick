@@ -7,10 +7,10 @@ no backend. Goal: as few taps as possible during play ("look → tap → continu
 
 - `requirements.md` — product requirements, domain model and user stories (Dutch).
   Story IDs look like `DC-001`. The requirements are the source of truth.
-- `docs/implementation-plan-slice-3.md` — the current plan (Spare NPCs): data, screen,
-  decisions D30–D35 and the step-by-step build order with a **Progress** line.
-- `docs/implementation-plan-slice-1.md` and `docs/implementation-plan-slice-2.md` — the
-  first two slices, done: architecture and decisions D1–D29, which still apply.
+- `docs/implementation-plan-slice-4.md` — the current plan (Healing): domain, combat
+  screen, decisions D36–D42 and the step-by-step build order with a **Progress** line.
+- `docs/implementation-plan-slice-1.md` to `-slice-3.md` — the earlier slices, done:
+  architecture and decisions D1–D35, which still apply.
 
 When asked to "do the next step", take the next step from the plan's build order.
 

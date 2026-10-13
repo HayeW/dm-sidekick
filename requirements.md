@@ -512,8 +512,13 @@ Acceptance criteria
 ### DC-062 — Healing toepassen
 P1
 Als DM wil ik direct healing kunnen toepassen.
-Open punt
-De exacte controls (+1, +5, +10) moeten nog definitief worden vastgesteld.
+Acceptance criteria (vastgesteld door de product owner op 2026-10-13)
+- Er zijn healing-controls voor 1, 5 en 10.
+- Healing gebeurt in een aparte heal-modus die de DM aan- en uitzet; de damage-controls blijven in de normale modus.
+- De HP wordt direct aangepast, zonder bevestigingsscherm.
+- De HP komt nooit boven de maximale HP.
+- Een combatant met 0 HP (dead) kan worden gehealed en is daarna niet meer dead.
+- Player Characters hebben geen HP en dus geen healing-controls.
 ### DC-063 — Dead combatant markeren
 P0
 Als DM wil ik kunnen zien dat een combatant 0 HP heeft bereikt.
