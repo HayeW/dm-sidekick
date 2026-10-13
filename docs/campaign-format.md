@@ -148,13 +148,13 @@ One line per group: `- <count> × <name>, <HP> HP`.
 
 Each `###` heading in a scene is one tile, in the order of the file.
 
-| Heading                 | Tile                                                                 |
-| ----------------------- | -------------------------------------------------------------------- |
-| `### Read-aloud: Title` | A read-aloud text, with the text below it. See "Descriptions" below. |
-| `### Location: Name`    | The location with that name from `## Locations`. No text below it.   |
-| `### NPCs`              | A list of NPC names from `## NPCs` (`- Marta Hollow`).               |
-| `### Encounter: Name`   | The encounter with that name from `## Encounters`; starts combat.    |
-| `### DM notes`          | The scene's own notes, with the text below it.                       |
+| Heading                 | Tile                                                                                |
+| ----------------------- | ----------------------------------------------------------------------------------- |
+| `### Read-aloud: Title` | A read-aloud text, with the text below it. See "Descriptions" below.                |
+| `### Location: Name`    | The location with that name from `## Locations`. No text below it.                  |
+| `### NPCs`              | A list of NPC names from `## NPCs` (`- Marta Hollow`).                              |
+| `### Encounter: Name`   | The encounter with that name from `## Encounters`; starts combat. No text below it. |
+| `### DM notes`          | The scene's own notes, with the text below it.                                      |
 
 **Descriptions:** read-aloud texts that follow each other directly form **one** Descriptions
 tile, with previous/next between them in the app (D11). Another tile in between starts a new
@@ -168,8 +168,10 @@ Descriptions tile.
 
 ### Text
 
-- Text is everything below a heading, up to the next heading. Paragraphs (separated by an
-  empty line) and line breaks are kept.
+- Text is everything below a heading, up to the next heading.
+- As in Markdown, the lines of one paragraph are joined into flowing text, so you can wrap
+  long lines in your editor. An empty line starts a new paragraph. A list line (`- …`)
+  stays on its own line.
 - Markdown formatting like `**bold**` or `*italic*` is shown as typed for now.
 
 ### Errors
@@ -190,3 +192,6 @@ imported until the file is correct (DC-112). For example:
 - **Unknown headings are an error**, so typos are caught early.
 - **A demo campaign's name is an error**, to keep things simple; the demo campaigns will be
   removed later.
+- **Lines within a paragraph are joined**, as in Markdown, so wrapped lines in the editor
+  read as flowing text on the phone.
+- **An NPC, location or note needs text.** One without a description below it is an error.

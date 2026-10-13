@@ -64,16 +64,16 @@ Everything happens on the campaign list (`/`):
 
 Each step is small, ends with `npm run check` green and a working app, and is one commit.
 
-**Progress:** **next: step 1**.
+**Progress:** step 1 (reading the structure) ✅ done · **next: step 2**.
 
-| Step | Content                                                                                        | Stories        | Tests                                                                                                            |
-| ---- | ---------------------------------------------------------------------------------------------- | -------------- | ---------------------------------------------------------------------------------------------------------------- |
-| 1    | Parser, structure: campaign name, sections, scenes, tiles, text, unknown/duplicate headings    | DC-110, DC-112 | Every rule in the format; line numbers; all errors at once                                                       |
-| 2    | Parser, content: enemies, references by name (case-insensitive), unique names, demo names, ids | DC-110, DC-112 | The format document's example (renamed) gives the same campaign as the demo seed; each error message; stable ids |
-| 3    | Store imported campaigns; `getCampaigns()` includes them; delete also removes the session      | DC-110, DC-113 | Survives a reload; bad stored data is skipped, not a crash; demo campaigns unchanged                             |
-| 4    | Import on the campaign list: file picker, error panel, replace confirmation                    | DC-110 – 112   | Import, open and play; errors shown, nothing imported; replace / cancel; current scene kept after re-import      |
-| 5    | Delete an imported campaign on the campaign list, with confirmation                            | DC-113         | Delete / cancel; demo campaigns can't be deleted; its session is gone                                            |
-| 6    | Real-phone check: import a file from Drive / mail                                              | DC-100         | Manual check                                                                                                     |
+| Step | Content                                                                                                                                              | Stories        | Tests                                                                                                            |
+| ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- | ---------------------------------------------------------------------------------------------------------------- |
+| 1    | Parser, structure: campaign name, sections, scenes, tiles, text, unknown/duplicate headings                                                          | DC-110, DC-112 | Every rule in the format; line numbers; all errors at once                                                       |
+| 2    | Parser, content: enemies, references by name (case-insensitive), unique names, demo names, ids; read-aloud texts in a row form one Descriptions tile | DC-110, DC-112 | The format document's example (renamed) gives the same campaign as the demo seed; each error message; stable ids |
+| 3    | Store imported campaigns; `getCampaigns()` includes them; delete also removes the session                                                            | DC-110, DC-113 | Survives a reload; bad stored data is skipped, not a crash; demo campaigns unchanged                             |
+| 4    | Import on the campaign list: file picker, error panel, replace confirmation                                                                          | DC-110 – 112   | Import, open and play; errors shown, nothing imported; replace / cancel; current scene kept after re-import      |
+| 5    | Delete an imported campaign on the campaign list, with confirmation                                                                                  | DC-113         | Delete / cancel; demo campaigns can't be deleted; its session is gone                                            |
+| 6    | Real-phone check: import a file from Drive / mail                                                                                                    | DC-100         | Manual check                                                                                                     |
 
 ## 5. Decisions
 
