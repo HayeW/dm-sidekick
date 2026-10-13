@@ -8,6 +8,7 @@ import { startCombat } from '../../domain/combat';
 import { canOpenTile, findScene, neighbours } from '../../domain/scene';
 import SceneTile from '../components/SceneTile';
 import StepNav from '../components/StepNav';
+import TopBar from '../components/TopBar';
 import styles from './ScenePage.module.css';
 
 /**
@@ -15,6 +16,7 @@ import styles from './ScenePage.module.css';
  * DC-015, DC-016: previous/next scene with one tap.
  * DC-080: the scene shown is remembered as the current scene.
  * DC-043: an encounter tile starts combat with one tap, or resumes the active one (D1).
+ * DC-020: Quick Access opens from the top bar (D22).
  */
 export default function ScenePage() {
   const { campaignId = '', sceneId = '' } = useParams();
@@ -56,9 +58,7 @@ export default function ScenePage() {
 
   return (
     <main className="page">
-      <Link to="/" className={styles.campaign}>
-        ‹ {campaign.name}
-      </Link>
+      <TopBar backTo="/" backLabel={campaign.name} campaignId={campaign.id} />
       <h1>{scene.title}</h1>
       <ul className={styles.tiles}>
         {scene.blocks.map((block) => (

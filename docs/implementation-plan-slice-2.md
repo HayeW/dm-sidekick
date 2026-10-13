@@ -110,7 +110,7 @@ type ContentBlock =
 Each step is small, ends with green checks (`npm run check`) and a working app, and is one
 commit.
 
-**Progress:** **next: step 1**.
+**Progress:** step 1 (DC-020) ✅ done · **next: step 2**.
 
 | Step | Content                                                                                  | Stories        | Tests                                                                                             |
 | ---- | ---------------------------------------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------- |

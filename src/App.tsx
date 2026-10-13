@@ -2,11 +2,12 @@ import { Link, Route, Routes } from 'react-router';
 import CampaignListPage from './ui/routes/CampaignListPage';
 import CampaignPage from './ui/routes/CampaignPage';
 import CombatPage from './ui/routes/CombatPage';
+import QuickAccessPage from './ui/routes/QuickAccessPage';
 import ScenePage from './ui/routes/ScenePage';
 import TilePage from './ui/routes/TilePage';
 import ScrollToTop from './ui/components/ScrollToTop';
 
-// Routes follow docs/implementation-plan-slice-1.md, §5.
+// Routes follow docs/implementation-plan-slice-1.md, §5, and docs/implementation-plan-slice-2.md, §3.
 export default function App() {
   return (
     <>
@@ -21,6 +22,7 @@ export default function App() {
           element={<TilePage />}
         />
         <Route path="/c/:campaignId/combat" element={<CombatPage />} />
+        <Route path="/c/:campaignId/quick" element={<QuickAccessPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>

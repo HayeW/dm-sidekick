@@ -1,0 +1,29 @@
+/* Heading with Close on the right, where the Quick button was. */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: var(--space);
+}
+
+.header h1 {
+  margin: 0;
+}
+
+.close {
+  min-width: 96px;
+  padding: 0 var(--space);
+  border: 1px solid var(--text-muted);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text);
+  font-weight: 700;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.close:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
