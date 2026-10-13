@@ -68,7 +68,7 @@ type SpareNpc = {
 
 Each step is small, ends with `npm run check` green and a working app, and is one commit.
 
-**Progress:** step 1 (DC-090 data) ✅ done · **next: step 2**.
+**Progress:** step 1 (DC-090 data) ✅ done · step 2 (DC-090 screen) ✅ done · **next: step 3**.
 
 | Step | Content                                                            | Stories | Tests                                                                                             |
 | ---- | ------------------------------------------------------------------ | ------- | ------------------------------------------------------------------------------------------------- |

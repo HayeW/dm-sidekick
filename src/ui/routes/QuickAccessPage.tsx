@@ -1,6 +1,7 @@
 import { Link, useLocation, useParams } from 'react-router';
 import { getCampaign } from '../../data/campaigns';
 import { getActiveCombat } from '../../data/combats';
+import { getSpareNpcs } from '../../data/spareNpcs';
 import { findEncounter } from '../../domain/scene';
 import ListRow from '../components/ListRow';
 import type { QuickAccessState } from '../components/TopBar';
@@ -72,6 +73,10 @@ export default function QuickAccessPage() {
             'Campaign NPCs',
             npcCount === 1 ? '1 NPC' : `${npcCount} NPCs`,
           )}
+        </li>
+        <li>
+          {/* DC-090: the same in every campaign; next to Campaign NPCs (D34). */}
+          {item(`/c/${campaign.id}/spare-npcs`, 'Spare NPCs', `${getSpareNpcs().length} NPCs`)}
         </li>
         <li>
           {item(

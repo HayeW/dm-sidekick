@@ -10,10 +10,11 @@ import NpcListPage from './ui/routes/NpcListPage';
 import NpcPage from './ui/routes/NpcPage';
 import QuickAccessPage from './ui/routes/QuickAccessPage';
 import ScenePage from './ui/routes/ScenePage';
+import SpareNpcsPage from './ui/routes/SpareNpcsPage';
 import TilePage from './ui/routes/TilePage';
 import ScrollToTop from './ui/components/ScrollToTop';
 
-// Routes follow docs/implementation-plan-slice-1.md, §5, and docs/implementation-plan-slice-2.md, §3.
+// Routes follow docs/implementation-plan-slice-1.md §5, slice-2 §3 and slice-3 §4.
 export default function App() {
   return (
     <>
@@ -31,6 +32,7 @@ export default function App() {
         <Route path="/c/:campaignId/quick" element={<QuickAccessPage />} />
         <Route path="/c/:campaignId/npcs" element={<NpcListPage />} />
         <Route path="/c/:campaignId/npcs/:npcId" element={<NpcPage />} />
+        <Route path="/c/:campaignId/spare-npcs" element={<SpareNpcsPage />} />
         <Route path="/c/:campaignId/locations" element={<LocationListPage />} />
         <Route path="/c/:campaignId/locations/:locationId" element={<LocationPage />} />
         <Route path="/c/:campaignId/notes" element={<NoteListPage />} />

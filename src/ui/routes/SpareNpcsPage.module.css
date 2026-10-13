@@ -1,0 +1,39 @@
+.npcs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Not tappable: everything the DM needs is on the row (D33). */
+.npc {
+  padding: 12px var(--space);
+  background: var(--surface);
+  border-radius: var(--radius);
+}
+
+.heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  margin: 0 0 2px;
+  font-size: 1rem;
+  font-weight: normal;
+}
+
+.name {
+  font-weight: 700;
+}
+
+.race {
+  color: var(--accent);
+  font-size: 0.875rem;
+}
+
+.description {
+  margin: 0;
+  color: var(--text-muted);
+}
