@@ -114,7 +114,7 @@ type ContentBlock =
 Each step is small, ends with green checks (`npm run check`) and a working app, and is one
 commit.
 
-**Progress:** step 1 (DC-020) ✅ done · step 2 (DC-020) ✅ done · step 3 (DC-021) ✅ done · step 4 (entities) ✅ done · **next: step 5**.
+**Progress:** step 1 (DC-020) ✅ done · step 2 (DC-020) ✅ done · step 3 (DC-021) ✅ done · step 4 (entities) ✅ done · step 5 (DC-021, DC-013) ✅ done · **next: step 6**.
 
 | Step | Content                                                                                  | Stories        | Tests                                                                                             |
 | ---- | ---------------------------------------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------- |

@@ -39,7 +39,16 @@ describe('DC-010 — Scene tonen: tiles met campaign-level NPCs en locations (D2
   it('shows the names of the NPCs the tile refers to, skipping unknown ones', () => {
     renderTile({ id: 'b-1', type: 'npcs', npcIds: ['npc-gone', 'npc-marta'] });
 
-    expect(screen.getByText('Marta')).toBeInTheDocument();
+    expect(screen.getAllByRole('link').map((link) => link.textContent)).toEqual(['Marta']);
+  });
+
+  it('links every NPC name to that NPC (DC-013)', () => {
+    renderTile({ id: 'b-1', type: 'npcs', npcIds: ['npc-marta'] });
+
+    expect(screen.getByRole('link', { name: 'Marta' })).toHaveAttribute(
+      'href',
+      '/c/c-1/npcs/npc-marta',
+    );
   });
 
   it('shows "No NPCs" when none of the NPCs exist', () => {

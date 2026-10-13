@@ -28,7 +28,7 @@ type CombatAction = {
   onStart: (encounter: Encounter) => void;
 };
 
-/** DC-010: compact view of one content block. */
+/** DC-010: compact view of one content block. DC-013: NPC names open the NPC. */
 export default function SceneTile({ block, campaign, openTo, combat }: Props) {
   const label = labels[block.type];
   const content = (
@@ -78,7 +78,18 @@ function TileBody({ block, campaign, combat }: Omit<Props, 'openTo'>) {
     case 'npcs': {
       const npcs = findNpcs(campaign, block.npcIds);
       if (npcs.length === 0) return <p className={styles.missing}>No NPCs</p>;
-      return <p className={styles.clamp}>{npcs.map((npc) => npc.name).join(', ')}</p>;
+      // DC-013: every NPC opens with one tap; a tile can hold several, so each is its own link.
+      return (
+        <ul className={styles.npcList}>
+          {npcs.map((npc) => (
+            <li key={npc.id}>
+              <Link to={`/c/${campaign.id}/npcs/${npc.id}`} className={styles.npc}>
+                {npc.name}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      );
     }
     case 'encounter': {
       const encounter = findEncounter(campaign, block.encounterId);
