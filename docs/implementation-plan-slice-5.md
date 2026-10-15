@@ -66,11 +66,11 @@ Each step is small, ends with `npm run check` green and a working app, and is on
 
 **Progress:** step 1 (reading the structure) ✅ done · step 2 (reading the content) ✅ done ·
 step 3 (storing) ✅ done · step 4 (import on the campaign list) ✅ done · step 5 (delete) ✅
-done · **next: step 6** (real-phone check, by the product owner).
+done · step 6 (real-phone check) ✅ done · **slice 5 done**.
 
-**For step 6:** the file picker only offers `.md`, `.markdown` and plain-text files. Some
-Android pickers (Drive) label a `.md` file as `application/octet-stream`, which may grey it
-out. If so, drop the filter: the parser rejects anything that isn't a campaign anyway.
+**Step 6 (product owner, 2026-10-15):** on the phone, `.md` files can be picked with the
+file-type filter. (A first try seemed to show them greyed out, but that file had no
+extension.) The filter stays. Follow-up from the review: D55 and D56.
 
 | Step | Content                                                                                                                                              | Stories        | Tests                                                                                                            |
 | ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- | ---------------------------------------------------------------------------------------------------------------- |
@@ -84,7 +84,7 @@ out. If so, drop the filter: the parser rejects anything that isn't a campaign a
 ## 5. Decisions
 
 Numbering continues from the fourth slice. Answers in **bold**. **Status: D43 – D51
-confirmed on 2026-10-13, D52 – D54 on 2026-10-15, by the product owner.**
+confirmed on 2026-10-13, D52 – D56 on 2026-10-15, by the product owner.**
 
 - **D43 — English section and tile names** (product owner, 2026-10-13): **yes**, matching
   the English UI (D10).
@@ -118,6 +118,13 @@ confirmed on 2026-10-13, D52 – D54 on 2026-10-15, by the product owner.**
   (product owner, 2026-10-15): **the same campaign.** Imported campaigns are stored by id;
   importing a file with an existing id asks to replace it (DC-111). Sessions are stored by
   id too, so the two stay consistent. For step 3 and 4.
+- **D55 — Files over 1 MB are refused** (product owner, 2026-10-15) without being read, with
+  one message. The file-type filter lets any plain-text file through, and a big one picked by
+  mistake would otherwise be read whole and could freeze the phone. A campaign file is a few
+  kilobytes.
+- **D56 — At most five errors are shown** (product owner, 2026-10-15), then "…and N more
+  errors." This narrows DC-112's "all errors at once": a wrong text file gives one error per
+  line, possibly thousands. The parser still finds every error; only the panel is capped.
 
 **Details settled while building (step 2, within D47):**
 

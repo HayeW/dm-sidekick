@@ -98,6 +98,11 @@
   margin-top: 4px;
 }
 
+.panel p.more {
+  margin-top: 8px;
+  color: var(--text-muted);
+}
+
 .panelButtons {
   display: flex;
   justify-content: flex-end;

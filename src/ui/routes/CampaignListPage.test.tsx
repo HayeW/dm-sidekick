@@ -327,3 +327,74 @@ describe('DC-113 — Geïmporteerde campaign verwijderen', () => {
     expect(campaignLink(/Hollowmere/)).toBeInTheDocument();
   });
 });
+
+describe('DC-112 — Duidelijke foutmeldingen: een verkeerd bestand', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('refuses a file over 1 MB without reading it (D55)', async () => {
+    const user = setupUser();
+    const read = vi.spyOn(FileReader.prototype, 'readAsText');
+    renderAt('/');
+
+    await importFile(user, asFile('x'.repeat(1024 * 1024 + 1), 'export.txt'));
+
+    const panel = await screen.findByRole('region', { name: 'Could not import export.txt' });
+    expect(
+      within(panel)
+        .getAllByRole('listitem')
+        .map((item) => item.textContent),
+    ).toEqual(["This doesn't look like a campaign file: it is larger than 1 MB."]);
+    expect(read).not.toHaveBeenCalled();
+  });
+
+  it('accepts a file of exactly 1 MB', async () => {
+    const user = setupUser();
+    const text = hollowmere();
+    // Bytes, not characters: "×" takes two.
+    const file = asFile(text + ' '.repeat(1024 * 1024 - new Blob([text]).size));
+    expect(file.size).toBe(1024 * 1024);
+    renderAt('/');
+
+    await importFile(user, file);
+
+    expect(await screen.findByRole('link', { name: /Hollowmere/ })).toBeInTheDocument();
+  });
+
+  it('shows the first five errors and how many more there are (D56)', async () => {
+    const user = setupUser();
+    const junk = Array.from({ length: 6 }, (_, index) => `junk ${index + 1}`);
+    renderAt('/');
+
+    // No campaign name, no scene, and six lines of loose text: eight errors.
+    await importFile(user, asFile(junk.join('\n'), 'notes.md'));
+
+    const panel = await screen.findByRole('region', { name: 'Could not import notes.md' });
+    expect(within(panel).getAllByRole('listitem')).toHaveLength(5);
+    expect(within(panel).getAllByRole('listitem')[0]).toHaveTextContent(/^Line 1: /);
+    expect(panel).toHaveTextContent('…and 3 more errors.');
+  });
+
+  it('says "1 more error" for one', async () => {
+    const user = setupUser();
+    renderAt('/');
+
+    // No campaign name, no scene, and four lines of loose text: six errors.
+    await importFile(user, asFile(['a', 'b', 'c', 'd'].join('\n'), 'notes.md'));
+
+    expect(await screen.findByText('…and 1 more error.')).toBeInTheDocument();
+  });
+
+  it('shows exactly five errors without a "more" line', async () => {
+    const user = setupUser();
+    renderAt('/');
+
+    // No campaign name, no scene, and three lines of loose text: five errors.
+    await importFile(user, asFile(['a', 'b', 'c'].join('\n'), 'notes.md'));
+
+    const panel = await screen.findByRole('region', { name: 'Could not import notes.md' });
+    expect(within(panel).getAllByRole('listitem')).toHaveLength(5);
+    expect(within(panel).queryByText(/more error/)).not.toBeInTheDocument();
+  });
+});

@@ -9,13 +9,19 @@ import {
 } from '../../data/importedCampaigns';
 import styles from './CampaignListPage.module.css';
 
+/** A campaign file is a few kilobytes; a bigger file was picked by mistake (D55). */
+const MAX_FILE_SIZE = 1024 * 1024;
+/** The errors shown at once (D56); the DM fixes these and imports again. */
+const MAX_ERRORS_SHOWN = 5;
+
 /**
  * What shows above the list (D50): the file's errors (DC-112), the question whether to
  * replace an imported campaign with the same id (DC-111, D54), or whether to delete one
  * (DC-113, D51).
  */
 type Panel =
-  | { kind: 'errors'; fileName: string; messages: string[] }
+  /** `more`: how many errors there are beyond the ones shown (D56). */
+  | { kind: 'errors'; fileName: string; messages: string[]; more?: number }
   | { kind: 'replace'; fileName: string; text: string; existingName: string }
   | { kind: 'delete'; campaignId: string; name: string };
 
@@ -71,6 +77,12 @@ export default function CampaignListPage() {
     input.value = '';
     if (!file) return;
     const pick = ++latestPick.current;
+    if (file.size > MAX_FILE_SIZE) {
+      // Not even read: a photo or video would freeze the phone (D55).
+      const messages = ["This doesn't look like a campaign file: it is larger than 1 MB."];
+      setPanel({ kind: 'errors', fileName: file.name, messages });
+      return;
+    }
 
     let text: string;
     try {
@@ -84,8 +96,11 @@ export default function CampaignListPage() {
     }
     const result = readCampaignFile(text);
     if ('errors' in result) {
-      const messages = result.errors.map((error) => `Line ${error.line}: ${error.message}`);
-      setPanel({ kind: 'errors', fileName: file.name, messages });
+      const messages = result.errors
+        .slice(0, MAX_ERRORS_SHOWN)
+        .map((error) => `Line ${error.line}: ${error.message}`);
+      const more = result.errors.length - messages.length;
+      setPanel({ kind: 'errors', fileName: file.name, messages, more });
       return;
     }
     const existing = getCampaign(result.campaign.id);
@@ -111,6 +126,11 @@ export default function CampaignListPage() {
               <li key={index}>{message}</li>
             ))}
           </ul>
+          {!!panel.more && (
+            <p className={styles.more}>
+              …and {panel.more} more {panel.more === 1 ? 'error' : 'errors'}.
+            </p>
+          )}
           <div className={styles.panelButtons}>
             <button type="button" className={styles.secondary} onClick={closePanel}>
               Close
