@@ -1,24 +1,137 @@
 .players {
   list-style: none;
-  margin: 0;
+  margin: 0 0 var(--space);
   padding: 0;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-/* A row like the other campaign lists (ListRow), without a › : there is nothing to open. */
+/* A row like the other campaign lists (ListRow): the name, and Remove at the right. */
 .player {
   display: flex;
   align-items: center;
+  gap: 8px;
   min-height: 64px;
-  padding: 8px var(--space);
+  padding: 8px;
   border-radius: var(--radius);
   background: var(--surface);
+}
+
+/* The name is the rename button: the whole width, left aligned (D60). */
+.name {
+  flex: 1;
+  min-width: 0;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
   font-weight: 700;
+  text-align: left;
   overflow-wrap: anywhere;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.name:active {
+  background: var(--bg);
+}
+
+/* Small and quiet, as Delete on the campaign list. */
+.remove {
+  flex: none;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .empty {
   color: var(--text-muted);
+}
+
+/* Add below the list, and rename in place: a field with its buttons beside or below it. */
+.form {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px 12px;
+}
+
+.players .form {
+  padding: 4px 8px;
+}
+
+.field {
+  flex: 1 1 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+/* 16px text: iOS does not zoom in on focus. */
+.field input {
+  min-height: var(--touch);
+  padding: 0 12px;
+  border: 1px solid var(--text-muted);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 1rem;
+}
+
+.field input[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+
+.formButtons {
+  display: flex;
+  gap: 8px;
+}
+
+.secondary,
+.primary {
+  min-width: 80px;
+  padding: 0 var(--space);
+  border-radius: var(--radius);
+  font-weight: 700;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.secondary {
+  border: 1px solid var(--text-muted);
+  background: transparent;
+  color: var(--text);
+}
+
+.primary {
+  border: 0;
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.problem {
+  flex: 1 1 100%;
+  margin: 0;
+  color: var(--danger);
+  font-size: 0.875rem;
+}
+
+.name:focus-visible,
+.remove:focus-visible,
+.secondary:focus-visible,
+.primary:focus-visible,
+.field input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
