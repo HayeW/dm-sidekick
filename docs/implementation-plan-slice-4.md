@@ -1,4 +1,4 @@
-# DM Cockpit — Implementation plan: fourth slice (Healing)
+# DM Sidekick — Implementation plan: fourth slice (Healing)
 
 Status: **done 2026-10-13.** D36–D42 confirmed by the product owner (D39–D42: all
 proposals; D41 adjusted in step 2). All steps built; checked on a real phone by the product

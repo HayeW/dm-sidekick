@@ -1,4 +1,4 @@
-# DM Cockpit — Implementation plan: second slice (Quick Access)
+# DM Sidekick — Implementation plan: second slice (Quick Access)
 
 Status: **done 2026-10-13.** Decisions D22–D28 confirmed by the product owner: all
 proposals, with option C for D25. All steps built; checked on a real phone by the product

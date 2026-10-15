@@ -1,4 +1,4 @@
-# DM Cockpit
+# DM Sidekick
 
 Mobile-first web app for a Dungeon Master during a D&D session.
 

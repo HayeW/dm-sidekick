@@ -1,4 +1,4 @@
-# DM Cockpit — Implementation plan: first vertical slice
+# DM Sidekick — Implementation plan: first vertical slice
 
 Status: **draft for review** — no code has been written yet.
 Source: `requirements.md` (product requirements, domain model, user stories).

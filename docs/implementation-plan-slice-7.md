@@ -1,4 +1,4 @@
-# DM Cockpit — Implementation plan: seventh slice (Ending a combat)
+# DM Sidekick — Implementation plan: seventh slice (Ending a combat)
 
 Status: **approved 2026-10-15.** D63 – D67 confirmed by the product owner (all proposals).
 Source: `requirements.md` (§16 and Epic 8: DC-072, DC-073). Builds on the earlier slices;

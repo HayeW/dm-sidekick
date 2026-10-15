@@ -1,4 +1,4 @@
-# DM Cockpit — Implementation plan: sixth slice (Own player characters)
+# DM Sidekick — Implementation plan: sixth slice (Own player characters)
 
 Status: **approved 2026-10-15.** D57 – D62 confirmed by the product owner (all proposals).
 Source: `requirements.md` (Epic 12: DC-114). Builds on the earlier slices; their

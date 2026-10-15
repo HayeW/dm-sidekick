@@ -1,4 +1,4 @@
-# DM Cockpit — Implementation plan: fifth slice (Campaign import)
+# DM Sidekick — Implementation plan: fifth slice (Campaign import)
 
 Status: **approved 2026-10-13.** D43 – D51 confirmed by the product owner (D46 – D51: all
 proposals).

@@ -1,6 +1,6 @@
-# DM Cockpit — Requirements
+# DM Sidekick — Requirements
 ## 1. Product
-DM Cockpit is een mobile-first webapp voor een Dungeon Master (DM) tijdens een D&D-sessie.
+DM Sidekick is een mobile-first webapp voor een Dungeon Master (DM) tijdens een D&D-sessie.
 De applicatie zelf bevat geen AI. AI wordt uitsluitend gebruikt tijdens de ontwikkeling van de software.
 Productdoel
 De DM moet tijdens een sessie zo min mogelijk bezig zijn met de applicatie en zo veel mogelijk met de spelers.
@@ -254,8 +254,8 @@ Deze open vragen hoeven niet allemaal vooraf opgelost te worden. Alleen vragen d
 
 # Eerste domeinmodel
 Dit is bewust een conceptueel model, niet meteen een database-schema. Ik zou de AI juist eerst hiermee laten werken en pas later persistence details laten bepalen.
-DM Cockpit — Eerste domeinmodel
-DM Cockpit — Eerste domeinmodel
+DM Sidekick — Eerste domeinmodel
+DM Sidekick — Eerste domeinmodel
 ## 1. Overzicht
 Campaign ├── Scene[] ├── PlayerCharacter[] ├── NPC[] ├── Location[] ├── Encounter[] └── Note[] 
 Een actieve combat ontstaat vanuit een Encounter, maar is een afzonderlijke runtime/session state.
@@ -351,7 +351,7 @@ Het domeinmodel moet niet proberen alle D&D-regels te modelleren.
 Kleine implementable user stories
 Hier zou ik bewust kleine stories van maken. Een coding agent moet idealiter één story kunnen oppakken zonder dat hij het hele product opnieuw moet begrijpen.
 
-# DM Cockpit — Implementable User Stories
+# DM Sidekick — Implementable User Stories
 Conventies
 Prioriteiten:
 - P0 — noodzakelijk voor een eerste werkende slice

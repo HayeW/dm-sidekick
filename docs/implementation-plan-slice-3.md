@@ -1,4 +1,4 @@
-# DM Cockpit — Implementation plan: third slice (Spare NPCs)
+# DM Sidekick — Implementation plan: third slice (Spare NPCs)
 
 Status: **done 2026-10-13.** Decisions D30–D35 confirmed by the product owner: all
 proposals. All steps built; checked on a real phone by the product owner.
