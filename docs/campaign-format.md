@@ -1,10 +1,13 @@
 # Campaign file format
 
-Status: **approved by the product owner on 2026-10-13.** Stories: DC-110 – DC-113 in
-`requirements.md`.
+Status: **approved by the product owner on 2026-10-13**; player characters removed on
+2026-10-15 (DC-114). Stories: DC-110 – DC-114 in `requirements.md`.
 
 A campaign is one Markdown file (`.md`), written on the PC in any text editor and imported
 in the app on the phone. It is plain Markdown, so it also reads well in an editor preview.
+
+A file can be shared between DMs, so it has **no player characters**: each DM adds their own
+in the app (DC-114).
 
 ## A complete example
 
@@ -12,13 +15,6 @@ This is the demo campaign "Shadows over Millbrook" as a file:
 
 ```markdown
 # Shadows over Millbrook
-
-## Player characters
-
-- Alice
-- Bob
-- Cora
-- Dain
 
 ## NPCs
 
@@ -123,17 +119,17 @@ from somewhere below the floorboards.
 
 ### Sections (`##`)
 
-| Heading                | Contains                                                  | Required     |
-| ---------------------- | --------------------------------------------------------- | ------------ |
-| `## Player characters` | A list of names (`- Alice`). No HP (D3).                  | No           |
-| `## NPCs`              | One `### Name` per NPC, with a description below it.      | No           |
-| `## Locations`         | One `### Name` per location, with a description below it. | No           |
-| `## Encounters`        | One `### Name` per encounter, with a list of enemies.     | No           |
-| `## Notes`             | One `### Title` per campaign note, with its text (D28).   | No           |
-| `## Scene: Title`      | One per scene; the tiles of that scene, see below.        | At least one |
+| Heading           | Contains                                                  | Required     |
+| ----------------- | --------------------------------------------------------- | ------------ |
+| `## NPCs`         | One `### Name` per NPC, with a description below it.      | No           |
+| `## Locations`    | One `### Name` per location, with a description below it. | No           |
+| `## Encounters`   | One `### Name` per encounter, with a list of enemies.     | No           |
+| `## Notes`        | One `### Title` per campaign note, with its text (D28).   | No           |
+| `## Scene: Title` | One per scene; the tiles of that scene, see below.        | At least one |
 
 - Scenes appear in the app in the order of the file. The other sections may be in any order,
   before, between or after the scenes, and each may appear only once.
+- `## Player characters` is an error: each DM adds their own in the app (DC-114).
 - NPCs, locations, encounters and notes keep the order of the file.
 
 ### Enemies in an encounter
@@ -178,11 +174,13 @@ Descriptions tile.
 
 ### Errors
 
-The app reads the whole file and lists **every** problem with its line number; nothing is
-imported until the file is correct (DC-112). For example:
+The app reads the whole file and finds **every** problem with its line number; it shows the
+first five and how many more there are (D56). Nothing is imported until the file is correct
+(DC-112). For example:
 
 - `Line 1: the file must start with "# Campaign name".`
-- `Line 47: unknown section "## Monsters". Expected Player characters, NPCs, Locations, Encounters, Notes or Scene: …`
+- `Line 47: unknown section "## Monsters". Expected NPCs, Locations, Encounters, Notes or Scene: …`
+- `Line 3: "## Player characters" can't be in a campaign file: each DM adds their own player characters in the app.`
 - `Line 62: "### Location: Crooked Kettle" — there is no location with that name.`
 - `Line 31: "- 3 Goblins" — expected an enemy like "- 3 × Goblin, 7 HP".`
 - `Line 88: "## NPCs" appears twice.`

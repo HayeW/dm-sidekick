@@ -26,7 +26,6 @@ describe('DC-110 — Campaign importeren: de structuur van het bestand', () => {
 
     expect(errors).toEqual([]);
     expect(draft.name).toBe('Shadows over Millbrook');
-    expect(draft.playerCharacters.map((pc) => pc.text)).toEqual(['Alice', 'Bob', 'Cora', 'Dain']);
     expect(draft.npcs.map((npc) => npc.name)).toEqual(['Marta Hollow', 'Old Fenn']);
     expect(draft.locations.map((location) => location.name)).toEqual([
       'The Crooked Kettle',
@@ -105,8 +104,9 @@ describe('DC-110 — Campaign importeren: de structuur van het bestand', () => {
       '## Scene: Second',
       '### DM notes',
       'Two.',
-      '## Player characters',
-      '- Alice',
+      '## Notes',
+      '### Village',
+      'Small.',
     );
 
     expect(errors).toEqual([]);
@@ -164,7 +164,7 @@ describe('DC-112 — Duidelijke foutmeldingen: de structuur', () => {
     expect(errorsOf(...minimal, '## Monsters')).toContainEqual({
       line: 7,
       message:
-        'unknown section "## Monsters". Expected Player characters, NPCs, Locations, Encounters, Notes or Scene: ….',
+        'unknown section "## Monsters". Expected NPCs, Locations, Encounters, Notes or Scene: ….',
     });
   });
 
@@ -223,8 +223,6 @@ describe('DC-112 — Duidelijke foutmeldingen: de structuur', () => {
   it('reports lines that should be list lines', () => {
     const errors = errorsOf(
       '# Test campaign',
-      '## Player characters',
-      'Alice',
       '## Encounters',
       '### Ambush',
       '3 Goblins',
@@ -235,11 +233,10 @@ describe('DC-112 — Duidelijke foutmeldingen: de structuur', () => {
 
     expect(errors).toEqual(
       [
-        { line: 3, message: '"Alice" — expected a player character like "- Alice".' },
-        { line: 6, message: '"3 Goblins" — expected a list line with an enemy, like "- …".' },
-        { line: 5, message: '"### Ambush" needs a list of enemies below it.' },
-        { line: 12, message: '"Marta" — expected a list line with an NPC name, like "- …".' },
-        { line: 11, message: '"### NPCs" needs a list of NPC names below it.' },
+        { line: 4, message: '"3 Goblins" — expected a list line with an enemy, like "- …".' },
+        { line: 3, message: '"### Ambush" needs a list of enemies below it.' },
+        { line: 10, message: '"Marta" — expected a list line with an NPC name, like "- …".' },
+        { line: 9, message: '"### NPCs" needs a list of NPC names below it.' },
       ].sort((a, b) => a.line - b.line),
     );
   });
@@ -268,8 +265,6 @@ describe('DC-112 — Duidelijke foutmeldingen: zoals editors bestanden opslaan',
   it('accepts list lines indented with spaces or a tab', () => {
     const { draft, errors } = read(
       '# Test campaign',
-      '## Player characters',
-      '  - Alice',
       '## Encounters',
       '### Ambush',
       '\t- 3 × Goblin, 7 HP',
@@ -279,7 +274,7 @@ describe('DC-112 — Duidelijke foutmeldingen: zoals editors bestanden opslaan',
     );
 
     expect(errors).toEqual([]);
-    expect(draft.playerCharacters[0]!.text).toBe('Alice');
+    expect(draft.scenes[0]!.tiles[1]).toMatchObject({ names: [{ text: 'Marta' }] });
     expect(draft.encounters[0]!.enemies[0]!.text).toBe('3 × Goblin, 7 HP');
   });
 
@@ -331,7 +326,7 @@ describe('DC-112 — Duidelijke foutmeldingen: zoals editors bestanden opslaan',
       {
         line: 7,
         message:
-          'unknown section "## NPC". Expected Player characters, NPCs, Locations, Encounters, Notes or Scene: ….',
+          'unknown section "## NPC". Expected NPCs, Locations, Encounters, Notes or Scene: ….',
       },
     ]);
   });
@@ -343,20 +338,10 @@ describe('DC-112 — Duidelijke foutmeldingen: zoals editors bestanden opslaan',
     });
   });
 
-  it('reports a scene without a title and player characters written as headings', () => {
-    const errors = errorsOf(
-      '# Test campaign',
-      '## Player characters',
-      '### Alice',
-      '## Scene:',
-      '### DM notes',
-      'Quiet.',
-    );
+  it('reports a scene without a title', () => {
+    const errors = errorsOf('# Test campaign', '## Scene:', '### DM notes', 'Quiet.');
 
-    expect(errors).toEqual([
-      { line: 3, message: '"### Alice": player characters are a list ("- Alice"), not headings.' },
-      { line: 4, message: '"## Scene:" needs a title after the colon.' },
-    ]);
+    expect(errors).toEqual([{ line: 2, message: '"## Scene:" needs a title after the colon.' }]);
   });
 
   it('reports text below an Encounter tile, which takes none', () => {
@@ -430,7 +415,12 @@ describe('DC-110 — Campaign importeren: de inhoud', () => {
     const demo = shape(seedCampaigns[0]!);
     // The seed uses a typographic apostrophe where the file has a plain one.
     const expected = JSON.parse(JSON.stringify(demo).replaceAll('’', "'")) as typeof demo;
-    expect(shape(result.campaign)).toEqual({ ...expected, name: 'Shadows over Hollowmere' });
+    // Player characters are not in the file: each DM keeps their own (DC-114).
+    expect(shape(result.campaign)).toEqual({
+      ...expected,
+      name: 'Shadows over Hollowmere',
+      playerCharacters: [],
+    });
   });
 
   it('reads enemies with a count, with "x" for "×", and without a count as one', () => {
@@ -508,8 +498,6 @@ describe('DC-110 — Campaign importeren: de inhoud', () => {
 describe('DC-110 — Campaign importeren: ids blijven gelijk bij opnieuw importeren (D47)', () => {
   const lines = [
     '# The Sunken Bell, part 2',
-    '## Player characters',
-    '- Esme',
     '## NPCs',
     '### Old Fenn',
     'Ferryman.',
@@ -524,7 +512,6 @@ describe('DC-110 — Campaign importeren: ids blijven gelijk bij opnieuw importe
     const campaign = campaignOf(...lines);
 
     expect(campaign.id).toBe('imported-the-sunken-bell-part-2');
-    expect(campaign.playerCharacters[0]!.id).toBe('pc-esme');
     expect(campaign.npcs[0]!.id).toBe('npc-old-fenn');
     const scene = campaign.scenes[0]!;
     expect(scene.id).toBe('scene-the-harbour-at-low-tide');
@@ -538,7 +525,7 @@ describe('DC-110 — Campaign importeren: ids blijven gelijk bij opnieuw importe
   });
 
   it('gives the same ids when the file is read again, also after other changes', () => {
-    const changed = [...lines.slice(0, 6), '### Marta', 'Innkeeper.', ...lines.slice(6)];
+    const changed = [...lines.slice(0, 4), '### Marta', 'Innkeeper.', ...lines.slice(4)];
 
     expect(campaignOf(...lines)).toEqual(campaignOf(...lines));
     expect(campaignOf(...changed).scenes[0]!.id).toBe(campaignOf(...lines).scenes[0]!.id);
@@ -635,9 +622,6 @@ describe('DC-112 — Duidelijke foutmeldingen: de inhoud', () => {
     expect(
       parseErrors(
         '# Test campaign',
-        '## Player characters',
-        '- Alice',
-        '- alice',
         '## NPCs',
         '### Marta',
         'Innkeeper.',
@@ -649,9 +633,8 @@ describe('DC-112 — Duidelijke foutmeldingen: de inhoud', () => {
         'Again.',
       ),
     ).toEqual([
-      { line: 4, message: '"alice" appears twice in Player characters (first on line 3).' },
-      { line: 8, message: '"MARTA" appears twice in NPCs (first on line 6).' },
-      { line: 14, message: '"road" appears twice in scenes (first on line 10).' },
+      { line: 5, message: '"MARTA" appears twice in NPCs (first on line 3).' },
+      { line: 11, message: '"road" appears twice in scenes (first on line 7).' },
     ]);
   });
 
@@ -748,5 +731,32 @@ describe('DC-112 — Duidelijke foutmeldingen: de inhoud', () => {
     expect(parseErrors(...minimal, '### Location:')).toEqual([
       { line: 7, message: '"### Location:" needs a name after the colon.' },
     ]);
+  });
+});
+
+describe('DC-114 — Eigen Player Characters: niet in het bestand', () => {
+  const message =
+    '"## Player characters" can\'t be in a campaign file: each DM adds their own player characters in the app.';
+
+  it('reports a "## Player characters" section, with one error for it and its list (D62)', () => {
+    expect(
+      parseErrors(
+        '# Test campaign',
+        '## Player characters',
+        '- Alice',
+        '- Bob',
+        ...minimal.slice(2),
+      ),
+    ).toEqual([{ line: 2, message }]);
+  });
+
+  it('reports it whatever the case, also with headings below it', () => {
+    expect(parseErrors(...minimal, '## player characters', '### Alice', 'A fighter.')).toEqual([
+      { line: 7, message: message.replace('Player characters', 'player characters') },
+    ]);
+  });
+
+  it('gives an imported campaign no player characters', () => {
+    expect(campaignOf(...minimal).playerCharacters).toEqual([]);
   });
 });

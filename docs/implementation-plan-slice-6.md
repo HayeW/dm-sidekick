@@ -53,7 +53,7 @@ src/ui/routes/PlayersPage.tsx    /c/:campaignId/players: view, add, rename, remo
 
 Each step is small, ends with `npm run check` green and a working app, and is one commit.
 
-**Progress:** not started · **next: step 1** (after approval).
+**Progress:** step 1 (no players in the file) ✅ done · **next: step 2**.
 
 | Step | Content                                                                                           | Stories        | Tests                                                                                                      |
 | ---- | ------------------------------------------------------------------------------------------------- | -------------- | ---------------------------------------------------------------------------------------------------------- |

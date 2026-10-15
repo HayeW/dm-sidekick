@@ -136,7 +136,7 @@ describe('DC-112 — Duidelijke foutmeldingen bij importeren', () => {
         .getAllByRole('listitem')
         .map((item) => item.textContent),
     ).toEqual([
-      'Line 2: unknown section "## Monsters". Expected Player characters, NPCs, Locations, Encounters, Notes or Scene: ….',
+      'Line 2: unknown section "## Monsters". Expected NPCs, Locations, Encounters, Notes or Scene: ….',
       'Line 5: "- Marta" — there is no NPC with that name.',
     ]);
     expect(campaignLink(/Hollowmere/)).not.toBeInTheDocument();

@@ -31,7 +31,6 @@ export type SceneDraft = At<{ title: string; tiles: TileDraft[] }>;
 /** The file's structure, before names are resolved and ids are made (step 2). */
 export type CampaignDraft = At<{
   name: string;
-  playerCharacters: ListLine[];
   npcs: TextItem[];
   locations: TextItem[];
   encounters: EncounterDraft[];
@@ -39,8 +38,10 @@ export type CampaignDraft = At<{
   scenes: SceneDraft[];
 }>;
 
-type Section = 'Player characters' | 'NPCs' | 'Locations' | 'Encounters' | 'Notes';
-const SECTIONS: Section[] = ['Player characters', 'NPCs', 'Locations', 'Encounters', 'Notes'];
+type Section = 'NPCs' | 'Locations' | 'Encounters' | 'Notes';
+const SECTIONS: Section[] = ['NPCs', 'Locations', 'Encounters', 'Notes'];
+/** Each DM adds their own player characters in the app (DC-114), so a file can be shared. */
+const PLAYER_CHARACTERS = 'Player characters';
 const SCENE_PREFIX = 'Scene:';
 const TILE_KINDS = ['Read-aloud: …', 'Location: …', 'NPCs', 'Encounter: …', 'DM notes'];
 
@@ -72,7 +73,6 @@ export function readCampaignStructure(text: string): {
   const draft: CampaignDraft = {
     name: '',
     line: 1,
-    playerCharacters: [],
     npcs: [],
     locations: [],
     encounters: [],
@@ -170,13 +170,7 @@ export function readCampaignStructure(text: string): {
     if (!heading) {
       if (section === 'unknown') return;
       if (block) block.body.push({ text: raw, line });
-      else if (section === 'Player characters') {
-        const match = LIST.exec(raw.trim());
-        if (match?.[1]) draft.playerCharacters.push({ text: match[1], line });
-        else if (raw.trim() !== '') {
-          error(line, `"${raw.trim()}" — expected a player character like "- Alice".`);
-        }
-      } else if (raw.trim() !== '') {
+      else if (raw.trim() !== '') {
         const where = section ? 'below a "###" heading' : 'in a section';
         error(line, `text must be ${where}: "${raw.trim()}".`);
       }
@@ -209,15 +203,20 @@ export function readCampaignStructure(text: string): {
         if (first !== undefined) {
           error(line, `"## ${title}" appears twice (first on line ${first}).`);
         } else seenSections.set(section, line);
+      } else if (sameName(title, PLAYER_CHARACTERS)) {
+        // Its list is skipped like an unknown section's, so it gives this one error (D62).
+        section = 'unknown';
+        error(
+          line,
+          `"## ${title}" can't be in a campaign file: each DM adds their own player characters in the app.`,
+        );
       } else {
         section = 'unknown';
         error(line, `unknown section "## ${title}". Expected ${SECTIONS.join(', ')} or Scene: ….`);
       }
     } else if (level === 3) {
       if (section === 'unknown') return;
-      if (section === 'Player characters') {
-        error(line, `"### ${title}": player characters are a list ("- Alice"), not headings.`);
-      } else if (section) block = { heading: title, line, body: [] };
+      if (section) block = { heading: title, line, body: [] };
       else error(line, `"### ${title}" must be inside a section.`);
     } else {
       error(line, `"${'#'.repeat(level)} ${title}": headings deeper than "###" are not used.`);
@@ -277,12 +276,6 @@ export function parseCampaign(text: string, demoNames: string[] = []): ParseResu
   }
 
   // Every item gets an id from its name; a name that appears twice is an error.
-  const playerCharacters = withIds(
-    draft.playerCharacters.map((pc) => ({ ...pc, name: pc.text })),
-    'pc',
-    'Player characters',
-    error,
-  );
   const npcs = withIds(draft.npcs, 'npc', 'NPCs', error);
   const locations = withIds(draft.locations, 'loc', 'Locations', error);
   const encounters = withIds(draft.encounters, 'enc', 'Encounters', error);
@@ -305,7 +298,8 @@ export function parseCampaign(text: string, demoNames: string[] = []): ParseResu
   const campaign: Campaign = {
     id: `imported-${slug(draft.name)}`,
     name: draft.name,
-    playerCharacters: playerCharacters.map(({ id, name }) => ({ id, name })),
+    // Not in the file: each DM keeps their own list on the device (DC-114).
+    playerCharacters: [],
     npcs: npcs.map(({ id, name, text }) => ({ id, name, description: text })),
     locations: locations.map(({ id, name, text }) => ({ id, name, description: text })),
     notes: notes.map(({ id, name, text }) => ({ id, title: name, text })),
