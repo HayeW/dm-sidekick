@@ -64,8 +64,8 @@ Everything happens on the campaign list (`/`):
 
 Each step is small, ends with `npm run check` green and a working app, and is one commit.
 
-**Progress:** step 1 (reading the structure) ✅ done · step 2 (reading the content) ✅ done ·
-**next: step 3**.
+**Progress:** step 1 (reading the structure) ✅ done · step 2 (reading the content) ✅ done · step 3 (storing) ✅ done ·
+**next: step 4**.
 
 | Step | Content                                                                                                                                              | Stories        | Tests                                                                                                            |
 | ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- | ---------------------------------------------------------------------------------------------------------------- |

@@ -1,5 +1,5 @@
 // Local persistence of session state (DC-080, DC-081), see docs/implementation-plan-slice-1.md, §6.
-// Campaign data itself is not stored; it comes from the seed in this slice.
+// Imported campaigns are stored separately, see importedCampaigns.ts.
 
 import type { Combat, Combatant } from '../domain/combat';
 
@@ -36,6 +36,15 @@ export function saveSession(session: SessionState): void {
     localStorage.setItem(keyFor(session.campaignId), JSON.stringify(session));
   } catch {
     // Not being able to remember the scene is not worth interrupting the game for.
+  }
+}
+
+/** Forgets the session of a campaign, e.g. when the campaign is deleted (DC-113). */
+export function deleteSession(campaignId: string): void {
+  try {
+    localStorage.removeItem(keyFor(campaignId));
+  } catch {
+    // Storage blocked: there is nothing stored to remove.
   }
 }
 

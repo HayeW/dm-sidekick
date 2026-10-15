@@ -1,5 +1,5 @@
 import type { Combat } from '../domain/combat';
-import { loadSession, saveActiveCombat } from './storage';
+import { deleteSession, loadSession, saveActiveCombat } from './storage';
 
 // The active combat of each campaign: one at most (decision D1). Saved in the campaign's
 // session (DC-081), so it survives a refresh. Also kept in memory, so the combat keeps working
@@ -15,6 +15,12 @@ export function getActiveCombat(campaignId: string): Combat | undefined {
 export function setActiveCombat(combat: Combat): void {
   activeCombats.set(combat.campaignId, combat);
   saveActiveCombat(combat);
+}
+
+/** Forgets a campaign's session, with its active combat, in memory and stored (DC-113). */
+export function forgetSession(campaignId: string): void {
+  activeCombats.delete(campaignId);
+  deleteSession(campaignId);
 }
 
 /** Forgets the in-memory copies, like a page refresh does. Saved combats stay. For tests. */
