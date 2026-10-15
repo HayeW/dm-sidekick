@@ -34,7 +34,9 @@ hosted one (§6), a custom domain, update notifications, Undo after removing a c
 src/data/seed.ts                  removed: no demo campaigns (D76)
 src/test/campaigns/*.md           the former demo campaigns as campaign files; the tests
 src/test/testCampaigns.ts           import them with importTestCampaigns(), as the DM would
-vite.config.ts                    base '/dm-sidekick/' for the build (D69); a small inline
+vite.config.ts                    base '/dm-sidekick/' for the build and `vite preview` (D69;
+                                  dev server and tests stay at '/'); an inline plugin that
+                                  emits 404.html as a copy of index.html; a small inline
                                   plugin that writes sw.js with the list of built files (D72)
 src/main.tsx                      BrowserRouter basename from import.meta.env.BASE_URL;
                                   registers the service worker in production builds only
@@ -78,7 +80,8 @@ No screen changes beyond these. Visible differences on the phone:
 
 Each step is small, ends with `npm run check` green and a working app, and is one commit.
 
-**Progress:** step 0 (no demo campaigns) ✅ done · next: step 1 (base path).
+**Progress:** step 0 (no demo campaigns) ✅ done · step 1 (base path) ✅ done · next: step 2
+(GitHub Actions deploy; first the product owner turns on GitHub Pages).
 
 | Step | Content                                                                                  | Stories                | Tests                                                                                             |
 | ---- | ---------------------------------------------------------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------- |
