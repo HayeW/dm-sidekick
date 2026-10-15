@@ -81,7 +81,7 @@ No screen changes beyond these. Visible differences on the phone:
 Each step is small, ends with `npm run check` green and a working app, and is one commit.
 
 **Progress:** step 0 (no demo campaigns) ✅ done · step 1 (base path) ✅ done · step 2
-(GitHub Actions deploy) ✅ done · step 3 (installable) ✅ done · next: step 4 (offline).
+(GitHub Actions deploy) ✅ done · step 3 (installable) ✅ done · step 4 (offline) ✅ done · next: step 5 (keep the data).
 
 | Step | Content                                                                                  | Stories                | Tests                                                                                             |
 | ---- | ---------------------------------------------------------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------- |
@@ -125,6 +125,11 @@ the product owner (all proposals).**
   in the background while the DM plays; the open app is never reloaded in the middle of a
   combat. The next start (or a refresh) runs the new version. No "update available" message.
   Alternative: a quiet "New version — tap to reload" bar.
+  _Built in step 4:_ the new worker takes over at once (`skipWaiting`) rather than waiting
+  until every window is closed: an installed app on Android may never close, and a refresh
+  does not activate a waiting worker. The open page keeps the version it started with. This
+  works because the app has no lazily loaded files; lazy chunks would need another approach,
+  since the old build's files leave the cache when the new worker takes over.
 - **D74 — The campaign list shows the version** (`package.json` version and build date), small
   at the bottom. Alternative: no version shown.
 - **D75 — Ask the browser to keep the data** (`navigator.storage.persist()`) at start. Chrome

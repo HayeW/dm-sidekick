@@ -12,3 +12,9 @@ createRoot(document.getElementById('root')!).render(
     </BrowserRouter>
   </StrictMode>,
 );
+
+// Offline use (D72): only the production build has a service worker; the dev server must
+// always serve fresh files. Without one (an old browser) the app still works online.
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch(() => {});
+}
