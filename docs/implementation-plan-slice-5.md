@@ -65,7 +65,8 @@ Everything happens on the campaign list (`/`):
 Each step is small, ends with `npm run check` green and a working app, and is one commit.
 
 **Progress:** step 1 (reading the structure) ✅ done · step 2 (reading the content) ✅ done ·
-step 3 (storing) ✅ done · step 4 (import on the campaign list) ✅ done · **next: step 5**.
+step 3 (storing) ✅ done · step 4 (import on the campaign list) ✅ done · step 5 (delete) ✅
+done · **next: step 6** (real-phone check, by the product owner).
 
 **For step 6:** the file picker only offers `.md`, `.markdown` and plain-text files. Some
 Android pickers (Drive) label a `.md` file as `application/octet-stream`, which may grey it

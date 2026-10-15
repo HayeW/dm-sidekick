@@ -13,6 +13,11 @@ const PREFIX = 'dm-cockpit:v1:campaign:';
 const IMPORTED_ID_PREFIX = 'imported-';
 const keyFor = (campaignId: string) => `${PREFIX}${campaignId}`;
 
+/** Whether the campaign was imported, so it can be deleted (DC-113); demo campaigns can't. */
+export function isImportedCampaign(id: string): boolean {
+  return id.startsWith(IMPORTED_ID_PREFIX);
+}
+
 /** Reads a campaign file; a demo campaign's name is an error (D45). */
 export function readCampaignFile(text: string): ParseResult {
   return parseCampaign(
@@ -90,7 +95,7 @@ export function loadImportedCampaigns(): Campaign[] {
  * A demo campaign can't be deleted; its session stays too.
  */
 export function deleteImportedCampaign(id: string): void {
-  if (!id.startsWith(IMPORTED_ID_PREFIX)) return;
+  if (!isImportedCampaign(id)) return;
   try {
     localStorage.removeItem(keyFor(id));
   } catch {

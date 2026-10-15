@@ -7,21 +7,32 @@
   gap: 12px;
 }
 
+/* A card: the campaign link, with a Delete button beside it for imported campaigns (D51). */
+.item {
+  display: flex;
+  align-items: center;
+  background: var(--surface);
+  border-radius: var(--radius);
+  border-left: 4px solid var(--accent);
+}
+
 .card {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 2px;
   min-height: 64px;
   padding: 14px var(--space);
-  background: var(--surface);
   border-radius: var(--radius);
-  border-left: 4px solid var(--accent);
   color: var(--text);
   text-decoration: none;
+  overflow-wrap: anywhere;
   -webkit-tap-highlight-color: transparent;
 }
 
-.card:active {
+/* Press feedback on the whole card, now that the background is on the wrapper. */
+.item:has(.card:active) {
   opacity: 0.8;
 }
 
@@ -95,7 +106,8 @@
 }
 
 .secondary,
-.primary {
+.primary,
+.danger {
   min-width: 96px;
   padding: 0 var(--space);
   border-radius: var(--radius);
@@ -116,9 +128,31 @@
   color: var(--bg);
 }
 
+.danger {
+  border: 0;
+  background: var(--danger);
+  color: var(--text);
+}
+
+/* Small and quiet: deleting is rare, opening a campaign is what the card is for. */
+.delete {
+  flex: none;
+  margin-right: 8px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
 .import:focus-visible,
 .secondary:focus-visible,
-.primary:focus-visible {
+.primary:focus-visible,
+.danger:focus-visible,
+.delete:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }

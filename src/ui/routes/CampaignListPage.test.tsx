@@ -263,3 +263,67 @@ describe('DC-112 — Duidelijke foutmeldingen: het apparaat', () => {
     expect(panel).toHaveTextContent('The file could not be read.');
   });
 });
+
+describe('DC-113 — Geïmporteerde campaign verwijderen', () => {
+  it('marks imported campaigns, and offers Delete only for them', () => {
+    saveImportedCampaign(hollowmere());
+    renderAt('/');
+
+    expect(campaignLink(/Hollowmere/)).toHaveTextContent('Imported');
+    expect(campaignLink(/Shadows over Millbrook/)).not.toHaveTextContent('Imported');
+    expect(screen.getAllByRole('button', { name: /^Delete/ }).map((b) => b.ariaLabel)).toEqual([
+      'Delete Hollowmere',
+    ]);
+  });
+
+  it('asks first, then deletes the campaign and its session', async () => {
+    const user = setupUser();
+    saveImportedCampaign(hollowmere());
+    // A current scene and an active combat, as after playing.
+    const { unmount } = renderAt('/c/imported-hollowmere/s/scene-the-bridge');
+    await user.click(screen.getByRole('button', { name: 'Start combat' }));
+    unmount();
+    renderAt('/');
+
+    await user.click(screen.getByRole('button', { name: 'Delete Hollowmere' }));
+    const panel = screen.getByRole('region', { name: 'Delete “Hollowmere”?' });
+    expect(campaignLink(/Hollowmere/)).toBeInTheDocument(); // nothing deleted yet
+    await user.click(within(panel).getByRole('button', { name: 'Delete' }));
+
+    expect(screen.queryByRole('region')).not.toBeInTheDocument();
+    expect(campaignLink(/Hollowmere/)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Import campaign' })).toHaveFocus();
+    expect(localStorage.getItem('dm-cockpit:v1:session:imported-hollowmere')).toBeNull();
+  });
+
+  it('starts fresh when the deleted campaign is imported again', async () => {
+    const user = setupUser();
+    saveImportedCampaign(hollowmere());
+    const { unmount } = renderAt('/c/imported-hollowmere/s/scene-the-bridge');
+    await user.click(screen.getByRole('button', { name: 'Start combat' }));
+    unmount();
+    const list = renderAt('/');
+    await user.click(screen.getByRole('button', { name: 'Delete Hollowmere' }));
+    await user.click(screen.getByRole('button', { name: 'Delete' }));
+
+    await importFile(user, asFile(hollowmere()));
+    await user.click(await screen.findByRole('link', { name: /Hollowmere/ }));
+
+    expect(screen.getByRole('heading', { level: 1, name: 'The Gate' })).toBeInTheDocument();
+    list.unmount();
+    renderAt('/c/imported-hollowmere/combat');
+    expect(screen.getByRole('heading', { name: 'No active combat' })).toBeInTheDocument();
+  });
+
+  it('changes nothing on Cancel', async () => {
+    const user = setupUser();
+    saveImportedCampaign(hollowmere());
+    renderAt('/');
+
+    await user.click(screen.getByRole('button', { name: 'Delete Hollowmere' }));
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(screen.queryByRole('region')).not.toBeInTheDocument();
+    expect(campaignLink(/Hollowmere/)).toBeInTheDocument();
+  });
+});

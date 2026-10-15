@@ -1,23 +1,33 @@
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { Link } from 'react-router';
 import { getCampaign, getCampaigns } from '../../data/campaigns';
-import { readCampaignFile, saveImportedCampaign } from '../../data/importedCampaigns';
+import {
+  deleteImportedCampaign,
+  isImportedCampaign,
+  readCampaignFile,
+  saveImportedCampaign,
+} from '../../data/importedCampaigns';
 import styles from './CampaignListPage.module.css';
 
 /**
- * What the import shows above the list (D50): the file's errors (DC-112), or the question
- * whether to replace an imported campaign with the same id (DC-111, D54).
+ * What shows above the list (D50): the file's errors (DC-112), the question whether to
+ * replace an imported campaign with the same id (DC-111, D54), or whether to delete one
+ * (DC-113, D51).
  */
 type Panel =
   | { kind: 'errors'; fileName: string; messages: string[] }
-  | { kind: 'replace'; fileName: string; text: string; existingName: string };
+  | { kind: 'replace'; fileName: string; text: string; existingName: string }
+  | { kind: 'delete'; campaignId: string; name: string };
 
-/** DC-001: the list of campaigns the DM can choose from; DC-110: import one from a file. */
+/**
+ * DC-001: the list of campaigns the DM can choose from. DC-110: import one from a file;
+ * DC-113: delete an imported one.
+ */
 export default function CampaignListPage() {
   const campaigns = getCampaigns();
   const [panel, setPanel] = useState<Panel>();
-  // The list is read from storage on every render; this re-renders it after an import.
-  const [, setImports] = useState(0);
+  // The list is read from storage on every render; this re-renders it after a change.
+  const [, setChanges] = useState(0);
   const fileInput = useRef<HTMLInputElement>(null);
   const importButton = useRef<HTMLButtonElement>(null);
   const panelHeading = useRef<HTMLHeadingElement>(null);
@@ -38,7 +48,7 @@ export default function CampaignListPage() {
   const save = (text: string, fileName: string) => {
     if (saveImportedCampaign(text)) {
       closePanel();
-      setImports((count) => count + 1);
+      setChanges((count) => count + 1);
     } else {
       setPanel({
         kind: 'errors',
@@ -46,6 +56,12 @@ export default function CampaignListPage() {
         messages: ['There is no room to store it on this device.'],
       });
     }
+  };
+
+  const remove = (campaignId: string) => {
+    deleteImportedCampaign(campaignId);
+    closePanel();
+    setChanges((count) => count + 1);
   };
 
   const importFile = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -85,9 +101,9 @@ export default function CampaignListPage() {
       {panel?.kind === 'errors' && (
         <section
           className={`${styles.panel} ${styles.problem}`}
-          aria-labelledby="import-panel-heading"
+          aria-labelledby="campaigns-panel-heading"
         >
-          <h2 id="import-panel-heading" ref={panelHeading} tabIndex={-1}>
+          <h2 id="campaigns-panel-heading" ref={panelHeading} tabIndex={-1}>
             Could not import {panel.fileName}
           </h2>
           <ul className={styles.errors}>
@@ -104,8 +120,8 @@ export default function CampaignListPage() {
       )}
 
       {panel?.kind === 'replace' && (
-        <section className={styles.panel} aria-labelledby="import-panel-heading">
-          <h2 id="import-panel-heading" ref={panelHeading} tabIndex={-1}>
+        <section className={styles.panel} aria-labelledby="campaigns-panel-heading">
+          <h2 id="campaigns-panel-heading" ref={panelHeading} tabIndex={-1}>
             Replace “{panel.existingName}”?
           </h2>
           <p>This overwrites the imported version.</p>
@@ -124,17 +140,58 @@ export default function CampaignListPage() {
         </section>
       )}
 
+      {panel?.kind === 'delete' && (
+        <section
+          className={`${styles.panel} ${styles.problem}`}
+          aria-labelledby="campaigns-panel-heading"
+        >
+          <h2 id="campaigns-panel-heading" ref={panelHeading} tabIndex={-1}>
+            Delete “{panel.name}”?
+          </h2>
+          <p>This removes it from this device, with its current scene and combat.</p>
+          <div className={styles.panelButtons}>
+            <button type="button" className={styles.secondary} onClick={closePanel}>
+              Cancel
+            </button>
+            <button
+              type="button"
+              className={styles.danger}
+              onClick={() => remove(panel.campaignId)}
+            >
+              Delete
+            </button>
+          </div>
+        </section>
+      )}
+
       <ul className={styles.list}>
-        {campaigns.map((campaign) => (
-          <li key={campaign.id}>
-            <Link to={`/c/${campaign.id}`} className={styles.card}>
-              <span className={styles.name}>{campaign.name}</span>
-              <span className={styles.meta}>
-                {campaign.scenes.length} {campaign.scenes.length === 1 ? 'scene' : 'scenes'}
-              </span>
-            </Link>
-          </li>
-        ))}
+        {campaigns.map((campaign) => {
+          const imported = isImportedCampaign(campaign.id);
+          return (
+            <li key={campaign.id} className={styles.item}>
+              <Link to={`/c/${campaign.id}`} className={styles.card}>
+                <span className={styles.name}>{campaign.name}</span>
+                <span className={styles.meta}>
+                  {campaign.scenes.length} {campaign.scenes.length === 1 ? 'scene' : 'scenes'}
+                  {imported && ' · Imported'}
+                </span>
+              </Link>
+              {/* Only imported campaigns can be deleted, not the demo campaigns (DC-113). */}
+              {imported && (
+                <button
+                  type="button"
+                  className={styles.delete}
+                  aria-label={`Delete ${campaign.name}`}
+                  onClick={() =>
+                    setPanel({ kind: 'delete', campaignId: campaign.id, name: campaign.name })
+                  }
+                >
+                  Delete
+                </button>
+              )}
+            </li>
+          );
+        })}
       </ul>
 
       <button
