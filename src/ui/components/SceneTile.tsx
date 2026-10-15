@@ -1,3 +1,4 @@
+import { useRef, useState } from 'react';
 import { Link } from 'react-router';
 import type { Campaign, ContentBlock, Encounter } from '../../domain/campaign';
 import { findLocation, findNpcs } from '../../domain/entities';
@@ -21,7 +22,10 @@ type Props = {
    * tile detail screen.
    */
   openTo?: string;
-  /** Encounter tiles: start a new combat, or resume the active one (DC-043, decision D1). */
+  /**
+   * Encounter tiles: start a new combat (DC-043), resume the running one (DC-071), or start
+   * another encounter in its place after a question (DC-073).
+   */
   combat?: CombatAction;
 };
 
@@ -30,7 +34,11 @@ type CombatAction = {
   to: string;
   /** Passed to the combat screen, so End combat can go back to this scene (DC-072). */
   state: unknown;
-  active: boolean;
+  /**
+   * The campaign's active combat, if any: its encounter (null when unknown, D67) and that
+   * encounter's name.
+   */
+  running?: { encounterId: string | null; name?: string };
   onStart: (encounter: Encounter) => void;
 };
 
@@ -104,22 +112,70 @@ function TileBody({ block, campaign, combat }: Omit<Props, 'openTo'>) {
         <>
           <p className={styles.title}>{encounter.name}</p>
           <p>{enemySummary(encounter)}</p>
-          {combat &&
-            (combat.active ? (
-              <Link to={combat.to} state={combat.state} className={styles.combat}>
-                Resume combat
-              </Link>
-            ) : (
-              <button
-                type="button"
-                className={styles.combat}
-                onClick={() => combat.onStart(encounter)}
-              >
-                Start combat
-              </button>
-            ))}
+          {combat && <EncounterAction encounter={encounter} combat={combat} />}
         </>
       );
     }
   }
+}
+
+/**
+ * Start combat, or Resume combat on the tile of the encounter that is running (DC-071). While
+ * another combat runs, Start combat first asks inside the tile whether to replace it (DC-073,
+ * D64); without a combat it starts straight away (DC-043).
+ */
+function EncounterAction({ encounter, combat }: { encounter: Encounter; combat: CombatAction }) {
+  const [asking, setAsking] = useState(false);
+  /** After Cancel, focus goes back to Start combat, not lost with the question. */
+  const refocusStart = useRef(false);
+  const { running } = combat;
+
+  if (running && running.encounterId === encounter.id) {
+    return (
+      <Link to={combat.to} state={combat.state} className={styles.combat}>
+        Resume combat
+      </Link>
+    );
+  }
+  if (!asking) {
+    return (
+      <button
+        ref={(button) => {
+          if (button && refocusStart.current) {
+            refocusStart.current = false;
+            button.focus();
+          }
+        }}
+        type="button"
+        className={styles.combat}
+        onClick={() => (running ? setAsking(true) : combat.onStart(encounter))}
+      >
+        Start combat
+      </button>
+    );
+  }
+  const cancel = () => {
+    refocusStart.current = true;
+    setAsking(false);
+  };
+  return (
+    <div className={styles.replace} role="group" aria-label="Replace the running combat?">
+      {/* D67: a combat without a known encounter is "the current combat". */}
+      <p>
+        {running?.name
+          ? `A combat against ${running.name} is running.`
+          : 'The current combat is still running.'}{' '}
+        Start this one instead? It replaces that combat.
+      </p>
+      <div className={styles.replaceButtons}>
+        {/* Focus on Cancel, not on Start: a second tap must not replace a combat by mistake. */}
+        <button type="button" className={styles.cancel} onClick={cancel} autoFocus>
+          Cancel
+        </button>
+        <button type="button" className={styles.combat} onClick={() => combat.onStart(encounter)}>
+          Start combat
+        </button>
+      </div>
+    </div>
+  );
 }

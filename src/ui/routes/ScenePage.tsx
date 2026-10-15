@@ -5,7 +5,7 @@ import { getActiveCombat, setActiveCombat } from '../../data/combats';
 import { saveCurrentScene } from '../../data/storage';
 import type { ContentBlock, Encounter } from '../../domain/campaign';
 import { startCombat } from '../../domain/combat';
-import { findScene, neighbours, tileTarget } from '../../domain/scene';
+import { findEncounter, findScene, neighbours, tileTarget } from '../../domain/scene';
 import SceneTile from '../components/SceneTile';
 import StepNav from '../components/StepNav';
 import TopBar from '../components/TopBar';
@@ -17,6 +17,7 @@ import styles from './ScenePage.module.css';
  * DC-015, DC-016: previous/next scene with one tap.
  * DC-080: the scene shown is remembered as the current scene.
  * DC-043: an encounter tile starts combat with one tap, or resumes the active one (D1).
+ * DC-073: while another encounter's combat runs, Start combat asks before replacing it (D64).
  * DC-020: Quick Access opens from the top bar (D22).
  * DC-012: a Location tile opens its location with one tap.
  */
@@ -61,10 +62,14 @@ export default function ScenePage() {
       state: { fromSceneId: scene.id } satisfies CombatOpenedFrom,
     });
   };
+  const running = getActiveCombat(campaign.id);
   const combat = {
     to: combatUrl,
     state: { fromSceneId: scene.id } satisfies CombatOpenedFrom,
-    active: getActiveCombat(campaign.id) !== undefined,
+    running: running && {
+      encounterId: running.encounterId,
+      name: running.encounterId ? findEncounter(campaign, running.encounterId)?.name : undefined,
+    },
     onStart: startCombatFrom,
   };
 

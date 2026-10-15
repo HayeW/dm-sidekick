@@ -139,3 +139,44 @@
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
+
+/* DC-073: while another combat runs, Start combat asks first, inside the tile (D64). */
+.replace {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--text-muted);
+}
+
+.replace p {
+  margin: 0;
+}
+
+.replaceButtons {
+  display: flex;
+  gap: 8px;
+}
+
+/* Cancel and Start combat side by side, Start as wide and red as ever. */
+.replaceButtons .combat {
+  flex: 1;
+}
+
+.cancel {
+  flex: none;
+  min-width: 96px;
+  min-height: 52px;
+  margin-top: 12px;
+  padding: 0 var(--space);
+  border: 1px solid var(--text-muted);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text);
+  font-weight: 700;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cancel:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

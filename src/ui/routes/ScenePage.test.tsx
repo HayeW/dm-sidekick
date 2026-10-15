@@ -1,7 +1,16 @@
 import { screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { getCampaign } from '../../data/campaigns';
-import { pressBrowserBack, renderAt, renderWithBrowserBack, setupUser } from '../../test/app';
+import { setActiveCombat } from '../../data/combats';
+import { saveImportedCampaign } from '../../data/importedCampaigns';
+import { startCombat } from '../../domain/combat';
+import {
+  combatOrder,
+  pressBrowserBack,
+  renderAt,
+  renderWithBrowserBack,
+  setupUser,
+} from '../../test/app';
 
 describe('DC-010 — Scene tonen', () => {
   const campaign = getCampaign('shadows-over-millbrook')!;
@@ -105,5 +114,121 @@ describe('DC-015 / DC-016 — Vorige en volgende scene', () => {
 
     expect(within(scenes()).getByRole('button', { name: /Previous/ })).toBeDisabled();
     expect(within(scenes()).getByRole('button', { name: /Next/ })).toBeDisabled();
+  });
+});
+
+describe('DC-073 — Ander encounter starten tijdens een combat', () => {
+  /** Two encounters in one scene, so both tiles are on screen. */
+  const file = [
+    '# Hollowmere',
+    '## Encounters',
+    '### Trolls',
+    '- 2 × Troll, 30 HP',
+    '### Wolves',
+    '- 3 × Wolf, 11 HP',
+    '## Scene: The Gate',
+    '### Encounter: Trolls',
+    '### Encounter: Wolves',
+  ].join('\n');
+  const sceneUrl = '/c/imported-hollowmere/s/scene-the-gate';
+  const question = 'Replace the running combat?';
+
+  const tile = (name: string) =>
+    screen
+      .getAllByRole('region', { name: 'Encounter' })
+      .find((region) => within(region).queryByText(name))!;
+  const enemies = () => combatOrder().filter((row) => !row.endsWith(' · PC'));
+
+  /** The scene with a combat against the trolls running. */
+  async function trollsRunning() {
+    saveImportedCampaign(file);
+    const user = setupUser();
+    const { unmount } = renderAt(sceneUrl);
+    await user.click(within(tile('Trolls')).getByRole('button', { name: 'Start combat' }));
+    await user.click(screen.getByRole('button', { name: 'Done' })); // reorder → normal
+    await user.click(screen.getByRole('button', { name: '5 damage to Troll 1' }));
+    unmount();
+    renderAt(sceneUrl);
+    return user;
+  }
+
+  it('starts straight away when no combat runs (DC-043)', async () => {
+    saveImportedCampaign(file);
+    const user = setupUser();
+    renderAt(sceneUrl);
+
+    await user.click(within(tile('Wolves')).getByRole('button', { name: 'Start combat' }));
+
+    expect(enemies()).toEqual(['Wolf 1 · 11/11 HP', 'Wolf 2 · 11/11 HP', 'Wolf 3 · 11/11 HP']);
+  });
+
+  it('shows Resume combat only on the running encounter, Start combat on the other', async () => {
+    await trollsRunning();
+
+    expect(within(tile('Trolls')).getByRole('link', { name: 'Resume combat' })).toBeInTheDocument();
+    expect(within(tile('Wolves')).queryByRole('link', { name: 'Resume combat' })).toBeNull();
+    expect(
+      within(tile('Wolves')).getByRole('button', { name: 'Start combat' }),
+    ).toBeInTheDocument();
+  });
+
+  it('asks first, inside the tile, naming the running combat (D64)', async () => {
+    const user = await trollsRunning();
+
+    await user.click(within(tile('Wolves')).getByRole('button', { name: 'Start combat' }));
+
+    const ask = within(tile('Wolves')).getByRole('group', { name: question });
+    expect(ask).toHaveTextContent(
+      'A combat against Trolls is running. Start this one instead? It replaces that combat.',
+    );
+    expect(within(ask).getByRole('button', { name: 'Cancel' })).toHaveFocus();
+    expect(screen.getByRole('heading', { level: 1, name: 'The Gate' })).toBeInTheDocument();
+  });
+
+  it('replaces the running combat on Start combat', async () => {
+    const user = await trollsRunning();
+
+    await user.click(within(tile('Wolves')).getByRole('button', { name: 'Start combat' }));
+    await user.click(
+      within(within(tile('Wolves')).getByRole('group', { name: question })).getByRole('button', {
+        name: 'Start combat',
+      }),
+    );
+
+    expect(enemies()).toEqual(['Wolf 1 · 11/11 HP', 'Wolf 2 · 11/11 HP', 'Wolf 3 · 11/11 HP']);
+  });
+
+  it('changes nothing on Cancel, and gives focus back to Start combat', async () => {
+    const user = await trollsRunning();
+
+    await user.click(within(tile('Wolves')).getByRole('button', { name: 'Start combat' }));
+    await user.click(within(tile('Wolves')).getByRole('button', { name: 'Cancel' }));
+
+    expect(within(tile('Wolves')).queryByRole('group', { name: question })).toBeNull();
+    expect(within(tile('Wolves')).getByRole('button', { name: 'Start combat' })).toHaveFocus();
+    await user.click(within(tile('Trolls')).getByRole('link', { name: 'Resume combat' }));
+    expect(enemies()).toEqual(['Troll 1 · 25/30 HP', 'Troll 2 · 30/30 HP']);
+  });
+
+  it.each([
+    ['has none', null],
+    ['was removed by a re-import', 'enc-gone'],
+  ])('asks about "the current combat" when its encounter %s (D67)', async (_, encounterId) => {
+    saveImportedCampaign(file);
+    const campaign = getCampaign('imported-hollowmere')!;
+    setActiveCombat({
+      ...startCombat(campaign, 'scene-the-gate', campaign.encounters[0]!),
+      encounterId,
+    });
+    const user = setupUser();
+    renderAt(sceneUrl);
+
+    // No tile resumes it: both offer Start combat.
+    expect(screen.queryByRole('link', { name: 'Resume combat' })).toBeNull();
+    await user.click(within(tile('Trolls')).getByRole('button', { name: 'Start combat' }));
+
+    expect(within(tile('Trolls')).getByRole('group', { name: question })).toHaveTextContent(
+      'The current combat is still running.',
+    );
   });
 });
