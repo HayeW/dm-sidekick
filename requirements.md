@@ -628,6 +628,18 @@ Acceptance criteria
 - Alleen geïmporteerde campaigns kunnen worden verwijderd, de demo campaigns niet.
 - De app vraagt om bevestiging voordat de campaign wordt verwijderd.
 - Ook de opgeslagen session state van die campaign (laatste scene, actieve combat) wordt verwijderd.
+### DC-114 — Eigen Player Characters bij een gedeelde campaign
+P1
+Toegevoegd door de product owner op 2026-10-15.
+Als DM wil ik de Player Characters van een campaign in de app zelf kunnen beheren, zodat ik een campaign-bestand kan gebruiken dat ik met andere DM's deel, ook al speelt iedere DM met andere spelers.
+Acceptance criteria
+- De Player Characters horen bij één campaign op dit apparaat; iedere campaign heeft zijn eigen lijst. Dit geldt voor alle campaigns, ook de demo campaigns, zodat die werken zoals echte campaigns.
+- De DM kan in de app een Player Character toevoegen (op naam), een naam wijzigen en een Player Character verwijderen.
+- Player Characters worden niet uit het campaign-bestand gelezen. Een bestand met een sectie "## Player characters" geeft een foutmelding (DC-112). Dit vervangt "Player Characters" in de acceptance criteria van DC-110.
+- Bij opnieuw importeren (DC-111) blijft de lijst van de DM ongewijzigd.
+- Bij het verwijderen van een campaign (DC-113) wordt ook zijn lijst Player Characters verwijderd.
+- Combat neemt de Player Characters van de campaign over bij het starten (DC-051). Een wijziging in de lijst verandert een lopende combat niet.
+- De lijst blijft na een refresh of het sluiten van de app bewaard.
 Niet gepland voor v1
 De volgende features krijgen geen implementation story voor de eerste versie:
 - AI in de applicatie
