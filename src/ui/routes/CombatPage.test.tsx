@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { getCampaign } from '../../data/campaigns';
 import { clearActiveCombats, setActiveCombat } from '../../data/combats';
+import { savePlayers } from '../../data/playerCharacters';
 import { startCombat } from '../../domain/combat';
 import {
   combatantName,
@@ -923,5 +924,48 @@ describe('DC-070 / DC-071 / DC-081 / DC-082 — Combat verlaten, terugkeren en h
     await user.click(screen.getByRole('link', { name: 'Resume combat' }));
 
     expect(combatOrder()).toEqual(before);
+  });
+});
+
+describe('DC-114 — Eigen Player Characters in combat', () => {
+  const sceneUrl = '/c/shadows-over-millbrook/s/scene-mill-road';
+  const players = () => combatOrder().filter((row) => row.endsWith(' · PC'));
+
+  async function startCombatAt(url: string) {
+    const user = setupUser();
+    const view = renderAt(url);
+    await user.click(screen.getByRole('button', { name: 'Start combat' }));
+    return view;
+  }
+
+  it("starts combat with the DM's own players, after the enemies", async () => {
+    savePlayers('shadows-over-millbrook', [
+      { id: 'pc-1', name: 'Mira' },
+      { id: 'pc-2', name: 'Tok' },
+    ]);
+
+    await startCombatAt(sceneUrl);
+
+    expect(combatOrder().slice(-2)).toEqual(['Mira · PC', 'Tok · PC']);
+    expect(players()).toHaveLength(2);
+  });
+
+  it('keeps the players of a running combat when the list changes (D15)', async () => {
+    const { unmount } = await startCombatAt(sceneUrl);
+    unmount();
+
+    savePlayers('shadows-over-millbrook', [{ id: 'pc-1', name: 'Mira' }]);
+    renderAt('/c/shadows-over-millbrook/combat');
+
+    expect(players()).toEqual(['Alice · PC', 'Bob · PC', 'Cora · PC', 'Dain · PC']);
+  });
+
+  it('starts combat with only the enemies when the campaign has no players', async () => {
+    savePlayers('shadows-over-millbrook', []);
+
+    await startCombatAt(sceneUrl);
+
+    expect(players()).toEqual([]);
+    expect(combatOrder()).toHaveLength(4);
   });
 });

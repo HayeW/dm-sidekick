@@ -6,6 +6,7 @@ import type { Campaign } from '../domain/campaign';
 import { parseCampaign, type ParseResult } from '../domain/campaignMarkdown';
 import { seedCampaigns } from './seed';
 import { forgetSession } from './combats';
+import { deletePlayers } from './playerCharacters';
 
 // The version is part of the key, as for sessions: a new schema gets a new key.
 const PREFIX = 'dm-cockpit:v1:campaign:';
@@ -91,8 +92,8 @@ export function loadImportedCampaigns(): Campaign[] {
 }
 
 /**
- * Removes an imported campaign and its session: current scene and active combat (DC-113).
- * A demo campaign can't be deleted; its session stays too.
+ * Removes an imported campaign, its session (current scene and active combat, DC-113) and
+ * its player characters (DC-114). A demo campaign can't be deleted; its data stays too.
  */
 export function deleteImportedCampaign(id: string): void {
   if (!isImportedCampaign(id)) return;
@@ -102,6 +103,7 @@ export function deleteImportedCampaign(id: string): void {
     // Storage blocked: there is nothing stored to remove.
   }
   forgetSession(id);
+  deletePlayers(id);
 }
 
 /** Forgets the parsed campaigns, so the next read parses the stored text again. For tests. */
