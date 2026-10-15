@@ -81,7 +81,8 @@ No screen changes beyond these. Visible differences on the phone:
 Each step is small, ends with `npm run check` green and a working app, and is one commit.
 
 **Progress:** step 0 (no demo campaigns) ✅ done · step 1 (base path) ✅ done · step 2
-(GitHub Actions deploy) ✅ done · step 3 (installable) ✅ done · step 4 (offline) ✅ done · next: step 5 (keep the data).
+(GitHub Actions deploy) ✅ done · step 3 (installable) ✅ done · step 4 (offline) ✅ done ·
+step 5 (keep the data) ✅ done · next: step 6 (real-phone check).
 
 | Step | Content                                                                                  | Stories                | Tests                                                                                             |
 | ---- | ---------------------------------------------------------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------- |
