@@ -68,7 +68,7 @@ describe('DC-003 / DC-080 — Laatst gebruikte scene onthouden', () => {
 
   it('opens the first scene when the saved scene no longer exists', () => {
     localStorage.setItem(
-      `dm-cockpit:v1:session:${campaign.id}`,
+      `dm-sidekick:v1:session:${campaign.id}`,
       JSON.stringify({ campaignId: campaign.id, currentSceneId: 'deleted-scene' }),
     );
 

@@ -12,7 +12,7 @@ export type SessionState = {
 
 // The version is part of the key: a new schema gets a new key, and old data is ignored.
 // `activeCombat` is optional, so sessions saved before it existed stay valid.
-const keyFor = (campaignId: string) => `dm-cockpit:v1:session:${campaignId}`;
+const keyFor = (campaignId: string) => `dm-sidekick:v1:session:${campaignId}`;
 
 /**
  * The stored session of a campaign, or undefined when there is none, or when it is invalid

@@ -85,7 +85,7 @@ a re-import keeps the list; deleting a campaign deletes its list.
   and **no confirmation**, as for combatants (D18): a player is only a name, so re-adding is
   quick. A name may not be empty or the same as another player's in that campaign (ignoring
   case); the field then says why and nothing changes.
-- **D61 — Storage.** Decision: one entry per campaign, `dm-cockpit:v1:players:<campaignId>`,
+- **D61 — Storage.** Decision: one entry per campaign, `dm-sidekick:v1:players:<campaignId>`,
   with the list as JSON (`{ id, name }[]`). No entry means the starting list (D59). Ids are
   `pc-1`, `pc-2`, … (the next free number), so no randomness is needed (D19) and a renamed
   player keeps its id. Unreadable stored data falls back to the starting list, not a crash.

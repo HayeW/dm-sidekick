@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Combat } from '../domain/combat';
 import { loadSession, saveActiveCombat, saveCurrentScene, saveSession } from './storage';
 
-const key = 'dm-cockpit:v1:session:c-1';
+const key = 'dm-sidekick:v1:session:c-1';
 
 describe('DC-080 — Current scene lokaal bewaren', () => {
   afterEach(() => {

@@ -181,7 +181,7 @@ UX details:
 
 ## 6. Persistence
 
-- Key per campaign: `dm-cockpit:v1:session:<campaignId>`, value = `SessionState` as JSON.
+- Key per campaign: `dm-sidekick:v1:session:<campaignId>`, value = `SessionState` as JSON.
 - Saved on **every** change (scene change, every HP tap, every move). The data is tiny.
 - Loaded at startup / when a campaign is opened. If the stored JSON is invalid or the
   schema version doesn't match, it is discarded and the app starts fresh for that campaign.

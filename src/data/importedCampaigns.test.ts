@@ -15,7 +15,7 @@ import { loadSession, saveSession } from './storage';
 const fileNamed = (name: string, scene = 'Road') =>
   [`# ${name}`, '', `## Scene: ${scene}`, '', '### DM notes', 'Quiet.'].join('\n');
 
-const keyOf = (id: string) => `dm-cockpit:v1:campaign:${id}`;
+const keyOf = (id: string) => `dm-sidekick:v1:campaign:${id}`;
 
 describe('DC-110 — Campaign importeren: bewaren', () => {
   afterEach(() => {

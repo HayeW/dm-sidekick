@@ -19,8 +19,6 @@ When asked to "do the next step", take the next step from the plan's build order
 
 React 19 + TypeScript (strict) + Vite, React Router, plain CSS / CSS modules,
 Vitest + React Testing Library, ESLint + Prettier. Persistence: `localStorage`. No backend.
-Storage keys start with `dm-cockpit:`, the app's old name; keep that prefix, or stored
-campaigns and sessions are lost.
 
 ## Commands
 

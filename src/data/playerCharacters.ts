@@ -5,7 +5,7 @@
 import type { PlayerCharacter } from '../domain/campaign';
 
 // The version is part of the key, as for sessions and imported campaigns.
-const keyFor = (campaignId: string) => `dm-cockpit:v1:players:${campaignId}`;
+const keyFor = (campaignId: string) => `dm-sidekick:v1:players:${campaignId}`;
 
 /**
  * The stored list as text, or null when there is none or storage is blocked. The text lets

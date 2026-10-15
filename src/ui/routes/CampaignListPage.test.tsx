@@ -293,7 +293,7 @@ describe('DC-113 — Geïmporteerde campaign verwijderen', () => {
     expect(screen.queryByRole('region')).not.toBeInTheDocument();
     expect(campaignLink(/Hollowmere/)).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Import campaign' })).toHaveFocus();
-    expect(localStorage.getItem('dm-cockpit:v1:session:imported-hollowmere')).toBeNull();
+    expect(localStorage.getItem('dm-sidekick:v1:session:imported-hollowmere')).toBeNull();
   });
 
   it('starts fresh when the deleted campaign is imported again', async () => {

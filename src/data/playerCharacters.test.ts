@@ -5,7 +5,7 @@ import { deletePlayers, savePlayers } from './playerCharacters';
 import { seedCampaigns } from './seed';
 
 const demo = seedCampaigns[0]!;
-const key = (campaignId: string) => `dm-cockpit:v1:players:${campaignId}`;
+const key = (campaignId: string) => `dm-sidekick:v1:players:${campaignId}`;
 const names = (campaignId: string) =>
   getCampaign(campaignId)?.playerCharacters.map((player) => player.name);
 

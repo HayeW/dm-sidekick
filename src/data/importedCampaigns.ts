@@ -9,7 +9,7 @@ import { forgetSession } from './combats';
 import { deletePlayers } from './playerCharacters';
 
 // The version is part of the key, as for sessions: a new schema gets a new key.
-const PREFIX = 'dm-cockpit:v1:campaign:';
+const PREFIX = 'dm-sidekick:v1:campaign:';
 /** Every imported campaign's id starts with this (D47), so it can't hide a demo campaign. */
 const IMPORTED_ID_PREFIX = 'imported-';
 const keyFor = (campaignId: string) => `${PREFIX}${campaignId}`;
