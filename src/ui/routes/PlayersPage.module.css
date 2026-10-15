@@ -1,0 +1,24 @@
+.players {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* A row like the other campaign lists (ListRow), without a › : there is nothing to open. */
+.player {
+  display: flex;
+  align-items: center;
+  min-height: 64px;
+  padding: 8px var(--space);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.empty {
+  color: var(--text-muted);
+}

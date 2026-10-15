@@ -81,10 +81,11 @@ describe('DC-021 — Quick Access items tonen: Campaign Notes', () => {
       expect.stringContaining('Combat'),
       expect.stringContaining('Campaign NPCs'),
       expect.stringContaining('Spare NPCs'),
+      expect.stringContaining('Player characters'),
       expect.stringContaining('Locations'),
       expect.stringContaining('Campaign Notes'),
     ]);
-    expect(items[4]).toHaveTextContent('2 notes');
+    expect(items[5]).toHaveTextContent('2 notes');
   });
 
   it('lists the campaign notes in campaign order, and opens one with one tap', async () => {

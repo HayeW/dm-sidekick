@@ -65,14 +65,14 @@ describe('DC-021 — Quick Access items tonen: Locations', () => {
   const quickItems = () => screen.getByRole('list', { name: 'Quick Access items' });
   const quickItem = (name: RegExp) => within(quickItems()).getByRole('link', { name });
 
-  it('shows Locations with their number, after Campaign NPCs and Spare NPCs (D24, D34)', async () => {
+  it('shows Locations with their number, after the NPCs and Player characters (D24, D34, D58)', async () => {
     const user = setupUser();
     renderAt(roadUrl);
     await user.click(screen.getByRole('link', { name: 'Quick' }));
 
     const items = within(quickItems()).getAllByRole('listitem');
-    expect(items[3]).toHaveTextContent('Locations');
-    expect(items[3]).toHaveTextContent('2 locations');
+    expect(items[4]).toHaveTextContent('Locations');
+    expect(items[4]).toHaveTextContent('2 locations');
   });
 
   it('lists the campaign’s locations in campaign order, and opens one with one tap', async () => {

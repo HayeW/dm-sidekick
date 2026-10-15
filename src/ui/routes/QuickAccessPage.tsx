@@ -48,6 +48,7 @@ export default function QuickAccessPage() {
   const npcCount = campaign.npcs.length;
   const locationCount = campaign.locations.length;
   const noteCount = campaign.notes.length;
+  const playerCount = campaign.playerCharacters.length;
 
   return (
     <main className="page">
@@ -77,6 +78,14 @@ export default function QuickAccessPage() {
         <li>
           {/* DC-090: the same in every campaign; next to Campaign NPCs (D34). */}
           {item(`/c/${campaign.id}/spare-npcs`, 'Spare NPCs', `${getSpareNpcs().length} NPCs`)}
+        </li>
+        <li>
+          {/* DC-114: the DM's own players, below Spare NPCs (D58). */}
+          {item(
+            `/c/${campaign.id}/players`,
+            'Player characters',
+            playerCount === 1 ? '1 player' : `${playerCount} players`,
+          )}
         </li>
         <li>
           {item(
