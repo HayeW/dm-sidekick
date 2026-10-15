@@ -1,6 +1,5 @@
 // Each campaign's own player characters, kept by the DM on this device (DC-114, D61). Not in
-// the campaign file, so a re-import keeps them. Without a stored list a campaign has its
-// starting list (D59): the demo campaigns' seed players, none for an imported campaign.
+// the campaign file, so a re-import keeps them. Without a stored list a campaign has none.
 
 import type { PlayerCharacter } from '../domain/campaign';
 

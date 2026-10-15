@@ -1,7 +1,10 @@
 import { screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
-import { getCampaign, getCampaigns } from '../../data/campaigns';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { getCampaigns } from '../../data/campaigns';
 import { renderAt, setupUser } from '../../test/app';
+import { importTestCampaigns, millbrook, sunkenBell } from '../../test/testCampaigns';
+
+beforeEach(importTestCampaigns);
 
 describe('DC-002 — Campaign openen', () => {
   it('opens the first scene of the selected campaign', () => {
@@ -22,7 +25,7 @@ describe('DC-002 — Campaign openen', () => {
 });
 
 describe('DC-003 / DC-080 — Laatst gebruikte scene onthouden', () => {
-  const campaign = getCampaign('shadows-over-millbrook')!;
+  const campaign = millbrook;
   const [first, second, last] = campaign.scenes;
 
   function expectScene(title: string) {
@@ -57,7 +60,7 @@ describe('DC-003 / DC-080 — Laatst gebruikte scene onthouden', () => {
   });
 
   it('remembers the scene per campaign', () => {
-    const other = getCampaign('the-sunken-bell')!;
+    const other = sunkenBell;
     renderAt(`/c/${campaign.id}/s/${last!.id}`).unmount();
     renderAt(`/c/${other.id}/s/${other.scenes[0]!.id}`).unmount();
 

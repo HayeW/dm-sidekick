@@ -8,7 +8,6 @@ import {
   loadImportedCampaigns,
   saveImportedCampaign,
 } from './importedCampaigns';
-import { seedCampaigns } from './seed';
 import { loadSession, saveSession } from './storage';
 
 /** A small valid campaign file with this name. */
@@ -48,28 +47,29 @@ describe('DC-110 — Campaign importeren: bewaren', () => {
 
   it('does not store a file with errors', () => {
     expect(saveImportedCampaign('# Broken')).toBeUndefined();
-    expect(saveImportedCampaign(fileNamed(seedCampaigns[0]!.name))).toBeUndefined();
     expect(loadImportedCampaigns()).toEqual([]);
   });
 
-  it('lists the demo campaigns first, then the imported ones by name (D48)', () => {
+  it('has no campaigns of its own (D76)', () => {
+    expect(getCampaigns()).toEqual([]);
+  });
+
+  it('lists the imported campaigns by name (D48)', () => {
     saveImportedCampaign(fileNamed('Zarnath'));
     saveImportedCampaign(fileNamed('amber keep'));
     saveImportedCampaign(fileNamed('Bellhaven'));
 
     expect(getCampaigns().map((campaign) => campaign.name)).toEqual([
-      ...seedCampaigns.map((campaign) => campaign.name),
       'amber keep',
       'Bellhaven',
       'Zarnath',
     ]);
   });
 
-  it('keeps the demo campaigns as they are', () => {
-    saveImportedCampaign(fileNamed('Hollowmere'));
-
-    expect(getCampaigns().slice(0, seedCampaigns.length)).toEqual(seedCampaigns);
-    expect(getCampaign(seedCampaigns[0]!.id)).toBe(seedCampaigns[0]);
+  it('accepts the names of the former demo campaigns (D76)', () => {
+    expect(saveImportedCampaign(fileNamed('Shadows over Millbrook'))?.id).toBe(
+      'imported-shadows-over-millbrook',
+    );
   });
 
   it('reports a full or blocked storage as not saved', () => {
@@ -107,7 +107,7 @@ describe('DC-110 — Campaign importeren: onleesbare opgeslagen data', () => {
     expect(loadImportedCampaigns()).toEqual([]);
   });
 
-  it('shows only the demo campaigns when storage is blocked', () => {
+  it('shows no campaigns when storage is blocked', () => {
     saveImportedCampaign(fileNamed('Hollowmere'));
     vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
       throw new Error('blocked');
@@ -116,12 +116,12 @@ describe('DC-110 — Campaign importeren: onleesbare opgeslagen data', () => {
       throw new Error('blocked');
     });
 
-    expect(getCampaigns()).toEqual(seedCampaigns);
+    expect(getCampaigns()).toEqual([]);
     expect(getCampaign('imported-hollowmere')).toBeUndefined();
   });
 });
 
-describe('DC-113 — Geïmporteerde campaign verwijderen: de data', () => {
+describe('DC-113 — Campaign verwijderen: de data', () => {
   it('removes the campaign and its session', () => {
     saveImportedCampaign(fileNamed('Hollowmere'));
     saveImportedCampaign(fileNamed('Bellhaven'));
@@ -149,15 +149,5 @@ describe('DC-113 — Geïmporteerde campaign verwijderen: de data', () => {
     saveImportedCampaign(fileNamed('Hollowmere'));
 
     expect(getActiveCombat('imported-hollowmere')).toBeUndefined();
-  });
-
-  it('never deletes a demo campaign or its session', () => {
-    const demo = seedCampaigns[0]!;
-    saveSession({ campaignId: demo.id, currentSceneId: demo.scenes[1]!.id });
-
-    deleteImportedCampaign(demo.id);
-
-    expect(getCampaign(demo.id)).toBe(demo);
-    expect(loadSession(demo.id)?.currentSceneId).toBe(demo.scenes[1]!.id);
   });
 });

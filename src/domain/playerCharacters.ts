@@ -45,7 +45,7 @@ function nameProblem(players: PlayerCharacter[], name: string): string | undefin
 
 /**
  * `pc-<n>`, one higher than the highest number in use (D61), so it is unique in the list.
- * Other ids, like the demo campaigns' `pc-alice`, don't count.
+ * Other ids, like `pc-alice`, don't count.
  */
 function nextId(players: PlayerCharacter[]): string {
   const numbers = players.map((player) => /^pc-(\d+)$/.exec(player.id)?.[1]).map(Number);

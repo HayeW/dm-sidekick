@@ -1,5 +1,5 @@
 import { screen, within } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getCampaign } from '../../data/campaigns';
 import { setActiveCombat } from '../../data/combats';
 import { saveImportedCampaign } from '../../data/importedCampaigns';
@@ -11,12 +11,15 @@ import {
   renderWithBrowserBack,
   setupUser,
 } from '../../test/app';
+import { importTestCampaigns, millbrook, sunkenBell } from '../../test/testCampaigns';
+
+beforeEach(importTestCampaigns);
 
 describe('DC-010 — Scene tonen', () => {
-  const campaign = getCampaign('shadows-over-millbrook')!;
+  const campaign = millbrook;
 
   it('shows every content block of the scene as a tile, in order', () => {
-    renderAt(`/c/${campaign.id}/s/scene-arrival`);
+    renderAt(`/c/${campaign.id}/s/scene-arrival-in-millbrook`);
 
     const tiles = screen.getAllByRole('region');
     expect(tiles.map((tile) => tile.getAttribute('aria-label'))).toEqual([
@@ -31,7 +34,7 @@ describe('DC-010 — Scene tonen', () => {
   });
 
   it('shows an encounter tile with a compact enemy summary', () => {
-    renderAt(`/c/${campaign.id}/s/scene-mill-road`);
+    renderAt(`/c/${campaign.id}/s/scene-the-mill-road`);
 
     const tile = screen.getByRole('region', { name: 'Encounter' });
     expect(tile).toHaveTextContent('Ambush on the mill road');
@@ -40,7 +43,7 @@ describe('DC-010 — Scene tonen', () => {
 });
 
 describe('DC-015 / DC-016 — Vorige en volgende scene', () => {
-  const campaign = getCampaign('shadows-over-millbrook')!;
+  const campaign = millbrook;
   const [first, second, last] = campaign.scenes;
   const scenes = () => screen.getByRole('navigation', { name: 'Scenes' });
 
@@ -109,7 +112,7 @@ describe('DC-015 / DC-016 — Vorige en volgende scene', () => {
   });
 
   it('disables both in a campaign with a single scene', () => {
-    const single = getCampaign('the-sunken-bell')!;
+    const single = sunkenBell;
     renderAt(`/c/${single.id}/s/${single.scenes[0]!.id}`);
 
     expect(within(scenes()).getByRole('button', { name: /Previous/ })).toBeDisabled();

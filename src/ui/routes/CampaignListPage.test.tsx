@@ -1,43 +1,46 @@
 import { screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { getCampaigns } from '../../data/campaigns';
 import { saveImportedCampaign } from '../../data/importedCampaigns';
 import { combatOrder, renderAt, setupUser } from '../../test/app';
+import { importTestCampaigns } from '../../test/testCampaigns';
 
 describe('DC-001 — Campaigns tonen', () => {
-  it('shows a list with the name of every campaign', () => {
+  it('says there are no campaigns yet: the app has none of its own (D76)', () => {
     renderAt('/');
 
     expect(screen.getByRole('heading', { name: 'Campaigns' })).toBeInTheDocument();
-    for (const campaign of getCampaigns()) {
-      expect(screen.getByRole('link', { name: new RegExp(campaign.name) })).toBeInTheDocument();
-    }
-  });
-
-  it('opens the selected campaign with one tap', async () => {
-    const user = setupUser();
-    const campaign = getCampaigns()[0]!;
-    renderAt('/');
-
-    await user.click(screen.getByRole('link', { name: new RegExp(campaign.name) }));
-
     expect(
-      screen.getByRole('heading', { level: 1, name: campaign.scenes[0]!.title }),
+      screen.getByText('No campaigns yet. Import a campaign file to start.'),
     ).toBeInTheDocument();
+    expect(screen.queryByRole('list')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Import campaign' })).toBeInTheDocument();
   });
 
-  it('shows an imported campaign after the demo campaigns, and opens its first scene', async () => {
-    const user = setupUser();
+  it('shows every campaign by name, with its number of scenes (D48)', () => {
+    importTestCampaigns();
     saveImportedCampaign(
       ['# Hollowmere', '## Scene: The Bridge', '### DM notes', 'Trolls.'].join('\n'),
     );
     renderAt('/');
 
-    const names = screen.getAllByRole('link').map((link) => link.textContent);
-    expect(names.at(-1)).toMatch(/^Hollowmere/);
-    await user.click(screen.getByRole('link', { name: /Hollowmere/ }));
+    expect(screen.getAllByRole('link').map((link) => link.textContent)).toEqual([
+      'Hollowmere1 scene',
+      'Shadows over Millbrook3 scenes',
+      'The Sunken Bell1 scene',
+    ]);
+    expect(screen.queryByText(/No campaigns yet/)).not.toBeInTheDocument();
+  });
 
-    expect(screen.getByRole('heading', { level: 1, name: 'The Bridge' })).toBeInTheDocument();
+  it('opens the selected campaign at its first scene with one tap', async () => {
+    const user = setupUser();
+    importTestCampaigns();
+    renderAt('/');
+
+    await user.click(screen.getByRole('link', { name: /Shadows over Millbrook/ }));
+
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Arrival in Millbrook' }),
+    ).toBeInTheDocument();
   });
 
   it('shows "not found" for an unknown campaign', () => {
@@ -107,7 +110,7 @@ describe('DC-110 — Campaign importeren uit een Markdown-bestand', () => {
     expect(combatOrder()).toEqual(['Troll 1 · 30/30 HP', 'Troll 2 · 30/30 HP']);
   });
 
-  it('keeps the imported campaign after a refresh, next to the demo campaigns', async () => {
+  it('keeps the imported campaign after a refresh', async () => {
     const user = setupUser();
     const { unmount } = renderAt('/');
     await importFile(user, asFile(hollowmere()));
@@ -117,7 +120,6 @@ describe('DC-110 — Campaign importeren uit een Markdown-bestand', () => {
     renderAt('/');
 
     expect(campaignLink(/Hollowmere/)).toBeInTheDocument();
-    expect(campaignLink(/Shadows over Millbrook/)).toBeInTheDocument();
   });
 });
 
@@ -264,15 +266,16 @@ describe('DC-112 — Duidelijke foutmeldingen: het apparaat', () => {
   });
 });
 
-describe('DC-113 — Geïmporteerde campaign verwijderen', () => {
-  it('marks imported campaigns, and offers Delete only for them', () => {
+describe('DC-113 — Campaign verwijderen', () => {
+  it('offers Delete for every campaign (D76)', () => {
+    importTestCampaigns();
     saveImportedCampaign(hollowmere());
     renderAt('/');
 
-    expect(campaignLink(/Hollowmere/)).toHaveTextContent('Imported');
-    expect(campaignLink(/Shadows over Millbrook/)).not.toHaveTextContent('Imported');
     expect(screen.getAllByRole('button', { name: /^Delete/ }).map((b) => b.ariaLabel)).toEqual([
       'Delete Hollowmere',
+      'Delete Shadows over Millbrook',
+      'Delete The Sunken Bell',
     ]);
   });
 
@@ -294,6 +297,9 @@ describe('DC-113 — Geïmporteerde campaign verwijderen', () => {
     expect(campaignLink(/Hollowmere/)).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Import campaign' })).toHaveFocus();
     expect(localStorage.getItem('dm-sidekick:v1:session:imported-hollowmere')).toBeNull();
+    expect(
+      screen.getByText('No campaigns yet. Import a campaign file to start.'),
+    ).toBeInTheDocument();
   });
 
   it('starts fresh when the deleted campaign is imported again', async () => {

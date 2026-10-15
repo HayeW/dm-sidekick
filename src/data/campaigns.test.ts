@@ -1,11 +1,17 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { findLocation, findNpcs } from '../domain/entities';
 import { findEncounter } from '../domain/scene';
+import { importTestCampaigns } from '../test/testCampaigns';
 import { getCampaign, getCampaigns } from './campaigns';
 
 describe('campaign data', () => {
-  it('provides at least one campaign', () => {
-    expect(getCampaigns().length).toBeGreaterThan(0);
+  beforeEach(importTestCampaigns);
+
+  it('provides the imported campaigns', () => {
+    expect(getCampaigns().map((campaign) => campaign.name)).toEqual([
+      'Shadows over Millbrook',
+      'The Sunken Bell',
+    ]);
   });
 
   it('gives every campaign a non-empty name and a unique id', () => {
@@ -26,8 +32,8 @@ describe('campaign data', () => {
     expect(getCampaign('does-not-exist')).toBeUndefined();
   });
 
-  // Tiles refer to encounters, locations and NPCs by id (D25): a typo in the seed would
-  // silently show "not found" on a scene, so every reference must resolve.
+  // Tiles refer to encounters, locations and NPCs by id (D25): a wrong id from the import
+  // would silently show "not found" on a scene, so every reference must resolve.
   it('refers only to encounters, locations and NPCs that exist in the same campaign', () => {
     for (const campaign of getCampaigns()) {
       for (const block of campaign.scenes.flatMap((scene) => scene.blocks)) {

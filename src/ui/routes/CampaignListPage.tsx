@@ -1,12 +1,8 @@
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { Link } from 'react-router';
 import { getCampaign, getCampaigns } from '../../data/campaigns';
-import {
-  deleteImportedCampaign,
-  isImportedCampaign,
-  readCampaignFile,
-  saveImportedCampaign,
-} from '../../data/importedCampaigns';
+import { deleteImportedCampaign, saveImportedCampaign } from '../../data/importedCampaigns';
+import { parseCampaign } from '../../domain/campaignMarkdown';
 import styles from './CampaignListPage.module.css';
 
 /** A campaign file is a few kilobytes; a bigger file was picked by mistake (D55). */
@@ -27,7 +23,7 @@ type Panel =
 
 /**
  * DC-001: the list of campaigns the DM can choose from. DC-110: import one from a file;
- * DC-113: delete an imported one.
+ * DC-113: delete one. The app has no campaigns of its own (D76): at first the list is empty.
  */
 export default function CampaignListPage() {
   const campaigns = getCampaigns();
@@ -94,7 +90,7 @@ export default function CampaignListPage() {
       setPanel({ kind: 'errors', fileName: file.name, messages: ['The file could not be read.'] });
       return;
     }
-    const result = readCampaignFile(text);
+    const result = parseCampaign(text);
     if ('errors' in result) {
       const messages = result.errors
         .slice(0, MAX_ERRORS_SHOWN)
@@ -184,35 +180,32 @@ export default function CampaignListPage() {
         </section>
       )}
 
-      <ul className={styles.list}>
-        {campaigns.map((campaign) => {
-          const imported = isImportedCampaign(campaign.id);
-          return (
+      {campaigns.length === 0 ? (
+        <p className={styles.empty}>No campaigns yet. Import a campaign file to start.</p>
+      ) : (
+        <ul className={styles.list}>
+          {campaigns.map((campaign) => (
             <li key={campaign.id} className={styles.item}>
               <Link to={`/c/${campaign.id}`} className={styles.card}>
                 <span className={styles.name}>{campaign.name}</span>
                 <span className={styles.meta}>
                   {campaign.scenes.length} {campaign.scenes.length === 1 ? 'scene' : 'scenes'}
-                  {imported && ' · Imported'}
                 </span>
               </Link>
-              {/* Only imported campaigns can be deleted, not the demo campaigns (DC-113). */}
-              {imported && (
-                <button
-                  type="button"
-                  className={styles.delete}
-                  aria-label={`Delete ${campaign.name}`}
-                  onClick={() =>
-                    setPanel({ kind: 'delete', campaignId: campaign.id, name: campaign.name })
-                  }
-                >
-                  Delete
-                </button>
-              )}
+              <button
+                type="button"
+                className={styles.delete}
+                aria-label={`Delete ${campaign.name}`}
+                onClick={() =>
+                  setPanel({ kind: 'delete', campaignId: campaign.id, name: campaign.name })
+                }
+              >
+                Delete
+              </button>
             </li>
-          );
-        })}
-      </ul>
+          ))}
+        </ul>
+      )}
 
       <button
         ref={importButton}

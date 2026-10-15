@@ -38,7 +38,7 @@ on a phone connected to the same Wi-Fi.
 ```
 src/
   domain/   pure TypeScript game logic, no React (from DC-001 on)
-  data/     seed data and localStorage persistence
+  data/     localStorage persistence (imported campaigns, sessions, player characters)
   ui/       screens and components
   test/     test setup
 ```

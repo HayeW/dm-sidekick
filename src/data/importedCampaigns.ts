@@ -3,29 +3,13 @@
 // only place that knows the format. One entry per campaign, keyed by its id (D54).
 
 import type { Campaign } from '../domain/campaign';
-import { parseCampaign, type ParseResult } from '../domain/campaignMarkdown';
-import { seedCampaigns } from './seed';
+import { parseCampaign } from '../domain/campaignMarkdown';
 import { forgetSession } from './combats';
 import { deletePlayers } from './playerCharacters';
 
 // The version is part of the key, as for sessions: a new schema gets a new key.
 const PREFIX = 'dm-sidekick:v1:campaign:';
-/** Every imported campaign's id starts with this (D47), so it can't hide a demo campaign. */
-const IMPORTED_ID_PREFIX = 'imported-';
 const keyFor = (campaignId: string) => `${PREFIX}${campaignId}`;
-
-/** Whether the campaign was imported, so it can be deleted (DC-113); demo campaigns can't. */
-export function isImportedCampaign(id: string): boolean {
-  return id.startsWith(IMPORTED_ID_PREFIX);
-}
-
-/** Reads a campaign file; a demo campaign's name is an error (D45). */
-export function readCampaignFile(text: string): ParseResult {
-  return parseCampaign(
-    text,
-    seedCampaigns.map((campaign) => campaign.name),
-  );
-}
 
 /**
  * Parsed campaigns by their text, so the same text is parsed once and gives the same object
@@ -36,7 +20,7 @@ const parsed = new Map<string, Campaign | undefined>();
 /** The campaign in a stored text, or undefined when the text no longer reads as one. */
 function campaignFrom(text: string): Campaign | undefined {
   if (!parsed.has(text)) {
-    const result = readCampaignFile(text);
+    const result = parseCampaign(text);
     parsed.set(text, 'campaign' in result ? result.campaign : undefined);
   }
   return parsed.get(text);
@@ -93,10 +77,9 @@ export function loadImportedCampaigns(): Campaign[] {
 
 /**
  * Removes an imported campaign, its session (current scene and active combat, DC-113) and
- * its player characters (DC-114). A demo campaign can't be deleted; its data stays too.
+ * its player characters (DC-114).
  */
 export function deleteImportedCampaign(id: string): void {
-  if (!isImportedCampaign(id)) return;
   try {
     localStorage.removeItem(keyFor(id));
   } catch {

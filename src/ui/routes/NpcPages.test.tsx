@@ -1,11 +1,13 @@
 import { screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
-import { getCampaign } from '../../data/campaigns';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { pressBrowserBack, renderAt, renderWithBrowserBack, setupUser } from '../../test/app';
+import { importTestCampaigns, millbrook } from '../../test/testCampaigns';
 
-const campaign = getCampaign('shadows-over-millbrook')!;
-const arrivalUrl = `/c/${campaign.id}/s/scene-arrival`;
-const roadUrl = `/c/${campaign.id}/s/scene-mill-road`;
+beforeEach(importTestCampaigns);
+
+const campaign = millbrook;
+const arrivalUrl = `/c/${campaign.id}/s/scene-arrival-in-millbrook`;
+const roadUrl = `/c/${campaign.id}/s/scene-the-mill-road`;
 
 const expectHeading = (name: string) =>
   expect(screen.getByRole('heading', { level: 1, name })).toBeInTheDocument();
@@ -36,7 +38,7 @@ describe('DC-013 — NPC tile openen', () => {
 
   it('goes to the NPC list, then the campaign, when opened directly with nothing to go back to', async () => {
     const user = setupUser();
-    renderAt(`/c/${campaign.id}/npcs/npc-marta`);
+    renderAt(`/c/${campaign.id}/npcs/npc-marta-hollow`);
 
     await user.click(screen.getByRole('button', { name: '‹ Back' }));
     expectHeading('NPCs');
@@ -47,7 +49,7 @@ describe('DC-013 — NPC tile openen', () => {
   });
 
   it('offers Quick Access on the NPC screen (D22)', () => {
-    renderAt(`/c/${campaign.id}/npcs/npc-marta`);
+    renderAt(`/c/${campaign.id}/npcs/npc-marta-hollow`);
 
     expect(screen.getByRole('link', { name: 'Quick' })).toBeInTheDocument();
   });
@@ -62,7 +64,7 @@ describe('DC-013 — NPC tile openen', () => {
   });
 
   it('shows "Campaign not found" for an unknown campaign', () => {
-    renderAt('/c/does-not-exist/npcs/npc-marta');
+    renderAt('/c/does-not-exist/npcs/npc-marta-hollow');
     expectHeading('Campaign not found');
   });
 });
@@ -128,7 +130,7 @@ describe('DC-021 — Quick Access items tonen: Campaign NPCs', () => {
 
   it('says so when the campaign has no NPCs', async () => {
     const user = setupUser();
-    renderAt('/c/the-sunken-bell/s/scene-harbour');
+    renderAt('/c/imported-the-sunken-bell/s/scene-the-harbour-at-low-tide');
     await user.click(screen.getByRole('link', { name: 'Quick' }));
     expect(quickItem(/Campaign NPCs/)).toHaveTextContent('0 NPCs');
 

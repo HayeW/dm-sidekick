@@ -1,7 +1,6 @@
 import { fireEvent, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
-import { getCampaign } from '../../data/campaigns';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { clearActiveCombats, setActiveCombat } from '../../data/combats';
 import { savePlayers } from '../../data/playerCharacters';
 import { startCombat } from '../../domain/combat';
@@ -14,10 +13,13 @@ import {
   renderWithBrowserBack,
   setupUser,
 } from '../../test/app';
+import { importTestCampaigns, millbrook } from '../../test/testCampaigns';
+
+beforeEach(importTestCampaigns);
 
 describe('DC-043 / DC-053 / DC-060 / DC-081 — Combat starten, tonen en bewaren', () => {
-  const campaign = getCampaign('shadows-over-millbrook')!;
-  const sceneUrl = `/c/${campaign.id}/s/scene-mill-road`;
+  const campaign = millbrook;
+  const sceneUrl = `/c/${campaign.id}/s/scene-the-mill-road`;
 
   const encounterTile = () => screen.getByRole('region', { name: 'Encounter' });
 
@@ -101,7 +103,7 @@ describe('DC-043 / DC-053 / DC-060 / DC-081 — Combat starten, tonen en bewaren
     await user.click(within(encounterTile()).getByRole('button', { name: 'Start combat' }));
     const before = combatOrder();
     unmount();
-    renderAt(`/c/${campaign.id}/s/scene-old-mill`).unmount(); // saves the current scene
+    renderAt(`/c/${campaign.id}/s/scene-the-old-mill`).unmount(); // saves the current scene
     clearActiveCombats(); // refresh
 
     renderAt(`/c/${campaign.id}/combat`);
@@ -132,11 +134,11 @@ describe('DC-043 / DC-053 / DC-060 / DC-081 — Combat starten, tonen en bewaren
 });
 
 describe('DC-061 / DC-063 — Damage toepassen en dead markeren', () => {
-  const campaign = getCampaign('shadows-over-millbrook')!;
+  const campaign = millbrook;
 
   async function startCombat() {
     const user = setupUser();
-    const view = renderAt(`/c/${campaign.id}/s/scene-mill-road`);
+    const view = renderAt(`/c/${campaign.id}/s/scene-the-mill-road`);
     await user.click(screen.getByRole('button', { name: 'Start combat' }));
     await user.click(screen.getByRole('button', { name: 'Done' })); // leave reorder mode
     return { user, ...view };
@@ -202,8 +204,8 @@ describe('DC-061 / DC-063 — Damage toepassen en dead markeren', () => {
 });
 
 describe('DC-062 — Healing toepassen (heal mode)', () => {
-  const campaign = getCampaign('shadows-over-millbrook')!;
-  const sceneUrl = `/c/${campaign.id}/s/scene-mill-road`;
+  const campaign = millbrook;
+  const sceneUrl = `/c/${campaign.id}/s/scene-the-mill-road`;
 
   /** Starts the combat in normal mode, with Goblin Boss at 11/21 and Goblin 1 DEAD. */
   async function startHurtCombat(render = renderAt) {
@@ -220,8 +222,8 @@ describe('DC-062 — Healing toepassen (heal mode)', () => {
     within(screen.getByRole('list', { name: 'Combat order' })).getAllByRole('listitem');
   const row = (name: string) => rows().find((item) => combatantName(item) === name)!;
   /** An active combat for the Mill Road encounter, without going through the scene. */
-  const setActiveCombatFromSeed = () =>
-    setActiveCombat(startCombat(campaign, 'scene-mill-road', campaign.encounters[0]!));
+  const setRoadCombat = () =>
+    setActiveCombat(startCombat(campaign, 'scene-the-mill-road', campaign.encounters[0]!));
   const healButton = (amount: number, name: string) =>
     screen.getByRole('button', { name: `${amount} healing to ${name}` });
 
@@ -333,7 +335,7 @@ describe('DC-062 — Healing toepassen (heal mode)', () => {
   });
 
   it('shows normal mode for an unknown mode in the URL', () => {
-    setActiveCombatFromSeed();
+    setRoadCombat();
     renderAt(`/c/${campaign.id}/combat?mode=bogus`);
 
     expect(screen.getByRole('button', { name: '5 damage to Goblin 2' })).toBeInTheDocument();
@@ -377,8 +379,8 @@ describe('DC-062 — Healing toepassen (heal mode)', () => {
 });
 
 describe('DC-064 / DC-052 — Combatants verplaatsen (reorder mode)', () => {
-  const campaign = getCampaign('shadows-over-millbrook')!;
-  const sceneUrl = `/c/${campaign.id}/s/scene-mill-road`;
+  const campaign = millbrook;
+  const sceneUrl = `/c/${campaign.id}/s/scene-the-mill-road`;
 
   const rows = () =>
     within(screen.getByRole('list', { name: 'Combat order' })).getAllByRole('listitem');
@@ -673,8 +675,8 @@ describe('DC-064 / DC-052 — Combatants verplaatsen (reorder mode)', () => {
 });
 
 describe('DC-065 / DC-066 / DC-067 — Combatant toevoegen en verwijderen', () => {
-  const campaign = getCampaign('shadows-over-millbrook')!;
-  const sceneUrl = `/c/${campaign.id}/s/scene-mill-road`;
+  const campaign = millbrook;
+  const sceneUrl = `/c/${campaign.id}/s/scene-the-mill-road`;
 
   const rows = () =>
     within(screen.getByRole('list', { name: 'Combat order' })).getAllByRole('listitem');
@@ -835,8 +837,8 @@ describe('DC-065 / DC-066 / DC-067 — Combatant toevoegen en verwijderen', () =
 });
 
 describe('DC-070 / DC-071 / DC-081 / DC-082 — Combat verlaten, terugkeren en herstellen', () => {
-  const campaign = getCampaign('shadows-over-millbrook')!;
-  const roadUrl = `/c/${campaign.id}/s/scene-mill-road`;
+  const campaign = millbrook;
+  const roadUrl = `/c/${campaign.id}/s/scene-the-mill-road`;
 
   const sceneNav = (name: RegExp) =>
     within(screen.getByRole('navigation', { name: 'Scenes' })).getByRole('link', { name });
@@ -928,7 +930,7 @@ describe('DC-070 / DC-071 / DC-081 / DC-082 — Combat verlaten, terugkeren en h
 });
 
 describe('DC-114 — Eigen Player Characters in combat', () => {
-  const sceneUrl = '/c/shadows-over-millbrook/s/scene-mill-road';
+  const sceneUrl = '/c/imported-shadows-over-millbrook/s/scene-the-mill-road';
   const players = () => combatOrder().filter((row) => row.endsWith(' · PC'));
 
   async function startCombatAt(url: string) {
@@ -939,7 +941,7 @@ describe('DC-114 — Eigen Player Characters in combat', () => {
   }
 
   it("starts combat with the DM's own players, after the enemies", async () => {
-    savePlayers('shadows-over-millbrook', [
+    savePlayers('imported-shadows-over-millbrook', [
       { id: 'pc-1', name: 'Mira' },
       { id: 'pc-2', name: 'Tok' },
     ]);
@@ -954,14 +956,14 @@ describe('DC-114 — Eigen Player Characters in combat', () => {
     const { unmount } = await startCombatAt(sceneUrl);
     unmount();
 
-    savePlayers('shadows-over-millbrook', [{ id: 'pc-1', name: 'Mira' }]);
-    renderAt('/c/shadows-over-millbrook/combat');
+    savePlayers('imported-shadows-over-millbrook', [{ id: 'pc-1', name: 'Mira' }]);
+    renderAt('/c/imported-shadows-over-millbrook/combat');
 
     expect(players()).toEqual(['Alice · PC', 'Bob · PC', 'Cora · PC', 'Dain · PC']);
   });
 
   it('starts combat with only the enemies when the campaign has no players', async () => {
-    savePlayers('shadows-over-millbrook', []);
+    savePlayers('imported-shadows-over-millbrook', []);
 
     await startCombatAt(sceneUrl);
 
@@ -971,7 +973,7 @@ describe('DC-114 — Eigen Player Characters in combat', () => {
 });
 
 describe('DC-072 — Combat beëindigen', () => {
-  const campaign = getCampaign('shadows-over-millbrook')!;
+  const campaign = millbrook;
   const encounter = campaign.encounters[0]!;
   const combatUrl = `/c/${campaign.id}/combat`;
   const question = 'End the combat against Ambush on the mill road?';
@@ -988,7 +990,7 @@ describe('DC-072 — Combat beëindigen', () => {
   }
 
   /** A combat runs on the Mill Road; the combat screen is open. */
-  function openCombat(sceneId = 'scene-mill-road') {
+  function openCombat(sceneId = 'scene-the-mill-road') {
     setActiveCombat(startCombat(campaign, sceneId, encounter));
     renderAt(combatUrl);
     return setupUser();
@@ -1059,8 +1061,8 @@ describe('DC-072 — Combat beëindigen', () => {
 
   it('replaces the combat screen when it was opened elsewhere: Back does not return to it', async () => {
     const user = setupUser();
-    setActiveCombat(startCombat(campaign, 'scene-mill-road', encounter));
-    renderWithBrowserBack(`/c/${campaign.id}/s/scene-arrival`);
+    setActiveCombat(startCombat(campaign, 'scene-the-mill-road', encounter));
+    renderWithBrowserBack(`/c/${campaign.id}/s/scene-arrival-in-millbrook`);
     await user.click(screen.getByRole('link', { name: 'Quick' }));
     await user.click(screen.getByRole('link', { name: /^Combat/ }));
     await endCombat(user);
@@ -1080,7 +1082,10 @@ describe('DC-072 — Combat beëindigen', () => {
   });
 
   it('asks about "the current combat" when its encounter is unknown (D67)', async () => {
-    setActiveCombat({ ...startCombat(campaign, 'scene-mill-road', encounter), encounterId: null });
+    setActiveCombat({
+      ...startCombat(campaign, 'scene-the-mill-road', encounter),
+      encounterId: null,
+    });
     renderAt(combatUrl);
 
     await setupUser().click(screen.getByRole('button', { name: 'End combat' }));

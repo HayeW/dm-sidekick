@@ -24,10 +24,10 @@ describe('DC-030 / DC-114 — Player Character toevoegen', () => {
     expect(listOf(addPlayer([], 'Mira'))).toEqual([{ id: 'pc-1', name: 'Mira' }]);
   });
 
-  it('ignores ids that are not numbered, like the demo campaigns’ pc-alice', () => {
-    const demo = [{ id: 'pc-alice', name: 'Alice' }];
+  it('ignores ids that are not numbered, like pc-alice', () => {
+    const named = [{ id: 'pc-alice', name: 'Alice' }];
 
-    expect(listOf(addPlayer(demo, 'Mira')).at(-1)?.id).toBe('pc-1');
+    expect(listOf(addPlayer(named, 'Mira')).at(-1)?.id).toBe('pc-1');
   });
 
   it('keeps ids unique after a player in the middle is removed', () => {

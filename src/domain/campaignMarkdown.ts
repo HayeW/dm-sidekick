@@ -264,16 +264,10 @@ export type ParseResult = { campaign: Campaign } | { errors: ImportError[] };
 /**
  * Reads a campaign file into a campaign (DC-110): the structure, then the content — enemies,
  * references by name, unique names — and the ids (D47). Collects every error (DC-112).
- * `demoNames` are the names an imported campaign may not take (D45); the caller passes
- * them, so this module stays free of the seed data.
  */
-export function parseCampaign(text: string, demoNames: string[] = []): ParseResult {
+export function parseCampaign(text: string): ParseResult {
   const { draft, errors } = readCampaignStructure(text);
   const error = (line: number, message: string) => errors.push({ line, message });
-
-  if (demoNames.some((name) => sameName(name, draft.name))) {
-    error(draft.line, `"${draft.name}" is the name of a demo campaign.`);
-  }
 
   // Every item gets an id from its name; a name that appears twice is an error.
   const npcs = withIds(draft.npcs, 'npc', 'NPCs', error);

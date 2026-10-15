@@ -1,10 +1,12 @@
 import { fireEvent, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
-import { getCampaign } from '../../data/campaigns';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { pressBrowserBack, renderAt, renderWithBrowserBack, setupUser } from '../../test/app';
+import { importTestCampaigns, millbrook } from '../../test/testCampaigns';
+
+beforeEach(importTestCampaigns);
 
 describe('DC-011 — Descriptions tile openen', () => {
-  const campaign = getCampaign('shadows-over-millbrook')!;
+  const campaign = millbrook;
   const scene = campaign.scenes[0]!;
   const block = scene.blocks.find((b) => b.type === 'descriptions')!;
   const [intro, inn] = block.type === 'descriptions' ? block.descriptions : [];
@@ -113,7 +115,7 @@ describe('DC-011 — Descriptions tile openen', () => {
 });
 
 describe('DC-017 — Swipen tussen beschrijvingen', () => {
-  const campaign = getCampaign('shadows-over-millbrook')!;
+  const campaign = millbrook;
   const scene = campaign.scenes[0]!;
   const block = scene.blocks.find((b) => b.type === 'descriptions')!;
   const [intro, inn] = block.type === 'descriptions' ? block.descriptions : [];

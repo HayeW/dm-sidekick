@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
 // Vite reads the file as text; no Node APIs needed.
 import formatDoc from '../../docs/campaign-format.md?raw';
-import { seedCampaigns } from '../data/seed';
-import type { Campaign } from './campaign';
+import { millbrookFile } from '../test/testCampaigns';
 import { parseCampaign, readCampaignStructure } from './campaignMarkdown';
 
 /** The complete example from docs/campaign-format.md, so the document can't drift. */
@@ -361,7 +360,7 @@ describe('DC-112 — Duidelijke foutmeldingen: zoals editors bestanden opslaan',
   });
 });
 
-const parse = (...lines: string[]) => parseCampaign(file(...lines), ['Shadows over Millbrook']);
+const parse = (...lines: string[]) => parseCampaign(file(...lines));
 const campaignOf = (...lines: string[]) => {
   const result = parse(...lines);
   if ('errors' in result) throw new Error(JSON.stringify(result.errors));
@@ -372,55 +371,10 @@ const parseErrors = (...lines: string[]) => {
   return 'errors' in result ? result.errors : [];
 };
 
-/**
- * A campaign without its ids: references become names. Two campaigns with the same shape
- * show the same content in the app, whatever their ids.
- */
-function shape(campaign: Campaign) {
-  const nameOf = (items: { id: string; name: string }[], id: string) =>
-    items.find((item) => item.id === id)?.name;
-  return {
-    name: campaign.name,
-    playerCharacters: campaign.playerCharacters.map((pc) => pc.name),
-    npcs: campaign.npcs.map(({ name, description }) => ({ name, description })),
-    locations: campaign.locations.map(({ name, description }) => ({ name, description })),
-    encounters: campaign.encounters.map(({ name, enemies }) => ({ name, enemies })),
-    notes: campaign.notes.map(({ title, text }) => ({ title, text })),
-    scenes: campaign.scenes.map((scene) => ({
-      title: scene.title,
-      blocks: scene.blocks.map((block) => {
-        switch (block.type) {
-          case 'descriptions':
-            return { descriptions: block.descriptions.map(({ title, text }) => ({ title, text })) };
-          case 'location':
-            return { location: nameOf(campaign.locations, block.locationId) };
-          case 'encounter':
-            return { encounter: nameOf(campaign.encounters, block.encounterId) };
-          case 'npcs':
-            return { npcs: block.npcIds.map((id) => nameOf(campaign.npcs, id)) };
-          case 'notes':
-            return { notes: block.text };
-        }
-      }),
-    })),
-  };
-}
-
 describe('DC-110 — Campaign importeren: de inhoud', () => {
-  it('reads the format document’s example as the same campaign as the demo seed', () => {
-    const renamed = formatExample.replace('# Shadows over Millbrook', '# Shadows over Hollowmere');
-    const result = parseCampaign(renamed, ['Shadows over Millbrook']);
-    if ('errors' in result) throw new Error(JSON.stringify(result.errors));
-
-    const demo = shape(seedCampaigns[0]!);
-    // The seed uses a typographic apostrophe where the file has a plain one.
-    const expected = JSON.parse(JSON.stringify(demo).replaceAll('’', "'")) as typeof demo;
-    // Player characters are not in the file: each DM keeps their own (DC-114).
-    expect(shape(result.campaign)).toEqual({
-      ...expected,
-      name: 'Shadows over Hollowmere',
-      playerCharacters: [],
-    });
+  it('reads the format document’s example as the same campaign as the test campaign', () => {
+    // The screen tests play with that file, so the document shows what the app was tested on.
+    expect(parseCampaign(formatExample)).toEqual(parseCampaign(millbrookFile));
   });
 
   it('reads enemies with a count, with "x" for "×", and without a count as one', () => {
@@ -668,12 +622,6 @@ describe('DC-112 — Duidelijke foutmeldingen: de inhoud', () => {
         '- marta',
       ),
     ).toEqual([{ line: 11, message: '"- marta" is already in this list.' }]);
-  });
-
-  it('reports the name of a demo campaign, whatever the case (D45)', () => {
-    expect(parseErrors('# shadows over millbrook', ...minimal.slice(1))).toEqual([
-      { line: 1, message: '"shadows over millbrook" is the name of a demo campaign.' },
-    ]);
   });
 
   it('reports structure and content errors together, in line order', () => {

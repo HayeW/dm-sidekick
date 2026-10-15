@@ -1,11 +1,13 @@
 import { screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
-import { getCampaign } from '../../data/campaigns';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { pressBrowserBack, renderAt, renderWithBrowserBack, setupUser } from '../../test/app';
+import { importTestCampaigns, millbrook } from '../../test/testCampaigns';
 
-const campaign = getCampaign('shadows-over-millbrook')!;
-const arrivalUrl = `/c/${campaign.id}/s/scene-arrival`;
-const roadUrl = `/c/${campaign.id}/s/scene-mill-road`;
+beforeEach(importTestCampaigns);
+
+const campaign = millbrook;
+const arrivalUrl = `/c/${campaign.id}/s/scene-arrival-in-millbrook`;
+const roadUrl = `/c/${campaign.id}/s/scene-the-mill-road`;
 
 const expectHeading = (name: string) =>
   expect(screen.getByRole('heading', { level: 1, name })).toBeInTheDocument();
@@ -107,7 +109,7 @@ describe('DC-021 — Quick Access items tonen: Locations', () => {
 
   it('says so when the campaign has no locations', async () => {
     const user = setupUser();
-    renderAt('/c/the-sunken-bell/s/scene-harbour');
+    renderAt('/c/imported-the-sunken-bell/s/scene-the-harbour-at-low-tide');
     await user.click(screen.getByRole('link', { name: 'Quick' }));
     expect(quickItem(/^Locations/)).toHaveTextContent('0 locations');
 

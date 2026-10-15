@@ -1,10 +1,13 @@
 import { screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { getSpareNpcs } from '../../data/spareNpcs';
 import { pressBrowserBack, renderAt, renderWithBrowserBack, setupUser } from '../../test/app';
+import { importTestCampaigns } from '../../test/testCampaigns';
 
-const roadUrl = '/c/shadows-over-millbrook/s/scene-mill-road';
-const harbourUrl = '/c/the-sunken-bell/s/scene-harbour';
+beforeEach(importTestCampaigns);
+
+const roadUrl = '/c/imported-shadows-over-millbrook/s/scene-the-mill-road';
+const harbourUrl = '/c/imported-the-sunken-bell/s/scene-the-harbour-at-low-tide';
 
 const expectHeading = (name: string) =>
   expect(screen.getByRole('heading', { level: 1, name })).toBeInTheDocument();
@@ -112,7 +115,7 @@ describe('DC-090 — Kant-en-klare NPC’s bekijken', () => {
 
   it('goes to the campaign when opened directly, with nothing to go back to (D35)', async () => {
     const user = setupUser();
-    renderAt('/c/shadows-over-millbrook/spare-npcs');
+    renderAt('/c/imported-shadows-over-millbrook/spare-npcs');
 
     await user.click(screen.getByRole('button', { name: '‹ Back' }));
 

@@ -1,19 +1,18 @@
 import type { Campaign } from '../domain/campaign';
 import { loadImportedCampaign, loadImportedCampaigns } from './importedCampaigns';
 import { playersFrom, storedPlayersText } from './playerCharacters';
-import { seedCampaigns } from './seed';
 
-// Single access point for campaign data. The UI never imports the seed or the stored
-// campaigns directly, so the sources can change without touching screens.
+// Single access point for campaign data. The UI never reads the stored campaigns directly,
+// so the source can change without touching screens. The app has no campaigns of its own
+// (D76): every campaign is imported.
 
-/** The demo campaigns first, then the imported ones by name (D48). */
+/** The imported campaigns, by name (D48). */
 export function getCampaigns(): Campaign[] {
-  return [...seedCampaigns, ...loadImportedCampaigns()].map(withOwnPlayers);
+  return loadImportedCampaigns().map(withOwnPlayers);
 }
 
 export function getCampaign(id: string): Campaign | undefined {
-  const campaign =
-    seedCampaigns.find((candidate) => candidate.id === id) ?? loadImportedCampaign(id);
+  const campaign = loadImportedCampaign(id);
   return campaign && withOwnPlayers(campaign);
 }
 
@@ -25,7 +24,7 @@ const withPlayers = new WeakMap<Campaign, { text: string; campaign: Campaign }>(
 
 /**
  * The campaign with the DM's own player characters (DC-114, D61). Without a stored list, or
- * with one that can't be read, it keeps its starting list (D59): the campaign itself.
+ * with one that can't be read, it keeps the file's list, which is empty: the campaign itself.
  */
 function withOwnPlayers(campaign: Campaign): Campaign {
   const text = storedPlayersText(campaign.id);

@@ -619,6 +619,7 @@ P0
 Als DM wil ik vanuit een context naar andere informatie kunnen navigeren zonder mijn huidige werk kwijt te raken.
 ## Epic 12 — Campaign importeren
 Toegevoegd door de product owner op 2026-10-13. De DM bereidt een campaign voor op de PC, in een Markdown-bestand, en importeert dat bestand op het apparaat waarop gespeeld wordt. Het formaat staat beschreven in docs/campaign-format.md. Bewerken in de app (Epic 4 en 5) kan later; import en export blijven dan de manier om een campaign van de PC naar de telefoon te krijgen.
+Gewijzigd door de product owner op 2026-10-15 (D76): de app bevat geen demo campaigns meer. Iedere campaign is geïmporteerd; zonder campaigns toont de campaign-lijst een korte melding dat de DM een campaign-bestand kan importeren.
 ### DC-110 — Campaign importeren uit een Markdown-bestand
 P1
 Als DM wil ik een campaign die ik op de PC heb voorbereid in een Markdown-bestand kunnen importeren, zodat ik hem tijdens de sessie op mijn telefoon kan gebruiken.
@@ -627,7 +628,6 @@ Acceptance criteria
 - De campaign wordt gelezen volgens het formaat in docs/campaign-format.md: scenes met tiles, Player Characters, NPC's, locations, encounters en campaign notes.
 - Na het importeren staat de campaign in de campaign-lijst en kan hij worden geopend zoals elke andere campaign.
 - De campaign wordt lokaal bewaard en blijft na een refresh of het sluiten van de app beschikbaar.
-- De demo campaigns blijven beschikbaar.
 ### DC-111 — Bestaande campaign vervangen
 P1
 Als DM wil ik een campaign opnieuw kunnen importeren nadat ik het bestand heb aangepast, zodat de nieuwe versie de oude vervangt.
@@ -642,11 +642,11 @@ Acceptance criteria
 - Bij een fout wordt er niets geïmporteerd of vervangen.
 - De melding noemt het regelnummer en wat er mis is, bijvoorbeeld een verwijzing naar een NPC die niet bestaat.
 - Alle gevonden fouten worden tegelijk getoond, niet alleen de eerste.
-### DC-113 — Geïmporteerde campaign verwijderen
+### DC-113 — Campaign verwijderen
 P1
-Als DM wil ik een geïmporteerde campaign kunnen verwijderen, bijvoorbeeld de oude versie nadat ik een campaign een andere naam heb gegeven.
+Als DM wil ik een campaign kunnen verwijderen, bijvoorbeeld de oude versie nadat ik een campaign een andere naam heb gegeven.
 Acceptance criteria
-- Alleen geïmporteerde campaigns kunnen worden verwijderd, de demo campaigns niet.
+- Iedere campaign kan worden verwijderd (D76: alle campaigns zijn geïmporteerd).
 - De app vraagt om bevestiging voordat de campaign wordt verwijderd.
 - Ook de opgeslagen session state van die campaign (laatste scene, actieve combat) wordt verwijderd.
 ### DC-114 — Eigen Player Characters bij een gedeelde campaign
@@ -654,7 +654,7 @@ P1
 Toegevoegd door de product owner op 2026-10-15.
 Als DM wil ik de Player Characters van een campaign in de app zelf kunnen beheren, zodat ik een campaign-bestand kan gebruiken dat ik met andere DM's deel, ook al speelt iedere DM met andere spelers.
 Acceptance criteria
-- De Player Characters horen bij één campaign op dit apparaat; iedere campaign heeft zijn eigen lijst. Dit geldt voor alle campaigns, ook de demo campaigns, zodat die werken zoals echte campaigns.
+- De Player Characters horen bij één campaign op dit apparaat; iedere campaign heeft zijn eigen lijst.
 - De DM kan in de app een Player Character toevoegen (op naam), een naam wijzigen en een Player Character verwijderen.
 - Player Characters worden niet uit het campaign-bestand gelezen. Een bestand met een sectie "## Player characters" geeft een foutmelding (DC-112). Dit vervangt "Player Characters" in de acceptance criteria van DC-110.
 - Bij opnieuw importeren (DC-111) blijft de lijst van de DM ongewijzigd.

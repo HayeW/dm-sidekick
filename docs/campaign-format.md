@@ -1,7 +1,8 @@
 # Campaign file format
 
 Status: **approved by the product owner on 2026-10-13**; player characters removed on
-2026-10-15 (DC-114). Stories: DC-110 – DC-114 in `requirements.md`.
+2026-10-15 (DC-114), and the demo campaign names allowed again on 2026-10-15 (D76).
+Stories: DC-110 – DC-114 in `requirements.md`.
 
 A campaign is one Markdown file (`.md`), written on the PC in any text editor and imported
 in the app on the phone. It is plain Markdown, so it also reads well in an editor preview.
@@ -11,7 +12,8 @@ in the app (DC-114).
 
 ## A complete example
 
-This is the demo campaign "Shadows over Millbrook" as a file:
+This is "Shadows over Millbrook", the campaign the app's tests play with
+(`src/test/campaigns/`), as a file:
 
 ```markdown
 # Shadows over Millbrook
@@ -115,7 +117,6 @@ from somewhere below the floorboards.
 
 - The file starts with **one** `# Campaign name` heading. The name identifies the campaign:
   importing a file with the same name replaces that campaign, after a confirmation (DC-111).
-- The name may not be the name of a demo campaign.
 
 ### Sections (`##`)
 
@@ -184,14 +185,13 @@ first five and how many more there are (D56). Nothing is imported until the file
 - `Line 62: "### Location: Crooked Kettle" — there is no location with that name.`
 - `Line 31: "- 3 Goblins" — expected an enemy like "- 3 × Goblin, 7 HP".`
 - `Line 88: "## NPCs" appears twice.`
-- `Line 1: "Shadows over Millbrook" is the name of a demo campaign.`
 
 ## Decisions (product owner, 2026-10-13)
 
 - **Section and tile names are English**, matching the English UI (D10).
 - **Unknown headings are an error**, so typos are caught early.
-- **A demo campaign's name is an error**, to keep things simple; the demo campaigns will be
-  removed later.
+- **A demo campaign's name was an error.** Dropped on 2026-10-15 together with the demo
+  campaigns (D76): every name is allowed.
 - **Lines within a paragraph are joined**, as in Markdown, so wrapped lines in the editor
   read as flowing text on the phone.
 - **An NPC, location or note needs text.** One without a description below it is an error.

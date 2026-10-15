@@ -31,7 +31,7 @@ Read these first; they are the source of truth:
    browser back button), wrong conditions, React pitfalls (hooks called conditionally, missing
    `key`s, stale closures, side effects during render).
 3. **Architecture rules.** `src/domain/` is pure TypeScript (no React, storage or browser
-   APIs). Screens get campaigns via `src/data/campaigns.ts`, never `seed.ts`. Order is array
+   APIs). Screens get campaigns via `src/data/campaigns.ts`, never from storage. Order is array
    order, no `order` fields. Combat never mutates campaign data. Player characters have no HP.
    No dice or initiative (D19); any randomness must be injectable.
 4. **UX rules.** Touch targets ≥ 44 px, frequent actions are one tap without confirmation

@@ -7,11 +7,11 @@ no backend. Goal: as few taps as possible during play ("look → tap → continu
 
 - `requirements.md` — product requirements, domain model and user stories (Dutch).
   Story IDs look like `DC-001`. The requirements are the source of truth.
-- `docs/implementation-plan-slice-7.md` — the current plan (Ending a combat): architecture,
-  screens, decisions D63–D67 and the step-by-step build order with a **Progress** line.
+- `docs/implementation-plan-slice-8.md` — the current plan (Hosting and offline use):
+  architecture, decisions D68–D76 and the step-by-step build order with a **Progress** line.
 - `docs/campaign-format.md` — the Markdown campaign file format the import reads.
-- `docs/implementation-plan-slice-1.md` to `-slice-6.md` — the earlier slices, done:
-  architecture and decisions D1–D62, which still apply.
+- `docs/implementation-plan-slice-1.md` to `-slice-7.md` — the earlier slices, done:
+  architecture and decisions D1–D67, which still apply.
 
 When asked to "do the next step", take the next step from the plan's build order.
 
@@ -43,8 +43,9 @@ The user is on Windows. The terminal may be PowerShell; use commands that work t
 
 - `src/domain/` — pure TypeScript game logic and types. No React, no storage, no browser APIs.
   All rules (combat ordering, damage) live here and are unit-tested.
-- `src/data/` — seed data and persistence. Screens get campaigns via `src/data/campaigns.ts`,
-  never by importing `seed.ts` directly.
+- `src/data/` — persistence: imported campaigns, sessions, player characters. The app has no
+  campaigns of its own (D76). Screens get campaigns via `src/data/campaigns.ts`, never by
+  reading storage directly. Tests use the campaign files in `src/test/campaigns/`.
 - `src/ui/` — screens (`routes/`) and components. They call domain functions and render results.
 - Order is array order (scenes, tiles, combatants). No `order` fields.
 - A combatant is not the same object as a PlayerCharacter; combat never changes campaign data.

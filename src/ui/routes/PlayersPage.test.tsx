@@ -1,5 +1,5 @@
 import { cleanup, screen, within } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { saveImportedCampaign } from '../../data/importedCampaigns';
 import { savePlayers } from '../../data/playerCharacters';
 import {
@@ -9,9 +9,12 @@ import {
   renderWithBrowserBack,
   setupUser,
 } from '../../test/app';
+import { importTestCampaigns } from '../../test/testCampaigns';
 
-const demoId = 'shadows-over-millbrook';
-const roadUrl = `/c/${demoId}/s/scene-mill-road`;
+beforeEach(importTestCampaigns);
+
+const millbrookId = 'imported-shadows-over-millbrook';
+const roadUrl = `/c/${millbrookId}/s/scene-the-mill-road`;
 const playersUrl = (campaignId: string) => `/c/${campaignId}/players`;
 
 const expectHeading = (name: string) =>
@@ -27,24 +30,24 @@ const playersItem = () =>
   });
 
 describe('DC-031 / DC-114 — Player Characters bekijken', () => {
-  it("shows a demo campaign's players, in combat order (D59)", () => {
-    renderAt(playersUrl(demoId));
+  it("shows the DM's stored list, in combat order", () => {
+    renderAt(playersUrl(millbrookId));
 
     expectHeading('Player characters');
     expect(playerNames()).toEqual(['Alice', 'Bob', 'Cora', 'Dain']);
   });
 
   it("shows the DM's own list once it is stored", () => {
-    savePlayers(demoId, [
+    savePlayers(millbrookId, [
       { id: 'pc-1', name: 'Mira' },
       { id: 'pc-2', name: 'Tok' },
     ]);
-    renderAt(playersUrl(demoId));
+    renderAt(playersUrl(millbrookId));
 
     expect(playerNames()).toEqual(['Mira', 'Tok']);
   });
 
-  it('says so when an imported campaign has no players yet (D59)', () => {
+  it('says so when a campaign has no players yet (D59)', () => {
     saveImportedCampaign(['# Hollowmere', '## Scene: The Gate', '### DM notes', 'Fog.'].join('\n'));
     renderAt(playersUrl('imported-hollowmere'));
 
@@ -54,7 +57,7 @@ describe('DC-031 / DC-114 — Player Characters bekijken', () => {
 
   it('goes to the campaign when opened directly, with nothing to go back to', async () => {
     const user = setupUser();
-    renderAt(playersUrl(demoId));
+    renderAt(playersUrl(millbrookId));
 
     await user.click(screen.getByRole('button', { name: '‹ Back' }));
 
@@ -62,7 +65,7 @@ describe('DC-031 / DC-114 — Player Characters bekijken', () => {
   });
 
   it('offers Quick Access on the screen (D22)', () => {
-    renderAt(playersUrl(demoId));
+    renderAt(playersUrl(millbrookId));
 
     expect(screen.getByRole('link', { name: 'Quick' })).toBeInTheDocument();
   });
@@ -76,7 +79,7 @@ describe('DC-031 / DC-114 — Player Characters bekijken', () => {
 
 describe('DC-021 — Quick Access items tonen: Player characters (D58)', () => {
   it('shows how many players the campaign has, below Spare NPCs', () => {
-    renderAt(`/c/${demoId}/quick`);
+    renderAt(`/c/${millbrookId}/quick`);
 
     expect(playersItem()).toHaveTextContent('4 players');
     const titles = within(screen.getByRole('list', { name: 'Quick Access items' }))
@@ -88,13 +91,13 @@ describe('DC-021 — Quick Access items tonen: Player characters (D58)', () => {
   });
 
   it('says "1 player" and "0 players"', () => {
-    savePlayers(demoId, [{ id: 'pc-1', name: 'Mira' }]);
-    const { unmount } = renderAt(`/c/${demoId}/quick`);
+    savePlayers(millbrookId, [{ id: 'pc-1', name: 'Mira' }]);
+    const { unmount } = renderAt(`/c/${millbrookId}/quick`);
     expect(playersItem()).toHaveTextContent(/1 player(?!s)/);
     unmount();
 
-    savePlayers(demoId, []);
-    renderAt(`/c/${demoId}/quick`);
+    savePlayers(millbrookId, []);
+    renderAt(`/c/${millbrookId}/quick`);
     expect(playersItem()).toHaveTextContent('0 players');
   });
 
@@ -223,12 +226,12 @@ describe('DC-030 / DC-114 — Player Characters toevoegen, hernoemen en verwijde
 
   it('keeps the changes after a refresh', async () => {
     const user = setupUser();
-    const { unmount } = renderAt(playersUrl(demoId));
+    const { unmount } = renderAt(playersUrl(millbrookId));
     await user.click(screen.getByRole('button', { name: 'Remove Bob' }));
     await user.type(nameField(), 'Mira{Enter}');
     unmount();
 
-    renderAt(playersUrl(demoId));
+    renderAt(playersUrl(millbrookId));
 
     expect(playerNames()).toEqual(['Alice', 'Cora', 'Dain', 'Mira']);
   });

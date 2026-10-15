@@ -1,6 +1,5 @@
 import { screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
-import { getCampaign } from '../../data/campaigns';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { setActiveCombat } from '../../data/combats';
 import { startCombat } from '../../domain/combat';
 import {
@@ -10,10 +9,13 @@ import {
   renderWithBrowserBack,
   setupUser,
 } from '../../test/app';
+import { importTestCampaigns, millbrook } from '../../test/testCampaigns';
+
+beforeEach(importTestCampaigns);
 
 describe('DC-020 — Quick Access openen', () => {
-  const campaign = getCampaign('shadows-over-millbrook')!;
-  const roadUrl = `/c/${campaign.id}/s/scene-mill-road`;
+  const campaign = millbrook;
+  const roadUrl = `/c/${campaign.id}/s/scene-the-mill-road`;
   const quickUrl = `/c/${campaign.id}/quick`;
 
   const expectHeading = (name: string) =>
@@ -92,8 +94,8 @@ describe('DC-020 — Quick Access openen', () => {
 });
 
 describe('DC-020 — Quick Access openen vanaf beschrijving en combat', () => {
-  const campaign = getCampaign('shadows-over-millbrook')!;
-  const roadUrl = `/c/${campaign.id}/s/scene-mill-road`;
+  const campaign = millbrook;
+  const roadUrl = `/c/${campaign.id}/s/scene-the-mill-road`;
 
   const expectHeading = (name: string) =>
     expect(screen.getByRole('heading', { level: 1, name })).toBeInTheDocument();
@@ -166,8 +168,8 @@ describe('DC-020 — Quick Access openen vanaf beschrijving en combat', () => {
 });
 
 describe('DC-021 — Quick Access items tonen: Combat', () => {
-  const campaign = getCampaign('shadows-over-millbrook')!;
-  const roadUrl = `/c/${campaign.id}/s/scene-mill-road`;
+  const campaign = millbrook;
+  const roadUrl = `/c/${campaign.id}/s/scene-the-mill-road`;
 
   const expectHeading = (name: string) =>
     expect(screen.getByRole('heading', { level: 1, name })).toBeInTheDocument();
@@ -252,7 +254,10 @@ describe('DC-021 — Quick Access items tonen: Combat', () => {
   it('shows "In progress" for a combat without a known encounter', async () => {
     const user = setupUser();
     const encounter = campaign.encounters[0]!;
-    setActiveCombat({ ...startCombat(campaign, 'scene-mill-road', encounter), encounterId: null });
+    setActiveCombat({
+      ...startCombat(campaign, 'scene-the-mill-road', encounter),
+      encounterId: null,
+    });
     renderAt(roadUrl);
 
     await user.click(screen.getByRole('link', { name: 'Quick' }));
@@ -264,7 +269,7 @@ describe('DC-021 — Quick Access items tonen: Combat', () => {
 
   it('keeps Quick Access in the history when it was opened directly, so Back stays in the app', async () => {
     const user = setupUser();
-    setActiveCombat(startCombat(campaign, 'scene-mill-road', campaign.encounters[0]!));
+    setActiveCombat(startCombat(campaign, 'scene-the-mill-road', campaign.encounters[0]!));
     renderWithBrowserBack(`/c/${campaign.id}/quick`);
 
     await user.click(screen.getByRole('link', { name: /Combat/ }));

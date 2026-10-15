@@ -1,10 +1,12 @@
 import { screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
-import { getCampaign } from '../../data/campaigns';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { pressBrowserBack, renderAt, renderWithBrowserBack, setupUser } from '../../test/app';
+import { importTestCampaigns, millbrook } from '../../test/testCampaigns';
 
-const campaign = getCampaign('shadows-over-millbrook')!;
-const roadUrl = `/c/${campaign.id}/s/scene-mill-road`;
+beforeEach(importTestCampaigns);
+
+const campaign = millbrook;
+const roadUrl = `/c/${campaign.id}/s/scene-the-mill-road`;
 
 const expectHeading = (name: string) =>
   expect(screen.getByRole('heading', { level: 1, name })).toBeInTheDocument();
@@ -18,7 +20,7 @@ describe('DC-014 — Notes tile openen', () => {
     await user.click(notesTile());
 
     expectHeading('DM Notes');
-    expect(screen.getByText(/The boss carries the miller’s key\./)).toBeInTheDocument();
+    expect(screen.getByText(/The boss carries the miller's key\./)).toBeInTheDocument();
   });
 
   it('returns to the scene in one tap, with Back or the back control', async () => {
@@ -47,7 +49,7 @@ describe('DC-014 — Notes tile openen', () => {
 
   it('opens the scene when opened directly, with nothing to go back to', async () => {
     const user = setupUser();
-    renderAt(`${roadUrl}/b/b-road-notes`);
+    renderAt(`${roadUrl}/b/scene-the-mill-road-tile-3`);
 
     await user.click(screen.getByRole('button', { name: '‹ The Mill Road' }));
 
@@ -55,13 +57,13 @@ describe('DC-014 — Notes tile openen', () => {
   });
 
   it('offers Quick Access on the notes screen (D22)', () => {
-    renderAt(`${roadUrl}/b/b-road-notes`);
+    renderAt(`${roadUrl}/b/scene-the-mill-road-tile-3`);
 
     expect(screen.getByRole('link', { name: 'Quick' })).toBeInTheDocument();
   });
 
   it('does not open notes on a description URL', () => {
-    renderAt(`${roadUrl}/b/b-road-notes/d/d-road-intro`);
+    renderAt(`${roadUrl}/b/scene-the-mill-road-tile-3/d/scene-the-mill-road-tile-1-1`);
 
     expectHeading('Tile not found');
   });
@@ -132,7 +134,7 @@ describe('DC-021 — Quick Access items tonen: Campaign Notes', () => {
 
   it('says so when the campaign has no notes', async () => {
     const user = setupUser();
-    renderAt('/c/the-sunken-bell/s/scene-harbour');
+    renderAt('/c/imported-the-sunken-bell/s/scene-the-harbour-at-low-tide');
     await user.click(screen.getByRole('link', { name: 'Quick' }));
     expect(quickItem(/Campaign Notes/)).toHaveTextContent('0 notes');
 
