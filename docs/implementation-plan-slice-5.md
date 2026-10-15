@@ -64,7 +64,8 @@ Everything happens on the campaign list (`/`):
 
 Each step is small, ends with `npm run check` green and a working app, and is one commit.
 
-**Progress:** step 1 (reading the structure) ✅ done · **next: step 2**.
+**Progress:** step 1 (reading the structure) ✅ done · step 2 (reading the content) ✅ done ·
+**next: step 3**.
 
 | Step | Content                                                                                                                                              | Stories        | Tests                                                                                                            |
 | ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- | ---------------------------------------------------------------------------------------------------------------- |
@@ -104,6 +105,20 @@ Numbering continues from the fourth slice. Answers in **bold**. **Status: all co
   URL".
 - **D51 — Delete** is a small `Delete` button on an imported campaign's card in the list,
   with the same kind of confirmation panel. Decision: **yes.**
+
+**Details settled while building (step 2, within D47):**
+
+- Ids keep letters with accents (`npc-zoë`); a name without letters or digits gets
+  `unnamed`. Two names in a section that differ only in punctuation ("Old-Fenn", "Old
+  Fenn!") are allowed and get `-2`, `-3` in file order; swapping them in the file swaps
+  their ids.
+- An NPC listed twice in one `### NPCs` tile is an error (the app shows each NPC once).
+- Names are compared in Unicode NFC, so an accent typed either way matches.
+- An enemy line whose name starts with a count (`- 3 Goblins, 7 HP`, `- 3xGoblin, 7 HP`)
+  is an error, not one enemy called "3 Goblins".
+- **For step 3:** two campaign names can give the same id ("Test" and "test", or "A!" and
+  "A?"). Proposal: store imported campaigns by id and treat the same id as the same
+  campaign (replace confirmation), which also matches how sessions are stored.
 
 **Open follow-ups from earlier slices that stay open:** resume per encounter / "New
 combat" (D1, D16), Undo after removing a combatant (D18), screen readers on a phone cannot

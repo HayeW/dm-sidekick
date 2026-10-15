@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 // Vite reads the file as text; no Node APIs needed.
 import formatDoc from '../../docs/campaign-format.md?raw';
-import { readCampaignStructure } from './campaignMarkdown';
+import { seedCampaigns } from '../data/seed';
+import type { Campaign } from './campaign';
+import { parseCampaign, readCampaignStructure } from './campaignMarkdown';
 
 /** The complete example from docs/campaign-format.md, so the document can't drift. */
 const formatExample = (() => {
@@ -371,5 +373,367 @@ describe('DC-112 — Duidelijke foutmeldingen: zoals editors bestanden opslaan',
       'Innkeeper of the Crooked Kettle. Warm to regulars, wary of strangers; keeps a cudgel under the bar.',
     );
     expect(draft.scenes[0]!.tiles[0]).toMatchObject({ kind: 'read-aloud', title: 'Intro' });
+  });
+});
+
+const parse = (...lines: string[]) => parseCampaign(file(...lines), ['Shadows over Millbrook']);
+const campaignOf = (...lines: string[]) => {
+  const result = parse(...lines);
+  if ('errors' in result) throw new Error(JSON.stringify(result.errors));
+  return result.campaign;
+};
+const parseErrors = (...lines: string[]) => {
+  const result = parse(...lines);
+  return 'errors' in result ? result.errors : [];
+};
+
+/**
+ * A campaign without its ids: references become names. Two campaigns with the same shape
+ * show the same content in the app, whatever their ids.
+ */
+function shape(campaign: Campaign) {
+  const nameOf = (items: { id: string; name: string }[], id: string) =>
+    items.find((item) => item.id === id)?.name;
+  return {
+    name: campaign.name,
+    playerCharacters: campaign.playerCharacters.map((pc) => pc.name),
+    npcs: campaign.npcs.map(({ name, description }) => ({ name, description })),
+    locations: campaign.locations.map(({ name, description }) => ({ name, description })),
+    encounters: campaign.encounters.map(({ name, enemies }) => ({ name, enemies })),
+    notes: campaign.notes.map(({ title, text }) => ({ title, text })),
+    scenes: campaign.scenes.map((scene) => ({
+      title: scene.title,
+      blocks: scene.blocks.map((block) => {
+        switch (block.type) {
+          case 'descriptions':
+            return { descriptions: block.descriptions.map(({ title, text }) => ({ title, text })) };
+          case 'location':
+            return { location: nameOf(campaign.locations, block.locationId) };
+          case 'encounter':
+            return { encounter: nameOf(campaign.encounters, block.encounterId) };
+          case 'npcs':
+            return { npcs: block.npcIds.map((id) => nameOf(campaign.npcs, id)) };
+          case 'notes':
+            return { notes: block.text };
+        }
+      }),
+    })),
+  };
+}
+
+describe('DC-110 — Campaign importeren: de inhoud', () => {
+  it('reads the format document’s example as the same campaign as the demo seed', () => {
+    const renamed = formatExample.replace('# Shadows over Millbrook', '# Shadows over Hollowmere');
+    const result = parseCampaign(renamed, ['Shadows over Millbrook']);
+    if ('errors' in result) throw new Error(JSON.stringify(result.errors));
+
+    const demo = shape(seedCampaigns[0]!);
+    // The seed uses a typographic apostrophe where the file has a plain one.
+    const expected = JSON.parse(JSON.stringify(demo).replaceAll('’', "'")) as typeof demo;
+    expect(shape(result.campaign)).toEqual({ ...expected, name: 'Shadows over Hollowmere' });
+  });
+
+  it('reads enemies with a count, with "x" for "×", and without a count as one', () => {
+    const campaign = campaignOf(
+      '# Test campaign',
+      '## Encounters',
+      '### Ambush',
+      '- 3 × Goblin, 7 HP',
+      '- 2 x Wolf, 11 HP',
+      '- Goblin Boss, 21 HP',
+      '- 1 X Ogre , 59 hp',
+      ...minimal.slice(2),
+    );
+
+    expect(campaign.encounters[0]!.enemies).toEqual([
+      { name: 'Goblin', count: 3, hp: 7 },
+      { name: 'Wolf', count: 2, hp: 11 },
+      { name: 'Goblin Boss', count: 1, hp: 21 },
+      { name: 'Ogre', count: 1, hp: 59 },
+    ]);
+  });
+
+  it('finds locations, encounters and NPCs by name, whatever the case', () => {
+    const campaign = campaignOf(
+      '# Test campaign',
+      '## NPCs',
+      '### Marta Hollow',
+      'Innkeeper.',
+      '## Locations',
+      '### The Crooked Kettle',
+      'Smoky inn.',
+      '## Encounters',
+      '### Ambush',
+      '- Goblin, 7 HP',
+      '## Scene: Road',
+      '### Location: the crooked kettle',
+      '### Encounter: AMBUSH',
+      '### NPCs',
+      '- marta hollow',
+    );
+
+    expect(campaign.scenes[0]!.blocks).toEqual([
+      expect.objectContaining({ type: 'location', locationId: campaign.locations[0]!.id }),
+      expect.objectContaining({ type: 'encounter', encounterId: campaign.encounters[0]!.id }),
+      expect.objectContaining({ type: 'npcs', npcIds: [campaign.npcs[0]!.id] }),
+    ]);
+  });
+
+  it('makes one Descriptions tile of read-aloud texts in a row (D11)', () => {
+    const campaign = campaignOf(
+      '# Test campaign',
+      '## Scene: Road',
+      '### Read-aloud: Intro',
+      'Rain.',
+      '### Read-aloud: Arriving',
+      'Mud.',
+      '### DM notes',
+      'Quiet.',
+      '### Read-aloud: Leaving',
+      'Sun.',
+    );
+
+    const blocks = campaign.scenes[0]!.blocks;
+    expect(blocks.map((block) => block.type)).toEqual(['descriptions', 'notes', 'descriptions']);
+    expect(blocks[0]).toMatchObject({
+      descriptions: [
+        { title: 'Intro', text: 'Rain.' },
+        { title: 'Arriving', text: 'Mud.' },
+      ],
+    });
+    expect(blocks[2]).toMatchObject({ descriptions: [{ title: 'Leaving', text: 'Sun.' }] });
+  });
+});
+
+describe('DC-110 — Campaign importeren: ids blijven gelijk bij opnieuw importeren (D47)', () => {
+  const lines = [
+    '# The Sunken Bell, part 2',
+    '## Player characters',
+    '- Esme',
+    '## NPCs',
+    '### Old Fenn',
+    'Ferryman.',
+    '## Scene: The Harbour at Low Tide',
+    '### Read-aloud: Intro',
+    'Mud.',
+    '### NPCs',
+    '- Old Fenn',
+  ];
+
+  it('makes ids from names, and tile ids from their position in the scene', () => {
+    const campaign = campaignOf(...lines);
+
+    expect(campaign.id).toBe('imported-the-sunken-bell-part-2');
+    expect(campaign.playerCharacters[0]!.id).toBe('pc-esme');
+    expect(campaign.npcs[0]!.id).toBe('npc-old-fenn');
+    const scene = campaign.scenes[0]!;
+    expect(scene.id).toBe('scene-the-harbour-at-low-tide');
+    expect(scene.blocks.map((block) => block.id)).toEqual([
+      'scene-the-harbour-at-low-tide-tile-1',
+      'scene-the-harbour-at-low-tide-tile-2',
+    ]);
+    expect(scene.blocks[0]).toMatchObject({
+      descriptions: [{ id: 'scene-the-harbour-at-low-tide-tile-1-1' }],
+    });
+  });
+
+  it('gives the same ids when the file is read again, also after other changes', () => {
+    const changed = [...lines.slice(0, 6), '### Marta', 'Innkeeper.', ...lines.slice(6)];
+
+    expect(campaignOf(...lines)).toEqual(campaignOf(...lines));
+    expect(campaignOf(...changed).scenes[0]!.id).toBe(campaignOf(...lines).scenes[0]!.id);
+    expect(campaignOf(...changed).npcs[0]!.id).toBe('npc-old-fenn');
+  });
+
+  it('keeps letters with accents and gives names that look alike different ids', () => {
+    const campaign = campaignOf(
+      '# Test campaign',
+      '## NPCs',
+      '### Zoë',
+      'Smith.',
+      '### Old-Fenn',
+      'Ferryman.',
+      '### Old Fenn!',
+      'His brother.',
+      '### ???',
+      'Nobody knows.',
+      ...minimal.slice(2),
+    );
+
+    expect(campaign.npcs.map((npc) => npc.id)).toEqual([
+      'npc-zoë',
+      'npc-old-fenn',
+      'npc-old-fenn-2',
+      'npc-unnamed',
+    ]);
+  });
+});
+
+describe('DC-112 — Duidelijke foutmeldingen: de inhoud', () => {
+  it('reports an enemy line it cannot read', () => {
+    expect(
+      parseErrors(
+        '# Test campaign',
+        '## Encounters',
+        '### Ambush',
+        '- 3 Goblins',
+        '- 0 × Goblin, 7 HP',
+        '- Goblin, 0 HP',
+        ...minimal.slice(2),
+      ),
+    ).toEqual([
+      { line: 4, message: '"- 3 Goblins" — expected an enemy like "- 3 × Goblin, 7 HP".' },
+      { line: 5, message: '"- 0 × Goblin, 7 HP" — expected an enemy like "- 3 × Goblin, 7 HP".' },
+      { line: 6, message: '"- Goblin, 0 HP" — expected an enemy like "- 3 × Goblin, 7 HP".' },
+    ]);
+  });
+
+  it('reports a count without "×" instead of reading it as part of the name', () => {
+    const errors = parseErrors(
+      '# Test campaign',
+      '## Encounters',
+      '### Ambush',
+      '- 3 Goblins, 7 HP',
+      '- 3xGoblin, 7 HP',
+      '- 2nd Lieutenant, 12 HP',
+      ...minimal.slice(2),
+    );
+
+    expect(errors.map((e) => e.line)).toEqual([4, 5]);
+  });
+
+  it('reports a location, encounter or NPC that does not exist', () => {
+    expect(
+      parseErrors(
+        ...minimal,
+        '### Location: Crooked Kettle',
+        '### Encounter: Ambush',
+        '### NPCs',
+        '- Marta',
+      ),
+    ).toEqual([
+      { line: 7, message: '"### Location: Crooked Kettle" — there is no location with that name.' },
+      { line: 8, message: '"### Encounter: Ambush" — there is no encounter with that name.' },
+      { line: 10, message: '"- Marta" — there is no NPC with that name.' },
+    ]);
+  });
+
+  it('reports a name that appears twice in a section, whatever the case', () => {
+    expect(
+      parseErrors(
+        '# Test campaign',
+        '## Player characters',
+        '- Alice',
+        '- alice',
+        '## NPCs',
+        '### Marta',
+        'Innkeeper.',
+        '### MARTA',
+        'Her twin.',
+        ...minimal.slice(2),
+        '## Scene: road',
+        '### DM notes',
+        'Again.',
+      ),
+    ).toEqual([
+      { line: 4, message: '"alice" appears twice in Player characters (first on line 3).' },
+      { line: 8, message: '"MARTA" appears twice in NPCs (first on line 6).' },
+      { line: 14, message: '"road" appears twice in scenes (first on line 10).' },
+    ]);
+  });
+
+  it('allows the same name in different sections', () => {
+    expect(
+      parseErrors(
+        '# Test campaign',
+        '## NPCs',
+        '### Millbrook',
+        'A person.',
+        '## Notes',
+        '### Millbrook',
+        'A village.',
+        '## Scene: Millbrook',
+        '### DM notes',
+        'Quiet.',
+      ),
+    ).toEqual([]);
+  });
+
+  it('reports an NPC listed twice in one NPCs tile', () => {
+    expect(
+      parseErrors(
+        '# Test campaign',
+        '## NPCs',
+        '### Marta',
+        'Innkeeper.',
+        ...minimal.slice(2),
+        '### NPCs',
+        '- Marta',
+        '- marta',
+      ),
+    ).toEqual([{ line: 11, message: '"- marta" is already in this list.' }]);
+  });
+
+  it('reports the name of a demo campaign, whatever the case (D45)', () => {
+    expect(parseErrors('# shadows over millbrook', ...minimal.slice(1))).toEqual([
+      { line: 1, message: '"shadows over millbrook" is the name of a demo campaign.' },
+    ]);
+  });
+
+  it('reports structure and content errors together, in line order', () => {
+    expect(
+      parseErrors('# Test campaign', '## Monsters', ...minimal.slice(2), '### NPCs', '- Marta'),
+    ).toEqual([
+      expect.objectContaining({ line: 2, message: expect.stringContaining('unknown section') }),
+      { line: 8, message: '"- Marta" — there is no NPC with that name.' },
+    ]);
+  });
+
+  it('reports a name that appears twice in Locations, Encounters or Notes', () => {
+    expect(
+      parseErrors(
+        '# Test campaign',
+        '## Locations',
+        '### Inn',
+        'Smoky.',
+        '### inn',
+        'Again.',
+        '## Encounters',
+        '### Ambush',
+        '- Goblin, 7 HP',
+        '### Ambush',
+        '- Wolf, 11 HP',
+        '## Notes',
+        '### Village',
+        'Small.',
+        '### Village',
+        'Again.',
+        ...minimal.slice(2),
+      ).map((e) => e.message),
+    ).toEqual([
+      '"inn" appears twice in Locations (first on line 3).',
+      '"Ambush" appears twice in Encounters (first on line 8).',
+      '"Village" appears twice in Notes (first on line 13).',
+    ]);
+  });
+
+  it('finds a name typed with a combining accent (NFC)', () => {
+    expect(
+      parseErrors(
+        '# Test campaign',
+        '## NPCs',
+        '### Zoë',
+        'Smith.',
+        ...minimal.slice(2),
+        '### NPCs',
+        '- Zoë',
+      ),
+    ).toEqual([]);
+  });
+
+  it('does not report a missing name twice', () => {
+    expect(parseErrors(...minimal, '### Location:')).toEqual([
+      { line: 7, message: '"### Location:" needs a name after the colon.' },
+    ]);
   });
 });
