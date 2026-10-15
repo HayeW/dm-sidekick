@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- DM Sidekick icon (D71): a d20 outline on the app's dark background. Full-bleed, and the
+       die stays inside the central circle that maskable icons keep (radius 40%). -->
+  <rect width="512" height="512" fill="#16161d"/>
+  <g fill="none" stroke="#ececf1" stroke-width="14" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M256 88 L401.5 172 L401.5 340 L256 424 L110.5 340 L110.5 172 Z"/>
+    <path d="M256 180 L342 328 L170 328 Z"/>
+    <path d="M256 88 L256 180 M110.5 172 L256 180 L401.5 172 M110.5 172 L170 328 L110.5 340 M170 328 L256 424 L342 328 M401.5 172 L342 328 L401.5 340"/>
+  </g>
+</svg>

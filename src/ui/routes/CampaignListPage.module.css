@@ -69,6 +69,14 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Small and quiet (D74): only there to tell which build the phone runs. */
+.version {
+  margin: calc(var(--space) * 2) 0 0;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  text-align: center;
+}
+
 .panel {
   margin-bottom: var(--space);
   padding: var(--space);

@@ -1,5 +1,6 @@
 import { defineConfig, type Plugin } from 'vitest/config';
 import react from '@vitejs/plugin-react';
+import packageJson from './package.json';
 
 // GitHub Pages serves the app at https://hayew.github.io/dm-sidekick/ (D69).
 const pagesBase = '/dm-sidekick/';
@@ -22,6 +23,12 @@ export default defineConfig(({ command, isPreview }) => ({
   // The dev server and the tests stay at '/'; the build and `npm run preview` use the Pages path.
   base: command === 'build' || isPreview ? pagesBase : '/',
   plugins: [react(), spaFallback()],
+  // The version line on the campaign list (D74); see src/buildInfo.d.ts. The build date is
+  // the UTC date, as on GitHub Actions, which builds the version the phone runs.
+  define: {
+    __APP_VERSION__: JSON.stringify(packageJson.version),
+    __BUILD_DATE__: JSON.stringify(new Date().toISOString().slice(0, 10)),
+  },
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],

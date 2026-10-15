@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import { getCampaign, getCampaigns } from '../../data/campaigns';
 import { deleteImportedCampaign, saveImportedCampaign } from '../../data/importedCampaigns';
 import { parseCampaign } from '../../domain/campaignMarkdown';
+import { versionText } from '../versionText';
 import styles from './CampaignListPage.module.css';
 
 /** A campaign file is a few kilobytes; a bigger file was picked by mistake (D55). */
@@ -223,6 +224,8 @@ export default function CampaignListPage() {
         hidden
         onChange={(event) => void importFile(event)}
       />
+
+      <p className={styles.version}>{versionText(__APP_VERSION__, __BUILD_DATE__)}</p>
     </main>
   );
 }

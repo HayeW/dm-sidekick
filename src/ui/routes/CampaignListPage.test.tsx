@@ -1,5 +1,6 @@
 import { screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import packageJson from '../../../package.json';
 import { saveImportedCampaign } from '../../data/importedCampaigns';
 import { combatOrder, renderAt, setupUser } from '../../test/app';
 import { importTestCampaigns } from '../../test/testCampaigns';
@@ -402,5 +403,16 @@ describe('DC-112 — Duidelijke foutmeldingen: een verkeerd bestand', () => {
     const panel = await screen.findByRole('region', { name: 'Could not import notes.md' });
     expect(within(panel).getAllByRole('listitem')).toHaveLength(5);
     expect(within(panel).queryByText(/more error/)).not.toBeInTheDocument();
+  });
+});
+
+describe('DC-100 — Mobile-first: version on the campaign list (D74)', () => {
+  it('shows the package version and the build date at the bottom', () => {
+    renderAt('/');
+
+    const line = screen.getByText(/^Version /).textContent ?? '';
+    const [version, date] = line.replace('Version ', '').split(' · ');
+    expect(version).toBe(packageJson.version);
+    expect(date).toMatch(/^\d{1,2} [A-Z][a-z]{2} \d{4}$/);
   });
 });
