@@ -1,8 +1,8 @@
-import { screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { screen, within } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { getCampaigns } from '../../data/campaigns';
 import { saveImportedCampaign } from '../../data/importedCampaigns';
-import { renderAt, setupUser } from '../../test/app';
+import { combatOrder, renderAt, setupUser } from '../../test/app';
 
 describe('DC-001 — Campaigns tonen', () => {
   it('shows a list with the name of every campaign', () => {
@@ -44,5 +44,222 @@ describe('DC-001 — Campaigns tonen', () => {
     renderAt('/c/does-not-exist');
 
     expect(screen.getByRole('heading', { name: 'Campaign not found' })).toBeInTheDocument();
+  });
+});
+
+/** A campaign file as the DM writes it on the PC. */
+const hollowmere = (secondScene = 'The Bridge') =>
+  [
+    '# Hollowmere',
+    '',
+    '## Encounters',
+    '',
+    '### Trolls',
+    '',
+    '- 2 × Troll, 30 HP',
+    '',
+    '## Scene: The Gate',
+    '',
+    '### Read-aloud: Intro',
+    '',
+    'Fog rolls over the marsh.',
+    '',
+    `## Scene: ${secondScene}`,
+    '',
+    '### Encounter: Trolls',
+  ].join('\n');
+
+const asFile = (text: string, name = 'hollowmere.md') =>
+  new File([text], name, { type: 'text/markdown' });
+
+/** Picks a file in the device's file picker behind "Import campaign". */
+async function importFile(user: ReturnType<typeof setupUser>, file: File) {
+  await user.upload(screen.getByLabelText('Campaign file'), file);
+}
+
+const campaignLink = (name: RegExp) => screen.queryByRole('link', { name });
+
+describe('DC-110 — Campaign importeren uit een Markdown-bestand', () => {
+  it('has an Import campaign button that opens the file picker for Markdown files', () => {
+    renderAt('/');
+
+    expect(screen.getByRole('button', { name: 'Import campaign' })).toBeInTheDocument();
+    expect(screen.getByLabelText('Campaign file')).toHaveAttribute(
+      'accept',
+      expect.stringContaining('.md'),
+    );
+  });
+
+  it('imports a file: the campaign is in the list, opens and can be played', async () => {
+    const user = setupUser();
+    renderAt('/');
+
+    await importFile(user, asFile(hollowmere()));
+    await user.click(await screen.findByRole('link', { name: /Hollowmere/ }));
+
+    expect(screen.getByRole('heading', { level: 1, name: 'The Gate' })).toBeInTheDocument();
+    await user.click(
+      within(screen.getByRole('navigation', { name: 'Scenes' })).getByRole('link', {
+        name: /Next/,
+      }),
+    );
+    await user.click(screen.getByRole('button', { name: 'Start combat' }));
+    expect(combatOrder()).toEqual(['Troll 1 · 30/30 HP', 'Troll 2 · 30/30 HP']);
+  });
+
+  it('keeps the imported campaign after a refresh, next to the demo campaigns', async () => {
+    const user = setupUser();
+    const { unmount } = renderAt('/');
+    await importFile(user, asFile(hollowmere()));
+    await screen.findByRole('link', { name: /Hollowmere/ });
+    unmount();
+
+    renderAt('/');
+
+    expect(campaignLink(/Hollowmere/)).toBeInTheDocument();
+    expect(campaignLink(/Shadows over Millbrook/)).toBeInTheDocument();
+  });
+});
+
+describe('DC-112 — Duidelijke foutmeldingen bij importeren', () => {
+  const broken = ['# Hollowmere', '## Monsters', '## Scene: The Gate', '### NPCs', '- Marta'];
+
+  it('shows every error with its line number, and imports nothing', async () => {
+    const user = setupUser();
+    renderAt('/');
+
+    await importFile(user, asFile(broken.join('\n'), 'campaign.md'));
+
+    const panel = await screen.findByRole('region', { name: 'Could not import campaign.md' });
+    expect(
+      within(panel)
+        .getAllByRole('listitem')
+        .map((item) => item.textContent),
+    ).toEqual([
+      'Line 2: unknown section "## Monsters". Expected Player characters, NPCs, Locations, Encounters, Notes or Scene: ….',
+      'Line 5: "- Marta" — there is no NPC with that name.',
+    ]);
+    expect(campaignLink(/Hollowmere/)).not.toBeInTheDocument();
+  });
+
+  it('brings the panel into view, and gives focus back to the button when it closes', async () => {
+    const user = setupUser();
+    renderAt('/');
+    await importFile(user, asFile(broken.join('\n'), 'campaign.md'));
+
+    expect(await screen.findByRole('heading', { name: /Could not import/ })).toHaveFocus();
+    await user.click(screen.getByRole('button', { name: 'Close' }));
+
+    expect(screen.queryByRole('region')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Import campaign' })).toHaveFocus();
+  });
+
+  it('does not replace an imported campaign when the new file has errors', async () => {
+    const user = setupUser();
+    saveImportedCampaign(hollowmere());
+    renderAt('/');
+
+    await importFile(user, asFile(broken.join('\n')));
+    await screen.findByRole('region', { name: /Could not import/ });
+
+    expect(screen.queryByRole('button', { name: 'Replace' })).not.toBeInTheDocument();
+    renderAt('/c/imported-hollowmere/s/scene-the-bridge');
+    expect(screen.getByRole('heading', { level: 1, name: 'The Bridge' })).toBeInTheDocument();
+  });
+});
+
+describe('DC-111 — Bestaande campaign vervangen', () => {
+  async function reimport(answer: 'Replace' | 'Cancel') {
+    const user = setupUser();
+    saveImportedCampaign(hollowmere('The Bridge'));
+    renderAt('/');
+    await importFile(user, asFile(hollowmere('The Ford').replace('# Hollowmere', '# HOLLOWMERE')));
+    const panel = await screen.findByRole('region', { name: 'Replace “Hollowmere”?' });
+    expect(panel).toHaveTextContent('This overwrites the imported version.');
+    await user.click(within(panel).getByRole('button', { name: answer }));
+    return user;
+  }
+
+  it('asks first, and replaces the campaign with the same name', async () => {
+    await reimport('Replace');
+
+    expect(screen.queryByRole('region')).not.toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: /HOLLOWMERE/i })).toHaveLength(1);
+    renderAt('/c/imported-hollowmere/s/scene-the-ford');
+    expect(screen.getByRole('heading', { level: 1, name: 'The Ford' })).toBeInTheDocument();
+  });
+
+  it('changes nothing on Cancel', async () => {
+    await reimport('Cancel');
+
+    expect(screen.queryByRole('region')).not.toBeInTheDocument();
+    expect(campaignLink(/^Hollowmere/)).toBeInTheDocument();
+    renderAt('/c/imported-hollowmere/s/scene-the-bridge');
+    expect(screen.getByRole('heading', { level: 1, name: 'The Bridge' })).toBeInTheDocument();
+  });
+
+  it('keeps the current scene after a re-import, if it still exists (D49)', async () => {
+    const user = setupUser();
+    saveImportedCampaign(hollowmere());
+    renderAt('/c/imported-hollowmere/s/scene-the-bridge').unmount();
+    renderAt('/');
+
+    await importFile(user, asFile(hollowmere().replace('Fog rolls', 'Rain falls')));
+    await user.click(await screen.findByRole('button', { name: 'Replace' }));
+    await user.click(screen.getByRole('link', { name: /Hollowmere/ }));
+
+    expect(screen.getByRole('heading', { level: 1, name: 'The Bridge' })).toBeInTheDocument();
+  });
+});
+
+describe('DC-112 — Duidelijke foutmeldingen: het apparaat', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  const storageFull = () =>
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('full', 'QuotaExceededError');
+    });
+
+  it('tells the DM when there is no room to store the campaign', async () => {
+    const user = setupUser();
+    storageFull();
+    renderAt('/');
+
+    await importFile(user, asFile(hollowmere()));
+
+    const panel = await screen.findByRole('region', { name: 'Could not import hollowmere.md' });
+    expect(panel).toHaveTextContent('There is no room to store it on this device.');
+    expect(campaignLink(/Hollowmere/)).not.toBeInTheDocument();
+  });
+
+  it('tells the DM when there is no room for the replacement, and keeps the old version', async () => {
+    const user = setupUser();
+    saveImportedCampaign(hollowmere('The Bridge'));
+    renderAt('/');
+    await importFile(user, asFile(hollowmere('The Ford')));
+    storageFull();
+
+    await user.click(await screen.findByRole('button', { name: 'Replace' }));
+
+    expect(
+      screen.getByRole('region', { name: 'Could not import hollowmere.md' }),
+    ).toBeInTheDocument();
+    renderAt('/c/imported-hollowmere/s/scene-the-bridge');
+    expect(screen.getByRole('heading', { level: 1, name: 'The Bridge' })).toBeInTheDocument();
+  });
+
+  it('tells the DM when the file cannot be read', async () => {
+    const user = setupUser();
+    vi.spyOn(FileReader.prototype, 'readAsText').mockImplementation(function (this: FileReader) {
+      this.onerror?.(new ProgressEvent('error') as ProgressEvent<FileReader>);
+    });
+    renderAt('/');
+
+    await importFile(user, asFile(hollowmere()));
+
+    const panel = await screen.findByRole('region', { name: 'Could not import hollowmere.md' });
+    expect(panel).toHaveTextContent('The file could not be read.');
   });
 });
