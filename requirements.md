@@ -179,9 +179,11 @@ De state moet echter niet verloren gaan door bijvoorbeeld:
 De actuele combat-state moet daarom lokaal persistent worden opgeslagen.
 De exacte lifecycle van deze state is nog niet definitief bepaald.
 ## 16. Combat lifecycle
-Er is in v1 geen expliciete End Combat-actie.
-De DM kan na afloop van een combat gewoon teruggaan naar de scene.
-De applicatie hoeft niet formeel vast te stellen dat een combat "beëindigd" is.
+Gewijzigd door de product owner op 2026-10-15 (DC-072, DC-073).
+De DM kan een combat beëindigen met een End combat-actie op het combatscherm. Daarna kan in de campaign weer een combat worden gestart.
+De DM kan ook een ander encounter starten terwijl een combat loopt; die vervangt de lopende combat.
+Beide vragen eerst om bevestiging, omdat de combat-state (HP, volgorde) verloren gaat.
+De DM kan na afloop van een combat ook gewoon teruggaan naar de scene; de combat blijft dan actief.
 ## 17. UX-richtlijnen
 Voor veelvoorkomende acties gelden de volgende richtlijnen:
 ActieDoelCampaign → huidige scene1 actie na campaign-selectieIntro bekijken1 tapVorige/volgende scene1 tapNPC bekijken±2 tapsEncounter starten±2 tapsHP aanpassen1 tapVeelgebruikte combatactiezo weinig mogelijk taps
@@ -212,7 +214,7 @@ De volgende aannames zijn momenteel gemaakt:
 - De alfabetische beginvolgorde is een startpunt; de DM bepaalt de uiteindelijke combatvolgorde handmatig.
 - De DM is verantwoordelijk voor correcte interpretatie van D&D-regels.
 - Een combatant met 0 HP hoeft niet automatisch uit de combatvolgorde te verdwijnen.
-- Er is geen expliciete actie nodig om combat te beëindigen.
+- Combat beëindigen is niet verplicht; de DM kan het doen om een nieuw encounter te starten (DC-072, DC-073).
 - Conditions kunnen later worden toegevoegd zonder het basis-combatmodel fundamenteel te wijzigen.
 ## 20. Open vragen
 Deze vragen zijn nog niet definitief beantwoord.
@@ -554,6 +556,25 @@ Acceptance criteria
 - HP is hetzelfde.
 - Dead-status is hetzelfde.
 - Handmatig toegevoegde combatants zijn nog aanwezig.
+### DC-072 — Combat beëindigen
+P1
+Toegevoegd door de product owner op 2026-10-15.
+Als DM wil ik een combat kunnen beëindigen, zodat ik daarna een ander encounter kan starten.
+Acceptance criteria
+- Het combatscherm heeft een End combat-actie.
+- De app vraagt om bevestiging, omdat de combat-state (HP, volgorde, toegevoegde combatants) verloren gaat. Dit is een bewuste uitzondering op "geen bevestigingsschermen", zoals bij verwijderen (DC-113).
+- Bij annuleren verandert er niets.
+- Na het beëindigen is er geen actieve combat meer: elke encounter tile toont weer Start combat, en Quick Access toont Combat als niet beschikbaar.
+- De beëindigde combat komt niet terug na een refresh.
+### DC-073 — Ander encounter starten tijdens een combat
+P1
+Toegevoegd door de product owner op 2026-10-15.
+Als DM wil ik een ander encounter kunnen starten terwijl er nog een combat loopt, zodat ik niet eerst naar het combatscherm hoef om die te beëindigen.
+Acceptance criteria
+- De encounter tile van het lopende encounter toont Resume combat, zoals nu (DC-071).
+- De tile van elk ander encounter toont Start combat.
+- Start combat vraagt dan eerst om bevestiging, met de naam van de lopende combat; bij bevestigen vervangt de nieuwe combat de lopende, bij annuleren verandert er niets.
+- Zonder lopende combat start Start combat direct, zonder bevestiging (DC-043).
 ## Epic 9 — Persistence
 ### DC-080 — Current scene lokaal bewaren
 P0
