@@ -316,8 +316,14 @@ export function parseCampaign(text: string, demoNames: string[] = []): ParseResu
         const group = parseEnemy(enemy.text);
         if (!group) {
           error(enemy.line, `"- ${enemy.text}" — expected an enemy like "- 3 × Goblin, 7 HP".`);
+          return [];
         }
-        return group ? [group] : [];
+        // A stray extra digit would otherwise fill the combat with thousands of enemies.
+        if (group.count > MAX_ENEMY_COUNT) {
+          error(enemy.line, `"- ${enemy.text}" — at most ${MAX_ENEMY_COUNT} enemies in one line.`);
+          return [];
+        }
+        return [group];
       }),
     })),
     scenes: scenes.map((scene) => {
@@ -412,6 +418,8 @@ function slug(name: string): string {
 
 /** `- 3 × Goblin, 7 HP`, `- 3 x Goblin, 7 HP` or `- Goblin Boss, 21 HP`, without the dash. */
 const ENEMY = /^(?:(\d+)\s*(?:×\s*|x\s+))?(.+?)\s*,\s*(\d+)\s*HP$/i;
+/** The most enemies one line may have; more is almost certainly a typo. */
+const MAX_ENEMY_COUNT = 99;
 /** A name that starts with a count: "3 Goblins" or "3xGoblin", a forgotten "×" or space. */
 const COUNT_IN_NAME = /^\d+(?:[\s×x]|$)/i;
 

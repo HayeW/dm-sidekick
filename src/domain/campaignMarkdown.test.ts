@@ -588,6 +588,19 @@ describe('DC-112 — Duidelijke foutmeldingen: de inhoud', () => {
     ]);
   });
 
+  it('allows at most 99 enemies in one line', () => {
+    expect(
+      parseErrors(
+        '# Test campaign',
+        '## Encounters',
+        '### Horde',
+        '- 99 × Rat, 1 HP',
+        '- 100 × Rat, 1 HP',
+        ...minimal.slice(2),
+      ),
+    ).toEqual([{ line: 5, message: '"- 100 × Rat, 1 HP" — at most 99 enemies in one line.' }]);
+  });
+
   it('reports a count without "×" instead of reading it as part of the name', () => {
     const errors = parseErrors(
       '# Test campaign',

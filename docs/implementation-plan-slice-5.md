@@ -78,8 +78,8 @@ Each step is small, ends with `npm run check` green and a working app, and is on
 
 ## 5. Decisions
 
-Numbering continues from the fourth slice. Answers in **bold**. **Status: all confirmed on
-2026-10-13 by the product owner.**
+Numbering continues from the fourth slice. Answers in **bold**. **Status: D43 – D51
+confirmed on 2026-10-13, D52 – D54 on 2026-10-15, by the product owner.**
 
 - **D43 — English section and tile names** (product owner, 2026-10-13): **yes**, matching
   the English UI (D10).
@@ -105,6 +105,14 @@ Numbering continues from the fourth slice. Answers in **bold**. **Status: all co
   URL".
 - **D51 — Delete** is a small `Delete` button on an imported campaign's card in the list,
   with the same kind of confirmation panel. Decision: **yes.**
+- **D52 — At most 99 enemies in one line** (product owner, 2026-10-15): **more is an
+  error**, so a stray extra digit can't fill a combat with thousands of enemies.
+- **D53 — An NPC listed twice in one `### NPCs` tile** (product owner, 2026-10-15): **an
+  error**; the app shows each NPC once. Added to `docs/campaign-format.md`.
+- **D54 — Campaign names that give the same id** ("Test" and "test", "A!" and "A?")
+  (product owner, 2026-10-15): **the same campaign.** Imported campaigns are stored by id;
+  importing a file with an existing id asks to replace it (DC-111). Sessions are stored by
+  id too, so the two stay consistent. For step 3 and 4.
 
 **Details settled while building (step 2, within D47):**
 
@@ -112,13 +120,9 @@ Numbering continues from the fourth slice. Answers in **bold**. **Status: all co
   `unnamed`. Two names in a section that differ only in punctuation ("Old-Fenn", "Old
   Fenn!") are allowed and get `-2`, `-3` in file order; swapping them in the file swaps
   their ids.
-- An NPC listed twice in one `### NPCs` tile is an error (the app shows each NPC once).
 - Names are compared in Unicode NFC, so an accent typed either way matches.
 - An enemy line whose name starts with a count (`- 3 Goblins, 7 HP`, `- 3xGoblin, 7 HP`)
   is an error, not one enemy called "3 Goblins".
-- **For step 3:** two campaign names can give the same id ("Test" and "test", or "A!" and
-  "A?"). Proposal: store imported campaigns by id and treat the same id as the same
-  campaign (replace confirmation), which also matches how sessions are stored.
 
 **Open follow-ups from earlier slices that stay open:** resume per encounter / "New
 combat" (D1, D16), Undo after removing a combatant (D18), screen readers on a phone cannot

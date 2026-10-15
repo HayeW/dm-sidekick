@@ -143,6 +143,7 @@ One line per group: `- <count> × <name>, <HP> HP`.
 - `- 3 × Goblin, 7 HP` — three goblins, 7 HP each. In the app: Goblin 1, Goblin 2, Goblin 3.
 - `- Goblin Boss, 21 HP` — without a count: one.
 - `x` works as well as `×`: `- 3 x Goblin, 7 HP`.
+- At most 99 enemies in one line; more is almost certainly a typo.
 
 ### Tiles in a scene (`###`)
 
@@ -165,6 +166,7 @@ Descriptions tile.
 - Locations, NPCs and encounters are referred to by their **name**, not by an id. Upper and
   lower case don't matter: `### Location: the crooked kettle` finds "The Crooked Kettle".
 - Within a section, every name must be unique, and so must the scene titles.
+- A name may appear only once in an `### NPCs` tile.
 
 ### Text
 
