@@ -56,7 +56,7 @@ src/ui/components/SceneTile.tsx  Resume combat only on the running encounter's t
 
 Each step is small, ends with `npm run check` green and a working app, and is one commit.
 
-**Progress:** not started · **next: step 1** (after approval).
+**Progress:** step 1 (ending in the data) ✅ done · **next: step 2**.
 
 | Step | Content                                                                        | Stories | Tests                                                                                                       |
 | ---- | ------------------------------------------------------------------------------ | ------- | ----------------------------------------------------------------------------------------------------------- |

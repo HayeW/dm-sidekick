@@ -1,5 +1,5 @@
 import type { Combat } from '../domain/combat';
-import { deleteSession, loadSession, saveActiveCombat } from './storage';
+import { deleteActiveCombat, deleteSession, loadSession, saveActiveCombat } from './storage';
 
 // The active combat of each campaign: one at most (decision D1). Saved in the campaign's
 // session (DC-081), so it survives a refresh. Also kept in memory, so the combat keeps working
@@ -15,6 +15,15 @@ export function getActiveCombat(campaignId: string): Combat | undefined {
 export function setActiveCombat(combat: Combat): void {
   activeCombats.set(combat.campaignId, combat);
   saveActiveCombat(combat);
+}
+
+/**
+ * Ends the campaign's active combat (DC-072): forgotten in memory and in the session, so it
+ * doesn't come back after a refresh. The DM's current scene stays (D66).
+ */
+export function endActiveCombat(campaignId: string): void {
+  activeCombats.delete(campaignId);
+  deleteActiveCombat(campaignId);
 }
 
 /** Forgets a campaign's session, with its active combat, in memory and stored (DC-113). */

@@ -54,6 +54,13 @@ export function saveCurrentScene(campaignId: string, currentSceneId: string): vo
   saveSession({ campaignId, currentSceneId, ...(activeCombat && { activeCombat }) });
 }
 
+/** Forgets the campaign's active combat (DC-072), keeping the current scene (D66). */
+export function deleteActiveCombat(campaignId: string): void {
+  const session = loadSession(campaignId);
+  if (!session?.activeCombat) return;
+  saveSession({ campaignId, currentSceneId: session.currentSceneId });
+}
+
 /** Remembers the campaign's active combat (DC-081), keeping the current scene. */
 export function saveActiveCombat(combat: Combat): void {
   const currentSceneId = loadSession(combat.campaignId)?.currentSceneId ?? combat.sceneId;
