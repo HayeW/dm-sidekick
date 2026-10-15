@@ -969,3 +969,122 @@ describe('DC-114 — Eigen Player Characters in combat', () => {
     expect(combatOrder()).toHaveLength(4);
   });
 });
+
+describe('DC-072 — Combat beëindigen', () => {
+  const campaign = getCampaign('shadows-over-millbrook')!;
+  const encounter = campaign.encounters[0]!;
+  const combatUrl = `/c/${campaign.id}/combat`;
+  const question = 'End the combat against Ambush on the mill road?';
+
+  const expectHeading = (name: string) =>
+    expect(screen.getByRole('heading', { level: 1, name })).toBeInTheDocument();
+
+  /** Taps End combat at the bottom, then End combat in the question panel. */
+  async function endCombat(user: ReturnType<typeof setupUser>, name = question) {
+    await user.click(screen.getByRole('button', { name: 'End combat' }));
+    await user.click(
+      within(screen.getByRole('region', { name })).getByRole('button', { name: 'End combat' }),
+    );
+  }
+
+  /** A combat runs on the Mill Road; the combat screen is open. */
+  function openCombat(sceneId = 'scene-mill-road') {
+    setActiveCombat(startCombat(campaign, sceneId, encounter));
+    renderAt(combatUrl);
+    return setupUser();
+  }
+
+  it('asks first, in a panel at the top, without ending the combat yet (D63, D64)', async () => {
+    const user = openCombat();
+
+    await user.click(screen.getByRole('button', { name: 'End combat' }));
+
+    const panel = screen.getByRole('region', { name: question });
+    expect(panel).toHaveTextContent('HP and order are lost.');
+    expect(screen.getByRole('heading', { name: question })).toHaveFocus();
+    expect(combatOrder()).toHaveLength(8);
+  });
+
+  it('changes nothing on Cancel, and gives focus back to End combat', async () => {
+    const user = openCombat();
+    const before = combatOrder();
+
+    await user.click(screen.getByRole('button', { name: 'End combat' }));
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(screen.queryByRole('region', { name: question })).not.toBeInTheDocument();
+    expect(combatOrder()).toEqual(before);
+    expect(screen.getByRole('button', { name: 'End combat' })).toHaveFocus();
+  });
+
+  it('ends the combat and goes to its scene, where the encounter can start again (D65)', async () => {
+    const user = openCombat();
+
+    await endCombat(user);
+
+    expectHeading('The Mill Road');
+    expect(screen.getByRole('button', { name: 'Start combat' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Resume combat/ })).not.toBeInTheDocument();
+  });
+
+  it('shows Combat as unavailable in Quick Access afterwards, also after a refresh', async () => {
+    const user = openCombat();
+    await endCombat(user);
+    clearActiveCombats(); // refresh
+
+    renderAt(`/c/${campaign.id}/quick`);
+    expect(screen.getByRole('button', { name: /Combat/ })).toBeDisabled();
+    renderAt(combatUrl);
+    expectHeading('No active combat');
+  });
+
+  it('goes back to the scene it was started from, also after a mode change: no double entry', async () => {
+    const user = setupUser();
+    renderWithBrowserBack('/');
+    await user.click(screen.getByRole('link', { name: new RegExp(campaign.name) }));
+    await user.click(
+      within(screen.getByRole('navigation', { name: 'Scenes' })).getByRole('link', {
+        name: /Next/,
+      }),
+    );
+    await user.click(screen.getByRole('button', { name: 'Start combat' }));
+    await user.click(screen.getByRole('button', { name: 'Done' })); // reorder → normal
+    await endCombat(user);
+    expectHeading('The Mill Road');
+
+    await pressBrowserBack();
+
+    expectHeading('Arrival in Millbrook');
+  });
+
+  it('replaces the combat screen when it was opened elsewhere: Back does not return to it', async () => {
+    const user = setupUser();
+    setActiveCombat(startCombat(campaign, 'scene-mill-road', encounter));
+    renderWithBrowserBack(`/c/${campaign.id}/s/scene-arrival`);
+    await user.click(screen.getByRole('link', { name: 'Quick' }));
+    await user.click(screen.getByRole('link', { name: /^Combat/ }));
+    await endCombat(user);
+    expectHeading('The Mill Road');
+
+    await pressBrowserBack();
+
+    expectHeading('Arrival in Millbrook');
+  });
+
+  it("goes to the campaign when the combat's scene no longer exists (D65)", async () => {
+    const user = openCombat('scene-removed');
+
+    await endCombat(user);
+
+    expectHeading('Arrival in Millbrook');
+  });
+
+  it('asks about "the current combat" when its encounter is unknown (D67)', async () => {
+    setActiveCombat({ ...startCombat(campaign, 'scene-mill-road', encounter), encounterId: null });
+    renderAt(combatUrl);
+
+    await setupUser().click(screen.getByRole('button', { name: 'End combat' }));
+
+    expect(screen.getByRole('region', { name: 'End the current combat?' })).toBeInTheDocument();
+  });
+});

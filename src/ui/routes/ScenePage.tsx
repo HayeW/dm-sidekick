@@ -9,6 +9,7 @@ import { findScene, neighbours, tileTarget } from '../../domain/scene';
 import SceneTile from '../components/SceneTile';
 import StepNav from '../components/StepNav';
 import TopBar from '../components/TopBar';
+import type { CombatOpenedFrom } from './CombatPage';
 import styles from './ScenePage.module.css';
 
 /**
@@ -56,10 +57,13 @@ export default function ScenePage() {
   const startCombatFrom = (encounter: Encounter) => {
     setActiveCombat(startCombat(campaign, scene.id, encounter));
     // A new combat opens in reorder mode: placing the PCs comes first (D17).
-    navigate(`${combatUrl}?mode=reorder`);
+    navigate(`${combatUrl}?mode=reorder`, {
+      state: { fromSceneId: scene.id } satisfies CombatOpenedFrom,
+    });
   };
   const combat = {
     to: combatUrl,
+    state: { fromSceneId: scene.id } satisfies CombatOpenedFrom,
     active: getActiveCombat(campaign.id) !== undefined,
     onStart: startCombatFrom,
   };

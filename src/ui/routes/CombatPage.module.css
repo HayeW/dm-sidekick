@@ -336,3 +336,62 @@
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
+
+/* End combat (DC-072): the question in a panel at the top (D64), the button last (D63). */
+.endPanel {
+  margin-bottom: var(--space);
+  padding: var(--space);
+  background: var(--surface);
+  border-radius: var(--radius);
+  border-left: 4px solid var(--danger);
+}
+
+.endPanel h2 {
+  margin: 0 0 8px;
+  font-size: 1.125rem;
+  /* The heading gets focus to bring the panel into view; no ring needed for that. */
+  outline: none;
+}
+
+.endPanel p {
+  margin: 0;
+}
+
+.endButtons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: var(--space);
+}
+
+.endConfirm {
+  min-width: 96px;
+  padding: 0 var(--space);
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--danger);
+  color: var(--text);
+  font-weight: 700;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Small and quiet, as Delete on the campaign list (D51). */
+.endCombat {
+  display: block;
+  margin: calc(var(--space) * 2) auto 0;
+  padding: 0 var(--space);
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.endConfirm:focus-visible,
+.endCombat:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

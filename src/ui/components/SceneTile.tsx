@@ -28,6 +28,8 @@ type Props = {
 type CombatAction = {
   /** Combat screen URL, used to resume. */
   to: string;
+  /** Passed to the combat screen, so End combat can go back to this scene (DC-072). */
+  state: unknown;
   active: boolean;
   onStart: (encounter: Encounter) => void;
 };
@@ -104,7 +106,7 @@ function TileBody({ block, campaign, combat }: Omit<Props, 'openTo'>) {
           <p>{enemySummary(encounter)}</p>
           {combat &&
             (combat.active ? (
-              <Link to={combat.to} className={styles.combat}>
+              <Link to={combat.to} state={combat.state} className={styles.combat}>
                 Resume combat
               </Link>
             ) : (

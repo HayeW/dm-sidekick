@@ -8,9 +8,9 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router';
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router';
 import { getCampaign } from '../../data/campaigns';
-import { getActiveCombat, setActiveCombat } from '../../data/combats';
+import { endActiveCombat, getActiveCombat, setActiveCombat } from '../../data/combats';
 import {
   addCombatant,
   applyDamage,
@@ -26,7 +26,7 @@ import {
   type Combatant,
   type NewCombatant,
 } from '../../domain/combat';
-import { findScene } from '../../domain/scene';
+import { findEncounter, findScene } from '../../domain/scene';
 import TopBar from '../components/TopBar';
 import { useDragReorder } from '../dragReorder';
 import styles from './CombatPage.module.css';
@@ -45,6 +45,8 @@ import styles from './CombatPage.module.css';
  * DC-062: in heal mode the damage buttons become +1/+5/+10, up to max HP; healing revives
  * the dead (D36–D41).
  * DC-020: Quick Access opens from the top bar (D22).
+ * DC-072: End combat at the bottom (D63) asks first in a panel at the top (D64), then goes
+ * to the combat's scene (D65).
  */
 export default function CombatPage() {
   const { campaignId = '' } = useParams();
@@ -52,16 +54,31 @@ export default function CombatPage() {
   // so Back still returns to the scene in one tap (D17, D42). Reorder and heal mode exclude
   // each other (D39).
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
+  const fromSceneId = (location.state as Partial<CombatOpenedFrom> | null)?.fromSceneId;
   const modeParam = searchParams.get('mode');
   const mode: Mode = modeParam === 'reorder' || modeParam === 'heal' ? modeParam : 'normal';
   const setMode = (next: Mode) =>
-    setSearchParams(next === 'normal' ? {} : { mode: next }, { replace: true });
+    // Keeps where the combat was opened from, for End combat.
+    setSearchParams(next === 'normal' ? {} : { mode: next }, {
+      replace: true,
+      state: location.state as unknown,
+    });
   const reordering = mode === 'reorder';
   const healing = mode === 'heal';
   const campaign = getCampaign(campaignId);
   const combat = campaign && getActiveCombat(campaign.id);
   // The combat lives in the data layer; after changing it, render again to show it.
   const [, rerender] = useReducer((n: number) => n + 1, 0);
+  const navigate = useNavigate();
+  /** The End combat question is open (D64). */
+  const [confirmingEnd, setConfirmingEnd] = useState(false);
+  const endButton = useRef<HTMLButtonElement>(null);
+  const endHeading = useRef<HTMLHeadingElement>(null);
+  // The panel is at the top, the button at the bottom: bring the question into view.
+  useEffect(() => {
+    if (confirmingEnd) endHeading.current?.focus();
+  }, [confirmingEnd]);
 
   if (!campaign || !combat) {
     return (
@@ -93,16 +110,47 @@ export default function CombatPage() {
     change((latest) => addCombatant(latest, newCombatant));
     setMode('reorder');
   };
+  const sceneUrl = scene ? `/c/${campaign.id}/s/${scene.id}` : `/c/${campaign.id}`;
+  const encounter = combat.encounterId ? findEncounter(campaign, combat.encounterId) : undefined;
+  const end = () => {
+    endActiveCombat(campaign.id);
+    // Opened from its own scene, that scene is the entry before this one: go back to it, so
+    // the history doesn't hold the scene twice. Otherwise replace this screen: Back must not
+    // return to a combat that no longer exists.
+    if (scene && fromSceneId === scene.id) void navigate(-1);
+    else void navigate(sceneUrl, { replace: true });
+  };
+  const cancelEnd = () => {
+    setConfirmingEnd(false);
+    endButton.current?.focus();
+  };
 
   return (
     <main className="page">
       {/* Back to where the combat started; to the campaign if that scene no longer exists. */}
       <TopBar
-        back={{ to: scene ? `/c/${campaign.id}/s/${scene.id}` : `/c/${campaign.id}` }}
+        back={{ to: sceneUrl }}
         backLabel={scene?.title ?? campaign.name}
         campaignId={campaign.id}
       />
       <h1>Combat</h1>
+      {confirmingEnd && (
+        <section className={styles.endPanel} aria-labelledby="end-combat-heading">
+          <h2 id="end-combat-heading" ref={endHeading} tabIndex={-1}>
+            {/* D67: a combat without a known encounter is "the current combat". */}
+            {encounter ? `End the combat against ${encounter.name}?` : 'End the current combat?'}
+          </h2>
+          <p>HP and order are lost.</p>
+          <div className={styles.endButtons}>
+            <button type="button" className={styles.cancel} onClick={cancelEnd}>
+              Cancel
+            </button>
+            <button type="button" className={styles.endConfirm} onClick={end}>
+              End combat
+            </button>
+          </div>
+        </section>
+      )}
       {reordering && (
         <p className={styles.hint}>Drag ≡ to move everyone into place, then tap Done below.</p>
       )}
@@ -161,11 +209,23 @@ export default function CombatPage() {
           </button>
         </div>
       </div>
+      {/* Rare and final: small, quiet and last, away from the damage buttons (D63). */}
+      <button
+        ref={endButton}
+        type="button"
+        className={styles.endCombat}
+        onClick={() => setConfirmingEnd(true)}
+      >
+        End combat
+      </button>
     </main>
   );
 }
 
 type Mode = 'normal' | 'reorder' | 'heal';
+
+/** Navigation state: the scene that opened the combat screen, with Start or Resume combat. */
+export type CombatOpenedFrom = { fromSceneId: string };
 
 type RowProps = {
   combatant: Combatant;
